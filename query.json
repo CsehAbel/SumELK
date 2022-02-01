@@ -1,0 +1,33 @@
+{
+    "bool":{
+      "should" : [
+        {"regexp": {
+          "rule.name": {
+            "value": "a.*",
+            "flags": "ALL",
+            "case_insensitive": true,
+            "max_determinized_states": 10000
+          }
+        }},
+        {
+          "regexp": {
+            "rule.name": {
+              "value": "wuser.*",
+              "flags": "ALL",
+              "case_insensitive": true,
+              "max_determinized_states": 10000
+            }
+          }
+        }
+        ],
+      "minimum_should_match" : 1,
+      "filter": {
+        "range": {
+          "@timestamp": {
+            "gte": "2022-01-21T09:00:00",
+            "lt": "2022-01-21T10:00:00"
+          }
+        }
+      }
+    }
+  }
