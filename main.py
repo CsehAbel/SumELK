@@ -24,6 +24,7 @@ from ssl import create_default_context
 from elasticsearch import RequestsHttpConnection
 
 import secrets
+import systems_group
 
 
 sc_helper = Secure_Change_Helper("cofw.siemens.com", (secrets.sc_u, secrets.sc_pw))
@@ -88,8 +89,13 @@ def main():
 
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
     lt_date = lt_date.strftime("%Y-%m-%dT%H:%M:%S")
-    query['bool']['filter']['range']['@timestamp']['gte']=gte_date
-    query['bool']['filter']['range']['@timestamp']['lt']=lt_date
+    query['bool']['filter'][1]['range']['@timestamp']['gte']=gte_date
+    query['bool']['filter'][1]['range']['@timestamp']['lt']=lt_date
+
+    query['bool']['filter'][0]['terms']['destination.ip']=systems_group.get_systems_ip_list()
+
+    with open('query_systems.json', 'w') as outfile:
+        json.dump(query, outfile)
 
     buckets_len=10000
     seq=0

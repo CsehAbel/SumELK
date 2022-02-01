@@ -68,7 +68,7 @@ def netmask_to_cidr(netmask):
     '''
     return sum([bin(int(x)).count('1') for x in netmask.split('.')])
 
-def main():
+def get_systems_ip_list():
     device_name = "CST-P-SAG-Energy"
     device_id = st_helper.get_device_id_by_name(device_name)
     #SystemsNetworkObjects_emea = st_helper.get_network_objects_for_device(device_id)
@@ -89,10 +89,8 @@ def main():
                 system_ips.append("%s/%s" %(range["ip"],range["cidr"]))
             else:
                 pass
-
-    print("lel")
-
+    return system_ips
 
 if __name__=="__main__":
-    main()
+    get_systems_ip_list()
 

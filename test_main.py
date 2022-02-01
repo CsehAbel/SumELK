@@ -28,4 +28,7 @@ class TestRegexpMatchRuleName(TestCase):
         duration=datetime.timedelta(days=30)
         lt=gt+duration
         lt=lt.strftime("%Y_%m_%d")
+
+        print((datetime.datetime.now()-datetime.timedelta(days=90)).strftime("%Y_%m_%d"))
+
         self.assertEqual(diff_days,90)
