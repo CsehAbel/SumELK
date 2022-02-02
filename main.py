@@ -89,40 +89,61 @@ def main():
 
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
     lt_date = lt_date.strftime("%Y-%m-%dT%H:%M:%S")
-    query['bool']['filter'][1]['range']['@timestamp']['gte']=gte_date
-    query['bool']['filter'][1]['range']['@timestamp']['lt']=lt_date
+    #query['bool']['filter'][1]['range']['@timestamp']['gte']=gte_date
+    #query['bool']['filter'][1]['range']['@timestamp']['lt']=lt_date
 
-    query['bool']['filter'][0]['terms']['destination.ip']=systems_group.get_systems_ip_list()
+    systems_ips=systems_group.get_systems_ip_list()
+    length = len(systems_ips)
 
-    with open('query_systems.json', 'w') as outfile:
-        json.dump(query, outfile)
+    divisor=1000
+    quotient,rest = divmod(length,divisor)
 
-    buckets_len=10000
-    seq=0
-    while buckets_len>=10000:
+    slices=[] #[[list[0],...list[999]],]
+    lower_bound=0
+    for i in range(quotient+1):
+        upper_bound=(i+1)*divisor
+        if upper_bound<length:
+            slices.append(systems_ips[slice(lower_bound,upper_bound,1)])
+        else:
+            slices.append(systems_ips[slice(lower_bound, length,1)])
+        lower_bound=upper_bound
+
+    asd=0
+    for s in slices:
+        query['bool']['filter']['terms']['destination.ip']=s
+        with open('query%d.json' %(asd+1), 'w') as outfile:
+            json.dump(query, outfile)
+        asd=asd+1
+
+    print("Done!")
+
+def download_buckets(es,query,aggs,gte_date,lt_date):
+    buckets_len = 10000
+    seq = 0
+    while buckets_len >= 10000:
         resp = es.search(query=query, index="energy-checkpoint", size=0, aggs=aggs)
         hits_len = resp['hits']['total']['value']
         print("Got %d Hits:" % hits_len)
         buckets = resp['aggregations']['my-buckets']['buckets']
         buckets_len = buckets.__len__()
 
-        with open('buckets_saved/bucket%s_%d.json' %(gte_date,seq), 'w') as outfile:
-            #json.dump(buckets)
+        with open('buckets_saved/bucket%s_%d.json' % (gte_date, seq), 'w') as outfile:
+            # json.dump(buckets)
             for b in buckets:
-                json.dump(flattenbucket(b),outfile)
+                json.dump(flattenbucket(b), outfile)
                 outfile.write("\n")
         seq = seq + 1
 
-        with open('buckets_saved/after_key.json', 'a') as outfile:
-            json.dump(resp['aggregations']['my-buckets']['after_key'],outfile)
-            outfile.write("\n")
+        if (10000<=buckets_len):
+            with open('buckets_saved/after_key.json', 'a') as outfile:
+                json.dump(resp['aggregations']['my-buckets']['after_key'], outfile)
+                outfile.write("\n")
 
-        aggs['my-buckets']['composite']['after'] = {}
-        aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
-            'source_ip']
-        aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
+            aggs['my-buckets']['composite']['after'] = {}
+            aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
+                'source_ip']
+            aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
 
-    print("Done!")
 
 def flattenbucket(b):
     s=b['key']['source_ip']

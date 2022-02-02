@@ -21,21 +21,12 @@
         }
         ],
       "minimum_should_match" : 1,
-      "filter": [
+      "filter":
        {
         "terms" :
         {
         "destination.ip" : ["10.222.28.0/24"]
         }
-       },
-       {
-        "range": {
-          "@timestamp": {
-            "gte": "2021-01-01T00:00:00",
-            "lt": "2022-01-31T23:00:00"
-          }
-        }
        }
-      ]
     }
   }
