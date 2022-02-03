@@ -110,7 +110,7 @@ def main():
 
     asd=0
     for s in slices:
-        query['bool']['filter']['terms']['destination.ip']=s
+        query['bool']['filter']['terms']['source.ip']=s
         with open('query%d.json' %(asd+1), 'w') as outfile:
             json.dump(query, outfile)
         asd=asd+1
