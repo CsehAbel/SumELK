@@ -15,7 +15,7 @@ def test_matches(attachment):
     for index, row in attachment.iterrows():
 
 
-        dict_raw_field = {"app_id": [], "tufin_id": row["Tufin ID"], "ips_field": row["Ips"]}
+        dict_raw_field = {"app_id": [], "tufin_id": row["Tufin ID"], "ips_field": row["IPs"]}
         # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
         field = dict_raw_field["ips_field"]
         field_list=[]
@@ -33,32 +33,6 @@ def test_matches(attachment):
             resultPrefix = patternPrefix.match(i)
             if resultPrefix:
                 inner_matches["single"]=True
-
-            patternPrefixCIDR = re.compile('^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+)\s*$')
-            resultPrefixCIDR = patternPrefixCIDR.match(i)
-            if resultPrefixCIDR:
-                inner_matches["cidr"]=True
-
-            patternPrefixRange = re.compile('^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\.([0-9]{1,3})-(\d+)\s*$')
-            resultPrefixRange = patternPrefixRange.match(i)
-            if resultPrefixRange:
-                inner_matches["range"]=True
-
-            patternPrefixCommaSeparated = re.compile('^\s*([1-9][0-9]{10,11})\s*$')
-            resultPrefixCommaSeparated = patternPrefixCommaSeparated.match(i)
-            if resultPrefixCommaSeparated:
-                ip_trsfrmd=correctMatchedPrefix(i)
-                inner_matches["commaseparated"]=True
-
-            patternBindestrich = re.compile('^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})-([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*$')
-            resultBindestrich = patternBindestrich.match(i)
-            if resultBindestrich:
-                inner_matches["bindestrich"] = True
-                start_ip_b=resultBindestrich.group(1)
-                end_ip_b=resultBindestrich.group(2)
-                #ToDo resultBindestrich.group(1), group(2)
-                #ToDo if group(1) < 0: group(1)=group(1) + 2**32
-                #ToDo for i in  range(quadToInt(group(1)),quadToInt(group(2))+1)
 
             if not any(inner_matches.values()) and not (i.find("Same as the App") != -1) and not len(i)==0 :
                 print("no regex match for 'field'{}".format(i))
@@ -143,87 +117,13 @@ def get_processed_qc_as_list(attachment_qc):
                 prefix = resultPrefix.group(1)
                 list_unpacked_ips.append(prefix)
 
-        if len(field_list)==1:
-            print("!!!field_list==1")
-
-
-
-
-
-        for i in field_list:
-            i = i.strip(u'\u200b')
-
-            patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
-            resultPrefix = patternPrefix.match(i)
-            if resultPrefix:
-                prefix = resultPrefix.group(1)
-                list_unpacked_ips.append(prefix)
-
-            patternPrefixCIDR = re.compile('^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+)\s*$')
-            resultPrefixCIDR = patternPrefixCIDR.match(i)
-            if resultPrefixCIDR:
-                prefix2 = resultPrefixCIDR.group(1)
-                cidr2 = correctAndCheckMatchedMask(resultPrefixCIDR.group(2))
-
-                base = integerToDecimalDottedQuad(
-                    decimalDottedQuadToInteger(prefix2) & makeIntegerMask(
-                        cidr2))
-                if base != prefix2:
-                    print("Not a network Adresse (possible ip base %s)" % base)
-
-                int_prefix_top = (~makeIntegerMask(
-                    cidr2)) | decimalDottedQuadToInteger(prefix2)
-                if int_prefix_top - 2 * 32 == -4117887025:
-                    print("Test singed to unsigned conversion")
-                    # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
-                    # Modified
-                    #    decimalDottedQuadToInteger()
-                    # to convert signed integers to unsigned.
-                    # Das Folgende ist redundant, überreichlich, ersetzt:
-                    #   int_prefix_top == -4117887025:
-                    #   if int_prefix_top < 0:
-                    #      int_prefix_top = int_prefix_top + (2**32)
-
-                prefix_top = integerToDecimalDottedQuad(int_prefix_top)
-                print("netw.adrr.:{}".format(base))
-                for j in range(decimalDottedQuadToInteger(base) + 1,
-                               decimalDottedQuadToInteger(
-                                       integerToDecimalDottedQuad(int_prefix_top)) + 1):
-                    list_unpacked_ips.append(integerToDecimalDottedQuad(j))
-
-            patternPrefixRange = re.compile('^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\.([0-9]{1,3})-(\d+)\s*$')
-            resultPrefixRange = patternPrefixRange.match(i)
-            if resultPrefixRange:
-                prefix3 = resultPrefixRange.group(1)
-                fourthoctet3 = resultPrefixRange.group(2)
-                fifthoctet3 = resultPrefixRange.group(3)
-
-                start_ip = ".".join([prefix3, fourthoctet3])
-                end_ip = ".".join([prefix3, fifthoctet3])
-                for j in range(decimalDottedQuadToInteger(start_ip) + 1,
-                               decimalDottedQuadToInteger(end_ip) + 1):
-                    list_unpacked_ips.append(integerToDecimalDottedQuad(j))
-
-            patternPrefixCommaSeparated = re.compile('^\s*([1-9][0-9]{10,11})\s*$')
-            resultPrefixCommaSeparated = patternPrefixCommaSeparated.match(i)
-            if resultPrefixCommaSeparated:
-                ip_trsfrmd = correctMatchedPrefix(i)
-                list_unpacked_ips.append(ip_trsfrmd)
-
-            patternBindestrich = re.compile(
-                '^\s*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})-([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})\s*$')
-            resultBindestrich = patternBindestrich.match(i)
-            if resultBindestrich:
-                start_ip_b = resultBindestrich.group(1)
-                end_ip_b = resultBindestrich.group(2)
-                for j in range(decimalDottedQuadToInteger(start_ip_b),
-                               decimalDottedQuadToInteger(start_ip_b) + 1):
-                    list_unpacked_ips.append(integerToDecimalDottedQuad(j))
+        if not len(field_list)==1:
+            print("!!!field_list!=1")
 
         for element in list_unpacked_ips:
             list_dict_transformed.append(
                 #{"app_id": dict_raw_field["app_id"], "tufin_id": dict_raw_field["tufin_id"], "ip": element, "excel_row_line": (index + 2)}
-                {"ip": element,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Tufin ID":row['Tufin ID'],"Source":row['Source'],"Ips":row['Ips'],"Protocol type port":row['Protocol type port'],"FQDNs":row['FQDNs'],"TSA":row['TSA'],"new TSA?":row['new TSA?'],"Application Name":row['Application Name'],"Application Manager\'s mail":row['Application Manager\'s mail'],"Status":row['Status']})
+                {"ip": element,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Tufin ID":row['Tufin ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":row['Protocol type port'],"FQDNs":row['FQDNs'],"TSA":row['TSA'],"new TSA?":row['new TSA?'],"Application Name":row['Application Name'],"Application Manager\'s mail":row['Application Manager\'s mail'],"Status":row['Status']})
 
     return list_dict_transformed
 
@@ -239,3 +139,7 @@ def main():
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
     df_qc = pandas.DataFrame(get_processed_qc_as_list(attachment_qc))
+    print("lel")
+
+if __name__=="__main__":
+    main()
