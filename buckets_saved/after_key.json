@@ -167,3 +167,4 @@
 {"source_ip": "10.99.156.35", "dest_ip": "139.22.145.42", "source_port": 59154, "dest_port": 443}
 {"source_ip": "10.99.156.35", "dest_ip": "139.22.145.45", "source_port": 53699, "dest_port": 443}
 {"source_ip": "10.99.156.204", "dest_ip": "10.142.200.6", "source_port": 22988, "dest_port": 9878}
+{"source_ip": "10.99.156.204", "dest_ip": "10.142.254.232", "source_port": 13734, "dest_port": 443}
