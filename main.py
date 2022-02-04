@@ -92,53 +92,45 @@ def main():
     #query['bool']['filter'][1]['range']['@timestamp']['gte']=gte_date
     #query['bool']['filter'][1]['range']['@timestamp']['lt']=lt_date
 
-    resp = es.search(index="business_partner_001")
 
+    for i in range(4):
+        download_index(es=es,index="business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)
+    
     print("Done!")
 
-def download_buckets(es,query,aggs,gte_date,lt_date):
-    buckets_len = 10000
+def download_index(es,index,nth,sort,gte_date):
+    resp = es.search(index=index,sort=sort,size=10000)
+    #hits_len = resp['hits']['total']['value']
+    hits_len = len(resp['hits']['hits'])
+    print("Got %d Hits:" % hits_len)
     seq = 0
-    while buckets_len >= 10000:
-        resp = es.search(query=query, index="business_partner", size=0, aggs=aggs)
-        hits_len = resp['hits']['total']['value']
-        print("Got %d Hits:" % hits_len)
-        buckets = resp['aggregations']['my-buckets']['buckets']
-        buckets_len = buckets.__len__()
+    hits = resp['hits']['hits']
+    with open('hits/hit_00%d_%s_%d.json' % (nth, gte_date, seq), 'w') as outfile:
+        # json.dump(buckets)
+        for b in hits:
+            json.dump(flattenhit(b), outfile)
+            outfile.write("\n")
+    seq = seq + 1
 
-        with open('buckets_from_transforms/bucket%s_%d.json' % (gte_date, seq), 'w') as outfile:
+    while hits_len >= 10000:
+        search_after=resp['hits']['hits'][-1]['sort']
+        resp = es.search(index=index,sort=sort,search_after=search_after,size=10000)
+        # hits_len = resp['hits']['total']['value']
+        hits_len = len(resp['hits']['hits'])
+        print("Got %d Hits:" % hits_len)
+        hits = resp['hits']['hits']
+
+        with open('hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
             # json.dump(buckets)
-            for b in buckets:
-                json.dump(flattenbucket(b), outfile)
+            for b in hits:
+                json.dump(flattenhit(b), outfile)
                 outfile.write("\n")
         seq = seq + 1
 
-        if (10000<=buckets_len):
-            with open('buckets_from_transforms/after_key.json', 'a') as outfile:
-                json.dump(resp['aggregations']['my-buckets']['after_key'], outfile)
-                outfile.write("\n")
-
-            aggs['my-buckets']['composite']['after'] = {}
-            aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
-                'source_ip']
-            aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
-
-
-def flattenbucket(b):
-    s=b['key']['source_ip']
-    d=b['key']['dest_ip']
+def flattenhit(h):
+    s=h['_source']['source']['ip']
+    d=h['_source']['destination']['ip']
     return {"source_ip":s,"dest_ip":d}
-
-def filteredresults():
-    es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
-                       http_auth=(user, pw), use_ssl=True, verify_certs=False)
-
-    with open('query.json') as json_file:
-        data = json.load(json_file)
-
-    resp = es.search(query=data, index="energy-checkpoint", size=10000)
-    print("Got %d Hits:" % resp['hits']['total']['value'])
-    return resp
 
 if __name__ == '__main__':
     main()
