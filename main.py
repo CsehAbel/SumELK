@@ -83,7 +83,7 @@ def main():
     #lt_date = datetime.datetime(day=23, year=2022, month=1)
     dtn=datetime.datetime.now()
     lt_date = datetime.datetime(day=dtn.day, year=dtn.year, month=dtn.month)
-    duration1 = datetime.timedelta(days=90)
+    duration1 = datetime.timedelta(days=15)
     gte_date = lt_date - duration1
 
     #lt_date = lt_date - duration1
