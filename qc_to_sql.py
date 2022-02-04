@@ -97,7 +97,7 @@ def get_processed_qc_as_list(attachment_qc):
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
     list_dict_transformed = []
     for index, row in attachment_qc.iterrows():
-        dict_raw_field = {"app_id": row["APP ID"], "tufin_id": row["Tufin ID"], "ips_field": row["Ips"]}
+        dict_raw_field = {"app_id": row["APP ID"], "tufin_id": row["Tufin ID"], "ips_field": row["IPs"]}
         # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
 
         field = dict_raw_field["ips_field"]
@@ -118,12 +118,12 @@ def get_processed_qc_as_list(attachment_qc):
                 list_unpacked_ips.append(prefix)
 
         if not len(field_list)==1:
-            print("!!!field_list!=1")
+            print("!!!field_list!=1  %s" %field_list)
 
         for element in list_unpacked_ips:
             list_dict_transformed.append(
                 #{"app_id": dict_raw_field["app_id"], "tufin_id": dict_raw_field["tufin_id"], "ip": element, "excel_row_line": (index + 2)}
-                {"ip": element,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Tufin ID":row['Tufin ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":row['Protocol type port'],"FQDNs":row['FQDNs'],"TSA":row['TSA'],"new TSA?":row['new TSA?'],"Application Name":row['Application Name'],"Application Manager\'s mail":row['Application Manager\'s mail'],"Status":row['Status']})
+                {"ip": element,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":row['Protocol type port'],"FQDNs":row['FQDNs'],"Application Name":row['Application Name']})
 
     return list_dict_transformed
 
