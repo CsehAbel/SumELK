@@ -3,6 +3,7 @@ import time
 from unittest import TestCase
 import main
 import re
+import qc_to_sql
 
 class TestRegexpMatchRuleName(TestCase):
     def test_regexp_rule_matching(self):
@@ -72,3 +73,27 @@ class TestRegexpMatchRuleName(TestCase):
                 slice_part = lista[slice(lower_bound,length,1)]
             lower_bound=(i+1)*oszto
             print(slice_part)
+
+    def test_qc_to_sql(self):
+        result=qc_to_sql.test_port_field("TCP 45;TCP 23")
+        self.assertEqual(result,"tcp/45, tcp/23")
+        result = qc_to_sql.test_port_field("TCP 41115;TCP 23")
+        self.assertEqual(result, "tcp/41115, tcp/23")
+        result = qc_to_sql.test_port_field("TCP 45")
+        self.assertEqual(result, "tcp/45")
+        result = qc_to_sql.test_port_field("UDP 45;TCP 23")
+        self.assertEqual(result, "udp/45, tcp/23")
+        result = qc_to_sql.test_port_field("udp 45")
+        self.assertEqual(result, "udp/45")
+        result = qc_to_sql.test_port_field("UDP 45;UDP 23")
+        self.assertEqual(result, "udp/45, udp/23")
+
+        result = qc_to_sql.test_port_field("  UDP 80;UDP 23")
+        self.assertEqual(result, "udp/80, udp/23")
+
+    def test_strip(self):
+        field = "  UDP 80"
+        field = field.strip()
+        field = field.strip(u'\u200b')
+        self.assertEqual(field, "UDP 80")
+        self.assertEqual(", ".join(["bad"]),"bad")

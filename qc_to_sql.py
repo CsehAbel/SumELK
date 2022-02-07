@@ -101,32 +101,79 @@ def get_processed_qc_as_list(attachment_qc):
         # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
 
         field = dict_raw_field["ips_field"]
-        field_list = []
 
-        list_unpacked_ips = []
+        field = field.strip(u'\u200b')
+        patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+        resultPrefix = patternPrefix.match(field)
+        if resultPrefix:
+            prefix = resultPrefix.group(1)
+        else:
+            continue
 
-        if (not pandas.isnull(field)) and field.find(";") != -1:
-            field_list = field.split(";")
-        elif (not pandas.isnull(field)) and field.find("\n") != -1:
-            field_list = field.split("\n")
-        elif (not pandas.isnull(field)):
-            field = field.strip(u'\u200b')
-            patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
-            resultPrefix = patternPrefix.match(field)
-            if resultPrefix:
-                prefix = resultPrefix.group(1)
-                list_unpacked_ips.append(prefix)
+        try:
+            port_list=test_port_field(row['Protocol type port'])
+        except ValueError as e:
+            print("Port error:\t%s\t%s" %(e.args[0],row['Protocol type port']))
+            continue
 
-        if not len(field_list)==1:
-            print("!!!field_list!=1  %s" %field_list)
 
-        for element in list_unpacked_ips:
-            list_dict_transformed.append(
+        list_dict_transformed.append(
                 #{"app_id": dict_raw_field["app_id"], "tufin_id": dict_raw_field["tufin_id"], "ip": element, "excel_row_line": (index + 2)}
-                {"ip": element,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":row['Protocol type port'],"FQDNs":row['FQDNs'],"Application Name":row['Application Name']})
+                {"ip": prefix,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":port_list,"FQDNs":row['FQDNs'],"Application Name":row['Application Name']})
 
     return list_dict_transformed
 
+def test_port_field(field):
+
+    list_ports=[]
+    field_list=[]
+    if (not pandas.isnull(field)) and field.find(";") != -1:
+        field_list = field.split(";")
+
+    elif (not pandas.isnull(field)) and field.find("\n") != -1:
+        field_list = field.split("\n")
+
+    elif (not pandas.isnull(field)):
+        field = field.strip(u'\u200b')
+        field_list = [field]
+
+    try:
+        for f in field_list:
+            list_ports.append(result_per_field(f))
+    except ValueError as e:
+        raise ValueError(f)
+
+    return ", ".join(list_ports)
+
+def result_per_field(field):
+    field = field.strip()
+    field = field.strip(u'\u200b')
+    patternPrefix1 = re.compile('^(TCP).*?([0-9]+)$',re.IGNORECASE)
+    resultPrefix1 = patternPrefix1.match(field)
+    patternPrefix2 = re.compile('^(UDP).*?([0-9]+)$', re.IGNORECASE)
+    resultPrefix2 = patternPrefix2.match(field)
+    patternPrefix3 = re.compile('^(UDP).*?([0-9]+-[0-9]+)$', re.IGNORECASE)
+    resultPrefix3 = patternPrefix3.match(field)
+    patternPrefix4 = re.compile('^(TCP).*?([0-9]+-[0-9]+)$', re.IGNORECASE)
+    resultPrefix4 = patternPrefix4.match(field)
+    if resultPrefix1:
+        proto = "tcp"
+        number = resultPrefix1.group(2)
+        return "%s/%s" % (proto, number)
+    elif resultPrefix2:
+        proto = "udp"
+        number = resultPrefix2.group(2)
+        return "%s/%s" % (proto, number)
+    elif resultPrefix3:
+        proto = "udp"
+        number = resultPrefix3.group(2)
+        return "%s/%s" % (proto, number)
+    elif resultPrefix4:
+        proto = "tcp"
+        number = resultPrefix4.group(2)
+        return "%s/%s" % (proto, number)
+    else:
+        raise ValueError()
 
 def main():
     filepath_qc = "QualityCheckFinal (1).xlsx"
@@ -139,6 +186,7 @@ def main():
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
     df_qc = pandas.DataFrame(get_processed_qc_as_list(attachment_qc))
+    #df_qc.to_sql()
     print("lel")
 
 if __name__=="__main__":
