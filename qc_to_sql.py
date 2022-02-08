@@ -7,6 +7,11 @@ import re
 import socket
 import struct
 import math
+from sqlalchemy import create_engine
+import pymysql
+import secrets
+
+
 
 
 def test_matches(attachment):
@@ -113,21 +118,21 @@ def get_correct_indexes(attachment_qc):
 
         try:
             port_string=test_port_field(row['Protocol type port'])
-            list_ports.append(port_string)
         except ValueError as e:
             print("%dPort error:\t%s\t%s" %(index,e.args[0],row['Protocol type port']))
             continue
 
         try:
             fqdn=test_fqdn(row["FQDNs"])
-            list_fqdns.append(fqdn)
         except ValueError as e:
             print("%dFQDNs error: %s" %(index,row["FQDNs"]))
             continue
 
+        list_fqdns.append(fqdn)
+        list_ports.append(port_string)
         list_index.append(index)
 
-    return list_index,list_ports
+    return list_index,list_ports,list_fqdns
 
 def test_port_field(field):
 
@@ -155,12 +160,13 @@ def test_fqdn(field):
     if pandas.isnull(field):
         raise ValueError("field is null")
 
-    pattern1=re.compile("http://([^/\s]+)",re.IGNORECASE)
-    pattern2=re.compile("https://([^/\s]+)",re.IGNORECASE)
-    pattern3=re.compile("([^/\s]+)")
+    pattern1=re.compile("http://([^/\s]+\.[a-z]+)",re.IGNORECASE)
+    pattern2=re.compile("https://([^/\s]+\.[a-z]+)",re.IGNORECASE)
+    pattern3=re.compile("([^/\s]+\.[a-z]+)")
     result1=pattern1.match(field)
     result2=pattern2.match(field)
     result3=pattern3.match(field)
+
     if result2:
         fqdn=result2.group(1)
     elif result1:
@@ -169,6 +175,7 @@ def test_fqdn(field):
         fqdn=result3.group(1)
     else:
         raise ValueError()
+    return fqdn
 
 def result_per_field(field):
     field = field.strip()
@@ -210,15 +217,18 @@ def main():
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
-    correct_indexes,correct_ports = get_correct_indexes(attachment_qc)
+    correct_indexes,correct_ports,correct_fqdns = get_correct_indexes(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
-    df_qc.insert(0,"Ports",correct_ports,allow_duplicates=True)
+    df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
+    df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
     #ToDo send dictionary to Claus
-    # using dictionary and Protocol type port field as dict key
     #ToDo df_qc replace Protocol Type port with ####/tcp
     #ToDo clean up ip ranges, clean up port fields
     #ToDo FQDN remove https,http
     #ToDo df_qc.to_sql()
+    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    df_qc.to_sql("white_apps", dbConnection,if_exists='replace', index=True)
 
     print("lel")
 
