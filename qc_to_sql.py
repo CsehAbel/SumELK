@@ -96,8 +96,9 @@ def get_correct_indexes(attachment_qc):
     test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
     list_index = []
-    #list_port=[]
-    dict_ports_for_index={}
+
+    list_ports = []
+    list_fqdns=[]
     for index, row in attachment_qc.iterrows():
 
         field = row["IPs"]
@@ -112,15 +113,21 @@ def get_correct_indexes(attachment_qc):
 
         try:
             port_string=test_port_field(row['Protocol type port'])
-            dict_ports_for_index[index]="%s" %port_string
+            list_ports.append(port_string)
         except ValueError as e:
-            print("Port error:\t%s\t%s" %(e.args[0],row['Protocol type port']))
+            print("%dPort error:\t%s\t%s" %(index,e.args[0],row['Protocol type port']))
             continue
 
+        try:
+            fqdn=test_fqdn(row["FQDNs"])
+            list_fqdns.append(fqdn)
+        except ValueError as e:
+            print("%dFQDNs error: %s" %(index,row["FQDNs"]))
+            continue
 
         list_index.append(index)
 
-    return list_index,dict_ports_for_index
+    return list_index,list_ports
 
 def test_port_field(field):
 
@@ -144,6 +151,25 @@ def test_port_field(field):
 
     return ", ".join(list_ports)
 
+def test_fqdn(field):
+    if pandas.isnull(field):
+        raise ValueError("field is null")
+
+    pattern1=re.compile("http://([^/\s]+)",re.IGNORECASE)
+    pattern2=re.compile("https://([^/\s]+)",re.IGNORECASE)
+    pattern3=re.compile("([^/\s]+)")
+    result1=pattern1.match(field)
+    result2=pattern2.match(field)
+    result3=pattern3.match(field)
+    if result2:
+        fqdn=result2.group(1)
+    elif result1:
+        fqdn=result1.group(1)
+    elif result3:
+        fqdn=result3.group(1)
+    else:
+        raise ValueError()
+
 def result_per_field(field):
     field = field.strip()
     field = field.strip(u'\u200b')
@@ -158,19 +184,19 @@ def result_per_field(field):
     if resultPrefix1:
         proto = "tcp"
         number = resultPrefix1.group(2)
-        return "%s/%s" % (proto, number)
+        return "%s/%s" % (number, proto)
     elif resultPrefix2:
         proto = "udp"
         number = resultPrefix2.group(2)
-        return "%s/%s" % (proto, number)
+        return "%s/%s" % (number, proto)
     elif resultPrefix3:
         proto = "udp"
         number = resultPrefix3.group(2)
-        return "%s/%s" % (proto, number)
+        return "%s/%s" % (number, proto)
     elif resultPrefix4:
         proto = "tcp"
         number = resultPrefix4.group(2)
-        return "%s/%s" % (proto, number)
+        return "%s/%s" % (number, proto)
     else:
         raise ValueError()
 
@@ -186,7 +212,7 @@ def main():
 
     correct_indexes,correct_ports = get_correct_indexes(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
-    df_qc["Ports"]=correct_ports
+    df_qc.insert(0,"Ports",correct_ports,allow_duplicates=True)
     #ToDo send dictionary to Claus
     # using dictionary and Protocol type port field as dict key
     #ToDo df_qc replace Protocol Type port with ####/tcp
