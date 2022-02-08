@@ -96,6 +96,8 @@ def get_correct_indexes(attachment_qc):
     test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
     list_index = []
+    #list_port=[]
+    dict_ports_for_index={}
     for index, row in attachment_qc.iterrows():
 
         field = row["IPs"]
@@ -109,7 +111,8 @@ def get_correct_indexes(attachment_qc):
             continue
 
         try:
-            port_list=test_port_field(row['Protocol type port'])
+            port_string=test_port_field(row['Protocol type port'])
+            dict_ports_for_index[index]="%s" %port_string
         except ValueError as e:
             print("Port error:\t%s\t%s" %(e.args[0],row['Protocol type port']))
             continue
@@ -117,7 +120,7 @@ def get_correct_indexes(attachment_qc):
 
         list_index.append(index)
 
-    return list_index
+    return list_index,dict_ports_for_index
 
 def test_port_field(field):
 
@@ -181,11 +184,16 @@ def main():
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
-    correct_indexes = get_correct_indexes(attachment_qc)
+    correct_indexes,correct_ports = get_correct_indexes(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
+    df_qc["Ports"]=correct_ports
+    #ToDo send dictionary to Claus
+    # using dictionary and Protocol type port field as dict key
     #ToDo df_qc replace Protocol Type port with ####/tcp
+    #ToDo clean up ip ranges, clean up port fields
     #ToDo FQDN remove https,http
     #ToDo df_qc.to_sql()
+
     print("lel")
 
 if __name__=="__main__":
