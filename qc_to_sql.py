@@ -91,16 +91,14 @@ def correctMatchedPrefix(ipaddr):
 
 
 
-def get_processed_qc_as_list(attachment_qc):
+def get_correct_indexes(attachment_qc):
 
     test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
-    list_dict_transformed = []
+    list_index = []
     for index, row in attachment_qc.iterrows():
-        dict_raw_field = {"app_id": row["APP ID"], "tufin_id": row["Tufin ID"], "ips_field": row["IPs"]}
-        # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
 
-        field = dict_raw_field["ips_field"]
+        field = row["IPs"]
 
         field = field.strip(u'\u200b')
         patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
@@ -117,11 +115,9 @@ def get_processed_qc_as_list(attachment_qc):
             continue
 
 
-        list_dict_transformed.append(
-                #{"app_id": dict_raw_field["app_id"], "tufin_id": dict_raw_field["tufin_id"], "ip": element, "excel_row_line": (index + 2)}
-                {"ip": prefix,"ACP #":row['ACP #'],"APP ID":row['APP ID'],"Source":row['Source'],"IPs":row['IPs'],"Protocol type port":port_list,"FQDNs":row['FQDNs'],"Application Name":row['Application Name']})
+        list_index.append(index)
 
-    return list_dict_transformed
+    return list_index
 
 def test_port_field(field):
 
@@ -185,8 +181,11 @@ def main():
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
-    df_qc = pandas.DataFrame(get_processed_qc_as_list(attachment_qc))
-    #df_qc.to_sql()
+    correct_indexes = get_correct_indexes(attachment_qc)
+    df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
+    #ToDo df_qc replace Protocol Type port with ####/tcp
+    #ToDo FQDN remove https,http
+    #ToDo df_qc.to_sql()
     print("lel")
 
 if __name__=="__main__":
