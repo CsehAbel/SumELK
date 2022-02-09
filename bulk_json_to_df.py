@@ -31,7 +31,7 @@ def decimalDottedQuadToInteger(dottedquad):
     return ip_as_int
 
 def list_files(path):
-    pttrn_bckt=re.compile("^bucket.*")
+    pttrn_bckt=re.compile("^hit.*")
     onlyfiles = []
     for f in listdir(path):
         if (isfile(join(path, f)) and pttrn_bckt.match(f)):
@@ -74,17 +74,17 @@ def create_dataframe(full_path):
     return df
 
 def main():
-    path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/buckets_saved/"
+    path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
     lf=list_files(path)
     df_list_per_file=[]
     for f in lf:
         df_list_per_file.append(create_dataframe(join(path, f)))
         print("%s done!" %f)
 
-    file_name="df2.csv"
+    file_name="df_hits.csv"
     df=pd.concat(df_list_per_file,ignore_index=True)
     df.to_csv(file_name)
-    print("Concatonation done!")
+    print("Concatenation done!")
 
 
 if __name__ == '__main__':
