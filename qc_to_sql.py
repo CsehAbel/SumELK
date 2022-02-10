@@ -101,8 +101,7 @@ def get_correct_indexes(attachment_qc):
     test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
     list_index = []
-
-    list_ports = []
+    dict_ports = {}
     list_fqdns=[]
     for index, row in attachment_qc.iterrows():
 
@@ -117,22 +116,41 @@ def get_correct_indexes(attachment_qc):
             continue
 
         try:
-            port_string=test_port_field(row['Protocol type port'])
+            dict_ports[test_port_field(row['Protocol type port'])]=index
         except ValueError as e:
             print("%dPort error:\t%s\t%s" %(index,e.args[0],row['Protocol type port']))
             continue
 
-        try:
-            fqdn=test_fqdn(row["FQDNs"])
-        except ValueError as e:
-            print("%dFQDNs error: %s" %(index,row["FQDNs"]))
-            continue
+        list_index.append(index)
 
-        list_fqdns.append(fqdn)
+    return list_index,dict_ports
+
+def get_correct_indexes_strict(attachment_qc):
+
+    test_matches(attachment_qc)
+    # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
+    list_index = []
+    list_ports = []
+    for index, row in attachment_qc.iterrows():
+
+        field = row["IPs"]
+
+        patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+        resultPrefix = patternPrefix.match(field)
+        if resultPrefix:
+            prefix = resultPrefix.group(1)
+        else:
+            raise ValueError()
+
+        try:
+            port_string = test_port_field(row['Protocol type port'])
+        except ValueError as e:
+            raise ValueError(e.args)
+
         list_ports.append(port_string)
         list_index.append(index)
 
-    return list_index,list_ports,list_fqdns
+    return list_index,list_ports
 
 def test_port_field(field):
 
@@ -208,7 +226,7 @@ def result_per_field(field):
         raise ValueError()
 
 def main():
-    filepath_qc = "QualityCheckFinal (1).xlsx"
+    filepath_qc = "QualityCh_unpacked09Feb2022.xlsx"
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -217,19 +235,16 @@ def main():
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
-    correct_indexes,correct_ports,correct_fqdns = get_correct_indexes(attachment_qc)
+    correct_indexes,correct_ports= get_correct_indexes(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
-    df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
-    df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
-    #ToDo send dictionary to Claus
-    #ToDo df_qc replace Protocol Type port with ####/tcp
+    #df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
     #ToDo clean up ip ranges, clean up port fields
-    #ToDo FQDN remove https,http
-    #ToDo df_qc.to_sql()
-    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    df_qc.to_sql("white_apps", dbConnection,if_exists='replace', index=True)
-
+    #ToDo clean up FQDNs in both QualityCheck-Bad Format and in df_qc
+    ci=[]
+    for value in correct_ports.values():
+        ci.append(value)
+    df_qc = attachment_qc.iloc[ci][["IPs", "APP ID", "Protocol type port", "FQDNs", "Application Name"]]
+    df_qc.to_csv(path_or_buf="unique_ports_for_bp_application_protocol.csv")
     print("lel")
 
 if __name__=="__main__":
