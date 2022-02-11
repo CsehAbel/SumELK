@@ -1,5 +1,6 @@
 import os
 
+import numpy
 import pandas
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -96,7 +97,7 @@ def correctMatchedPrefix(ipaddr):
 
 
 
-def get_correct_indexes(attachment_qc):
+def match_ip_fqdn(attachment_qc):
 
     test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
@@ -117,22 +118,52 @@ def get_correct_indexes(attachment_qc):
             continue
 
         try:
-            port_string=test_port_field(row['Protocol type port'])
+            fqdn=test_fqdn(row["FQDNs"])
         except ValueError as e:
-            print("%dPort error:\t%s\t%s" %(index,e.args[0],row['Protocol type port']))
+            fqdn=numpy.nan
+            print("%dFQDNs error: %s" %(index,row["FQDNs"]))
+
+        list_fqdns.append(fqdn)
+        list_index.append(index)
+
+    return list_index,list_fqdns
+
+
+def match_fqdn_strict(attachment_qc):
+    test_matches(attachment_qc)
+    # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
+    list_index = []
+
+    list_ports = []
+    list_fqdns = []
+    for index, row in attachment_qc.iterrows():
+
+        field = row["IPs"]
+
+        field = field.strip(u'\u200b')
+        patternPrefix = re.compile('^\s*(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+        resultPrefix = patternPrefix.match(field)
+        if resultPrefix:
+            prefix = resultPrefix.group(1)
+        else:
             continue
 
         try:
-            fqdn=test_fqdn(row["FQDNs"])
+            qc_fqdn = test_fqdn(row["FQDNs"])
         except ValueError as e:
-            print("%dFQDNs error: %s" %(index,row["FQDNs"]))
+            qc_fqdn = numpy.nan
+            #print("%dFQDNs error: %s" % (index, row["FQDNs"]))
+        if not pandas.isnull(row("dns")):
+            fqdn = row("dns")
+        elif not pandas.isnull(qc_fqdn):
+            fqdn = qc_fqdn
+        else:
             continue
 
         list_fqdns.append(fqdn)
-        list_ports.append(port_string)
         list_index.append(index)
 
-    return list_index,list_ports,list_fqdns
+    return list_index, list_fqdns
 
 def test_port_field(field):
 
@@ -160,9 +191,9 @@ def test_fqdn(field):
     if pandas.isnull(field):
         raise ValueError("field is null")
 
-    pattern1=re.compile("http://([^/\s]+\.[a-z]+)",re.IGNORECASE)
-    pattern2=re.compile("https://([^/\s]+\.[a-z]+)",re.IGNORECASE)
-    pattern3=re.compile("([^/\s]+\.[a-z]+)")
+    pattern1=re.compile("\s*http://([^/\s]+\.[a-z]+)",re.IGNORECASE)
+    pattern2=re.compile("\s*https://([^/\s]+\.[a-z]+)",re.IGNORECASE)
+    pattern3=re.compile("\s*([^/\s]+\.[a-z]+)",re.IGNORECASE)
     result1=pattern1.match(field)
     result2=pattern2.match(field)
     result3=pattern3.match(field)
@@ -217,10 +248,21 @@ def main():
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
 
-    correct_indexes,correct_ports,correct_fqdns = get_correct_indexes(attachment_qc)
+    #one column for fqdn = FQDNs, incorrect format set to NaN
+    correct_indexes,correct_fqdns = match_ip_fqdn(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
-    df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
+    #df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
+
+    file = "sysdb_2022-02-07.gz"
+    df_sysdb = pandas.read_csv(file, sep=';', encoding="utf-8", dtype='str')
+    df_sysdb = df_sysdb[["ip", "dns"]]
+
+    df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
+    #two column for fqdn = FQDNs,dns incorrect format thrown away
+
+    #df_qc_null = df_qc[ pandas.isnull(df_qc["dns"]) & pandas.isnull(df_qc["FQDN"])]
+    #df_qc_null = df_qc[~(pandas.isnull(df_qc["FQDN"]))]
     #ToDo send dictionary to Claus
     #ToDo df_qc replace Protocol Type port with ####/tcp
     #ToDo clean up ip ranges, clean up port fields
