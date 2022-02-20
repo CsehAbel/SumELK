@@ -1,6 +1,7 @@
 import os
 
 import numpy
+import numpy as np
 import pandas
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -11,9 +12,6 @@ import math
 from sqlalchemy import create_engine
 import pymysql
 import secrets
-
-
-
 
 def test_matches(attachment):
 
@@ -95,8 +93,6 @@ def correctMatchedPrefix(ipaddr):
         ip = ".".join([str(int(sum(firstoctet))),str(int(sum(secondoctet))),str(int(sum(thirdoctet))),str(int(sum(fourthoctet)))])
         return ip
 
-
-
 def match_ip_fqdn(attachment_qc):
 
     test_matches(attachment_qc)
@@ -128,9 +124,7 @@ def match_ip_fqdn(attachment_qc):
 
     return list_index,list_fqdns
 
-
 def match_fqdn_strict(attachment_qc):
-    test_matches(attachment_qc)
     # use for capturing ip,ip/mask,ip.ip.ip.ip-ip
     list_index = []
 
@@ -148,15 +142,10 @@ def match_fqdn_strict(attachment_qc):
         else:
             continue
 
-        try:
-            qc_fqdn = test_fqdn(row["FQDNs"])
-        except ValueError as e:
-            qc_fqdn = numpy.nan
-            #print("%dFQDNs error: %s" % (index, row["FQDNs"]))
-        if not pandas.isnull(row("dns")):
-            fqdn = row("dns")
-        elif not pandas.isnull(qc_fqdn):
-            fqdn = qc_fqdn
+        if not pandas.isnull(row["dns2"]):
+            fqdn = row["dns2"]
+        elif not pandas.isnull(row["FQDN"]):
+            fqdn = row["FQDN"]
         else:
             continue
 
@@ -239,7 +228,7 @@ def result_per_field(field):
         raise ValueError()
 
 def main():
-    filepath_qc = "QualityCheckFinal (1).xlsx"
+    filepath_qc = "QualityCh_unpacked09Feb2022.xlsx"
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -247,21 +236,30 @@ def main():
         raise FileNotFoundError(filepath_qc)
 
     attachment_qc = pandas.read_excel(filepath_qc, index_col=None, dtype=str, engine='openpyxl')
-
+    print("attachment_qc.shape[0]=%d" %attachment_qc.shape[0])
     #one column for fqdn = FQDNs, incorrect format set to NaN
     correct_indexes,correct_fqdns = match_ip_fqdn(attachment_qc)
     df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
     #df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
+    print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
 
     file = "sysdb_2022-02-07.gz"
     df_sysdb = pandas.read_csv(file, sep=';', encoding="utf-8", dtype='str')
     df_sysdb = df_sysdb[["ip", "dns"]]
 
-    df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
-    #two column for fqdn = FQDNs,dns incorrect format thrown away
 
-    #df_qc_null = df_qc[ pandas.isnull(df_qc["dns"]) & pandas.isnull(df_qc["FQDN"])]
+
+    df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
+    df_qc["dns2"] = df_qc.apply(lambda x: x["dns"] if x["dns"] != "-" else numpy.nan, axis=1)
+    print("merged df_qc.shape[0]=%d" % df_qc.shape[0])
+    #two column for fqdn = FQDNs,dns2 NaN thrown away
+    correct_indexes_2, correct_fqdns_2 = match_fqdn_strict(df_qc)
+    df_qc_fqdn = df_qc.iloc[correct_indexes_2][["IPs","APP ID","Protocol type port","Application Name","FQDN","dns2"]]
+    df_qc_fqdn.insert(0, "FQDN2", correct_fqdns_2, allow_duplicates=False)
+    print("df_qc_fqdn.shape[0]=%d" %df_qc_fqdn.shape[0])
+    df_qc_null = df_qc[ pandas.isnull(df_qc["dns2"]) & pandas.isnull(df_qc["FQDN"])]
+    print("df_qc_null.shape[0]=%d" % df_qc_null.shape[0])
     #df_qc_null = df_qc[~(pandas.isnull(df_qc["FQDN"]))]
     #ToDo send dictionary to Claus
     #ToDo df_qc replace Protocol Type port with ####/tcp
@@ -271,7 +269,6 @@ def main():
     sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df_qc.to_sql("white_apps", dbConnection,if_exists='replace', index=True)
-
     print("lel")
 
 if __name__=="__main__":

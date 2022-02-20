@@ -38,6 +38,8 @@ def list_files(path):
             onlyfiles.append(f)
     return onlyfiles
 
+
+
 def create_df_from_line(line):
     dict_line = json.loads(line)
     # src_ip
@@ -56,7 +58,7 @@ def create_df_from_line(line):
     return df
 
 
-def create_dataframe(full_path):
+def create_dataframe(full_path,func):
 # ToDo iterate through files saved created during elastic query
     df_list_per_line=[]
     with open(full_path, "r") as after_key:
@@ -66,7 +68,7 @@ def create_dataframe(full_path):
             line = after_key.readline().strip()
             if line.__len__()==0:
                 continue
-            df_list_per_line.append(create_df_from_line(line))
+            df_list_per_line.append(func(line))
             # can be run after while loop, will it save performance?
             #df = df.drop_duplicates()
 
@@ -78,7 +80,7 @@ def main():
     lf=list_files(path)
     df_list_per_file=[]
     for f in lf:
-        df_list_per_file.append(create_dataframe(join(path, f)))
+        df_list_per_file.append(create_dataframe(join(path, f),create_df_from_line))
         print("%s done!" %f)
 
     file_name="df_hits.csv"
