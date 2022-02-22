@@ -16,6 +16,6 @@ SELECT COUNT(*) FROM ip_unique;
 SELECT COUNT(*) FROM ip;
 
 SELECT id, dst_ip, GROUP_CONCAT(src_ip) FROM ip GROUP BY dst_ip LIMIT 5000;
-SELECT dst_ip, COUNT(src_ip), GROUP_CONCAT(src_ip) FROM ip_unique GROUP BY dst_ip LIMIT 5000;
+SELECT dst_ip, COUNT(src_ip), GROUP_CONCAT(src_ip) FROM ip_unique GROUP BY dst_ip LIMIT 50000;
 
 SELECT * FROM ip_unique
