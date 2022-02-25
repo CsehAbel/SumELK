@@ -10,7 +10,6 @@ import socket
 import struct
 import math
 from sqlalchemy import create_engine
-import pymysql
 import secrets
 
 def test_matches(attachment):
@@ -228,7 +227,7 @@ def result_per_field(field):
         raise ValueError()
 
 def main():
-    filepath_qc = "QualityCh_unpacked09Feb2022.xlsx"
+    filepath_qc = "se_ruleset_unpacked22Feb2022.xlsx"
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -268,7 +267,8 @@ def main():
     #ToDo df_qc.to_sql()
     sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df_qc.to_sql("white_apps", dbConnection,if_exists='replace', index=True)
+    df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
+    df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
     print("lel")
 
 if __name__=="__main__":
