@@ -18,4 +18,8 @@ SELECT COUNT(*) FROM ip;
 SELECT id, dst_ip, GROUP_CONCAT(src_ip) FROM ip GROUP BY dst_ip LIMIT 5000;
 SELECT dst_ip, COUNT(src_ip), GROUP_CONCAT(src_ip) FROM ip_unique GROUP BY dst_ip LIMIT 50000;
 
-SELECT * FROM ip_unique
+SELECT * FROM (SELECT * FROM ip_unique) as i INNER JOIN (SELECT * FROM sysdb) as s ON i.src_ip=s.ip
+WHERE s.dns IS NOT NULL AND s.dns NOT LIKE '-';
+
+SELECT COUNT(*) FROM ip_unique;
+

@@ -227,7 +227,7 @@ def result_per_field(field):
         raise ValueError()
 
 def main():
-    filepath_qc = "se_ruleset_unpacked22Feb2022.xlsx"
+    filepath_qc = "se_ruleset_unpacked25Feb2022.xlsx"
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -238,27 +238,28 @@ def main():
     print("attachment_qc.shape[0]=%d" %attachment_qc.shape[0])
     #one column for fqdn = FQDNs, incorrect format set to NaN
     correct_indexes,correct_fqdns = match_ip_fqdn(attachment_qc)
-    df_qc=attachment_qc.iloc[correct_indexes][["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
+    df_qc=attachment_qc.iloc[correct_indexes]#[["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
     #df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
     print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
 
-    file = "sysdb_2022-02-07.gz"
-    df_sysdb = pandas.read_csv(file, sep=';', encoding="utf-8", dtype='str')
-    df_sysdb = df_sysdb[["ip", "dns"]]
+    #file = "sysdb_2022-02-07.gz"
+    #df_sysdb = pandas.read_csv(file, sep=';', encoding="utf-8", dtype='str')
+    #df_sysdb = df_sysdb[["ip", "dns"]]
+    #df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
 
+    #df_qc["dns2"] = df_qc.apply(lambda x: x["dns"] if x["dns"] != "-" else numpy.nan, axis=1)
 
-
-    df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
-    df_qc["dns2"] = df_qc.apply(lambda x: x["dns"] if x["dns"] != "-" else numpy.nan, axis=1)
-    print("merged df_qc.shape[0]=%d" % df_qc.shape[0])
+    #print("merged df_qc.shape[0]=%d" % df_qc.shape[0])
     #two column for fqdn = FQDNs,dns2 NaN thrown away
-    correct_indexes_2, correct_fqdns_2 = match_fqdn_strict(df_qc)
-    df_qc_fqdn = df_qc.iloc[correct_indexes_2][["IPs","APP ID","Protocol type port","Application Name","FQDN","dns2"]]
-    df_qc_fqdn.insert(0, "FQDN2", correct_fqdns_2, allow_duplicates=False)
-    print("df_qc_fqdn.shape[0]=%d" %df_qc_fqdn.shape[0])
-    df_qc_null = df_qc[ pandas.isnull(df_qc["dns2"]) & pandas.isnull(df_qc["FQDN"])]
-    print("df_qc_null.shape[0]=%d" % df_qc_null.shape[0])
+    #correct_indexes_2, correct_fqdns_2 = match_fqdn_strict(df_qc)
+    #df_qc_fqdn = df_qc.iloc[correct_indexes_2][["IPs","APP ID","Protocol type port","Application Name","FQDN","dns2"]]
+
+    #df_qc_fqdn.insert(0, "FQDN2", correct_fqdns_2, allow_duplicates=False)
+
+    #print("df_qc_fqdn.shape[0]=%d" %df_qc_fqdn.shape[0])
+    #df_qc_null = df_qc[ pandas.isnull(df_qc["dns2"]) & pandas.isnull(df_qc["FQDN"])]
+    #print("df_qc_null.shape[0]=%d" % df_qc_null.shape[0])
     #df_qc_null = df_qc[~(pandas.isnull(df_qc["FQDN"]))]
     #ToDo send dictionary to Claus
     #ToDo df_qc replace Protocol Type port with ####/tcp
@@ -268,7 +269,7 @@ def main():
     sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
-    df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
+    #df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
     print("lel")
 
 if __name__=="__main__":

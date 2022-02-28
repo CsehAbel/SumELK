@@ -2,6 +2,8 @@ USE CSV_DB;
 
 SHOW CREATE TABLE white_apps;
 
+SELECT IPs as qc_ip,`APP ID` as qc_app_id,`Application Name` as qc_app_name FROM white_apps LIMIT 30000;
+
 CREATE TABLE `white_apps` (
   `index` bigint DEFAULT NULL,
   `FQDN` text,
@@ -73,3 +75,7 @@ SELECT IPs,`APP ID`,group_concat(FQDN),group_concat(`Protocol type port`),group_
  SELECT IPs,`APP ID`,group_concat(FQDN),group_concat(`Protocol type port`),group_concat(`Application Name`)
 ,group_concat(ip),group_concat(dns),group_concat(dns2) FROM white_apps 
  GROUP BY IPs,`APP ID` HAVING `APP ID` IS NOT NULL LIMIT 60000;
+ 
+ SELECT IPs as qc_ip,`APP ID` as qc_app_id,group_concat(DISTINCT(`Application Name`)) as qc_app_name FROM white_apps 
+ GROUP BY IPs,`APP ID` HAVING `APP ID` IS NOT NULL LIMIT 20000;
+
