@@ -7,26 +7,57 @@ from sqlalchemy.testing import db_spec
 
 import secrets
 import csv
+import dns.resolver, dns.reversename
 
-def ip2dns(): #defthw99m5bsrv.ad001.siemens.net 139.23.160.99
-    ipl = pd.read_clipboard(header=None,names=['ip'])
-    ipl.to_csv("mnt/c/Users/z004a6nh/PycharmProjects/SumELK/ip.txt", index = False, header = False)
-    p = subprocess.Popen(["powershell.exe",
-                          "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/pyip2dns.ps1"],
-                         stdout=sys.stdout)
-    p.communicate()
-    dns = pd.read_csv("mnt/c/Users/z004a6nh/PycharmProjects/SumELK/dns.csv",sep=';') #get dns after running get-dns-by-ips.ps1
-    print(dns)
+def ip2dns(ip): #defthw99m5bsrv.ad001.siemens.net 139.23.160.99
+
+    resolver = dns.resolver.Resolver()
+    resolver.nameservers = ['129.103.90.199',
+                            '129.103.99.237',
+                            '139.25.226.6']
+    #ip='139.21.146.17'
+    n = dns.reversename.from_address(ip)
+    try:
+        names = dns.resolver.query(n, "PTR")
+    except dns.resolver.NXDOMAIN as e:
+        pass
+    except dns.resolver.NoNameservers as e2:
+        pass
+    else:
+        if 1<names.response.answer.__len__():
+            cc=0
+            ll=[]
+            for answer in names.response.answer:
+                for item in answer.items:
+                    if item.rdtype==12:
+                        cc=cc+1
+                        xx=".".join(
+                            map(lambda x: x.decode("utf-8"), item.target.labels)).rstrip("\.")
+                        ll.append(xx)
+            if cc>1:
+                print()
+            elif cc==1:
+                return ll[0]
+            else:
+                print()
+        return ".".join(map(lambda x: x.decode("utf-8"),names.response.answer[0].items[0].target.labels)).rstrip("\.")
+
+    #return names
+
 
 def main():
-    #ip2dns()
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     wa_ips=pd.read_sql_query("SELECT IPs FROM white_apps_se_ruleset",dbConnection)
-    wa_ips=wa_ips["IPs"]
-    wa_ips.to_csv("dns.csv",index=False,header=False,quoting=csv.QUOTE_NONE, quotechar="")
-    print("")
+    wa_ips['dns'] = wa_ips["IPs"].map(lambda a: ip2dns(a))
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    wa_ips.to_sql("white_apps_dns", dbConnection, if_exists='replace', index=True)
+
+    # print("")
+
 
 if __name__=="__main__":
     main()

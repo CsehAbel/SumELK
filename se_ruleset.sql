@@ -120,7 +120,7 @@ FROM st_ports GROUP BY st_dest_ip,rule_name)
 as ports ON wa.IPs = ports.st_dest_ip WHERE wa.ips IS NULL LIMIT 30000;
 
 #8906
-# white_apps unique ip app_id RIGHT JOIN st_ports unique ip
+# white_apps unique ip RIGHT JOIN st_ports unique ip
 SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip
 WHERE cardinality=1) as wa RIGHT JOIN
 (SELECT st_dest_ip,GROUP_CONCAT(DISTINCT(rule_name)) as g_rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
@@ -188,6 +188,7 @@ SHOW COLUMNS FROM se_ruleset_st_ports_qc;
 
 SELECT GROUP_CONCAT(DISTINCT(`ACP Level`)) FROM se_ruleset_st_ports_qc;
 
+CREATE TABLE nice_se_ruleset_st_ports_qc
 SELECT
 g_qc_app_name,
 qc_app_id,
