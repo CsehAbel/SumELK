@@ -11,9 +11,20 @@ SELECT group_concat(COLUMN_NAME)
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
 
 DROP TABLE white_apps_se_ruleset_merged;
-#wa LEFT JOIN sysdb
+#wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
 CREATE TABLE white_apps_se_ruleset_merged
-SELECT ip,dns,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
+SELECT 
+CASE WHEN FQDN IS NOT NULL 
+	THEN FQDN ELSE
+		CASE WHEN dns LIKE '-' THEN 
+			NULL 
+		ELSE 
+			dns
+		END
+END AS 'dns2',
+ip,
+#dns,ip,
+c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
 ,FQDN as fqdn,IPs as ips,`Change Type` as change_type,`Tufin ID` as tufin_id,`APP ID` as app_id,`Source` as source,FQDNs as fqdns
 ,`Application Name` as dest_info,`Protocol type port` as port
 ,`TSA expiration date` as tsa_expiration_date,`Application Requester` as application_requestor,Comment as comment
@@ -27,16 +38,23 @@ SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' 
 #filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
 SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
 
+#Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
 #choose either dns or FQDN (grep/sed of FQDNs)
 CREATE TABLE white_apps_se_ruleset_merged_dns2
-SELECT ip,dns,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
-,fqdn,ips,change_type,tufin_id,app_id,source,fqdns
+SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4',wa.* 
+FROM 
+(SELECT fqdn,ips,change_type,tufin_id,app_id,source,fqdns
 ,dest_info,port
 ,tsa_expiration_date,application_requestor,comment,
-CASE WHEN fqdn IS NOT NULL THEN fqdn ELSE dns END AS 'dns2'
-FROM white_apps_se_ruleset_merged
+CASE WHEN fqdn IS NOT NULL THEN fqdn ELSE dns END AS 'dns2',
+ip,dns,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,
+snic_comment,ip_cidr,vpn_name
+FROM white_apps_se_ruleset_merged) as wa
+LEFT JOIN (SELECT IPs,dns as dns3 FROM white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
 WHERE change_type NOT LIKE 'deleted';
+
+SELECT * FROM white_apps_se_ruleset_merged_dns2;
 
 #8030 from 8208
 SELECT * FROM white_apps_se_ruleset_merged_dns2 

@@ -227,7 +227,7 @@ def result_per_field(field):
         raise ValueError()
 
 def main():
-    filepath_qc = "se_ruleset_unpacked25Feb2022.xlsx"
+    filepath_qc = "se_ruleset_unpacked08Mar2022.xlsx"
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -238,7 +238,7 @@ def main():
     print("attachment_qc.shape[0]=%d" %attachment_qc.shape[0])
     #one column for fqdn = FQDNs, incorrect format set to NaN
     correct_indexes,correct_fqdns = match_ip_fqdn(attachment_qc)
-    df_qc=attachment_qc.iloc[correct_indexes]#[["IPs","APP ID","Protocol type port","FQDNs","Application Name"]]
+    df_qc=attachment_qc.iloc[correct_indexes]
     #df_qc.insert(0,"Ports",correct_ports,allow_duplicates=False)
     print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
