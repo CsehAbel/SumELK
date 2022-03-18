@@ -9,6 +9,9 @@ SELECT group_concat(COLUMN_NAME)
 SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
+ 
+#19304 -> 20220 
+SELECT COUNT(*) FROM white_apps_se_ruleset;
 
 DROP TABLE white_apps_se_ruleset_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
@@ -21,13 +24,13 @@ CASE WHEN FQDN IS NOT NULL
 		ELSE 
 			dns
 		END
-END AS 'dns2',
-ip,
-#dns,ip,
-c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
-,FQDN as fqdn,IPs as ips,`Change Type` as change_type,`Tufin ID` as tufin_id,`APP ID` as app_id,`Source` as source,FQDNs as fqdns
+END AS 'dns2'
+,IPs as ips,`Change Type` as change_type,`Tufin ID` as tufin_id,`APP ID` as app_id,`Source` as source
 ,`Application Name` as dest_info,`Protocol type port` as port
 ,`TSA expiration date` as tsa_expiration_date,`Application Requester` as application_requestor,Comment as comment
+,ip
+#dns,ip,
+,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
 FROM (SELECT * FROM white_apps_se_ruleset) as wa 
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
@@ -38,39 +41,34 @@ SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' 
 #filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
 SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
 
+#6353 where sysdb.ip is null
+SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
+#19624 -> 20283
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
+
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
 #choose either dns or FQDN (grep/sed of FQDNs)
 CREATE TABLE white_apps_se_ruleset_merged_dns2
-SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4',wa.* 
-FROM 
-(SELECT fqdn,ips,change_type,tufin_id,app_id,source,fqdns
+SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
+,wa.ips,change_type,tufin_id,app_id,source
 ,dest_info,port
-,tsa_expiration_date,application_requestor,comment,
-CASE WHEN fqdn IS NOT NULL THEN fqdn ELSE dns END AS 'dns2',
-ip,dns,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,
-snic_comment,ip_cidr,vpn_name
-FROM white_apps_se_ruleset_merged) as wa
+,tsa_expiration_date,application_requestor,comment
+
+,ip,   c,l,sys_type,corpflag,info_extra,info,hostname,domain,region
+,snic_comment,ip_cidr,vpn_name
+,wa_d.ips as wa_d_ips
+FROM 
+(SELECT * FROM white_apps_se_ruleset_merged) as wa
 LEFT JOIN (SELECT IPs,dns as dns3 FROM white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
 WHERE change_type NOT LIKE 'deleted';
 
-SELECT * FROM white_apps_se_ruleset_merged_dns2;
+#38162 -> 42043
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
 
-#8030 from 8208
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' LIMIT 10000;
-
-#wrong fqdn 162 from 8208
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 LIKE '-' LIMIT 10000;
-
-#wrong fqdn 16 from 8208
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 IS NULL LIMIT 10000;
-
-#8030 from 8208
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL LIMIT 10000;
+#222
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
+SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
 
 #---> THIS IS WHY WE NEED TO GROUP BY IPs AND!!! APP ID
 SELECT * FROM white_apps_se_ruleset_merged_dns2 
@@ -82,8 +80,10 @@ WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY ips,app_id LIMIT 10000;
 
 SET group_concat_max_len=15000;
 
+SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
+
 DROP TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-#7447
+#t-1:7447 t-0:17042 t+1=18195
 CREATE TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
@@ -107,74 +107,19 @@ GROUP_CONCAT(DISTINCT(port)) as g_port,
 GROUP_CONCAT(DISTINCT(tsa_expiration_date)) as g_tsa_expiration_date,
 GROUP_CONCAT(DISTINCT(application_requestor)) as g_application_requestor,
 GROUP_CONCAT(DISTINCT(comment)) as g_comment,
-GROUP_CONCAT(DISTINCT(dns2)) as g_dns2
+GROUP_CONCAT(DISTINCT(dns4)) as g_dns4
 FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY ips,app_id
+WHERE dns4 IS NOT NULL GROUP BY ips,app_id
 ;
  
-#409 
+#t-1:409 t-0:9242 t+1: 90009
 SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1;
-#409
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1 GROUP BY ips,app_id LIMIT 10000;
-
-#7038
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1 LIMIT 10000;
-#7038
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1 GROUP BY ips,app_id LIMIT 10000;
- 
-# white_apps unique ip app_id RIGHT JOIN st_ports unique ip, rule_name 
-#9194 -> 9191
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1) as wa RIGHT JOIN
-(SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
-GROUP_CONCAT(DISTINCT(st_serv_name)) as g_st_serv_name,
-GROUP_CONCAT(DISTINCT(rule_order)) as g_rule_order,
-GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
-FROM st_ports GROUP BY st_dest_ip,rule_name)
-as ports ON wa.IPs = ports.st_dest_ip WHERE wa.ips IS NULL LIMIT 30000;
-
-#8906
-# white_apps unique ip RIGHT JOIN st_ports unique ip
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip
-WHERE cardinality=1) as wa RIGHT JOIN
-(SELECT st_dest_ip,GROUP_CONCAT(DISTINCT(rule_name)) as g_rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
-GROUP_CONCAT(DISTINCT(st_serv_name)) as g_st_serv_name,
-GROUP_CONCAT(DISTINCT(rule_order)) as g_rule_order,
-GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
-FROM st_ports GROUP BY st_dest_ip)
-as ports ON wa.IPs = ports.st_dest_ip WHERE wa.ips IS NULL LIMIT 30000;
-
-#wa inner join st_ports
-#9929 -> 9932
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1) as wa INNER JOIN
-(SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
-GROUP_CONCAT(DISTINCT(st_serv_name)) as g_st_serv_name,
-GROUP_CONCAT(DISTINCT(rule_order)) as g_rule_order,
-GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
-FROM st_ports GROUP BY st_dest_ip,rule_name)
-as ports ON wa.IPs = ports.st_dest_ip LIMIT 30000;
-
-#wa left join st_ports
-#765
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1) as wa LEFT JOIN
-(SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
-GROUP_CONCAT(DISTINCT(st_serv_name)) as g_st_serv_name,
-GROUP_CONCAT(DISTINCT(rule_order)) as g_rule_order,
-GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
-FROM st_ports GROUP BY st_dest_ip,rule_name)
-as ports ON wa.IPs = ports.st_dest_ip WHERE ports.st_dest_ip IS NULL LIMIT 30000;
+WHERE cardinality!=1 LIMIT 20000;
 
 DROP TABLE se_ruleset_st_ports;
 #INNER JOIN
 CREATE TABLE se_ruleset_st_ports
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality=1) as wa INNER JOIN
+SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id) as wa INNER JOIN
 (SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
 GROUP_CONCAT(DISTINCT(st_serv_name)) as g_st_serv_name,
 GROUP_CONCAT(DISTINCT(rule_order)) as g_rule_order,
@@ -202,10 +147,7 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'se_ruleset_st_ports_qc';
 
-SHOW COLUMNS FROM se_ruleset_st_ports_qc;
-
-SELECT GROUP_CONCAT(DISTINCT(`ACP Level`)) FROM se_ruleset_st_ports_qc;
-
+DROP TABLE nice_se_ruleset_st_ports_qc;
 CREATE TABLE nice_se_ruleset_st_ports_qc
 SELECT
 g_qc_app_name,
@@ -216,7 +158,7 @@ qc_ip,
 st_dest_ip,
 g_s_ip,
 cardinality,
-g_dns2,
+g_dns4,
 g_st_port,
 rule_name,
 g_rule_number,
