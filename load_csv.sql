@@ -17,9 +17,3 @@ LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/df_hits.cs
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 IGNORE 1 LINES;
-
-#INNER JOIN
-SELECT * FROM nice_se_ruleset_st_ports_qc INNER JOIN hitsxse ON nice_se_ruleset_st_ports_qc.ips=hitsxse.dst_ip;
-
-#LEFT JOIN
-SELECT * FROM nice_se_ruleset_st_ports_qc INNER JOIN hitsxse ON nice_se_ruleset_st_ports_qc.ips=hitsxse.dst_ip;

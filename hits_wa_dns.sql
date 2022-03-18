@@ -1,4 +1,7 @@
 SELECT * FROM white_apps_dns WHERE dns is NULL LIMIT 30000;
+# 2783
+SELECT * FROM white_apps_dns WHERE dns is NOT NULL LIMIT 30000;
+# 19304
 SELECT COUNT(*) FROM white_apps_dns;
 
 SELECT COUNT(*) FROM ip_unique;
@@ -8,4 +11,3 @@ SELECT COUNT(*) FROM (SELECT * FROM ip_unique GROUP BY src_ip) as s;
 
 SELECT * FROM src_dns WHERE dns is NULL LIMIT 30000;
 SELECT * FROM src_dns WHERE dns is NOT NULL LIMIT 30000;
-SELECT COUNT(*) FROM white_apps_dns;
