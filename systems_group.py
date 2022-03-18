@@ -360,8 +360,7 @@ def df_from_line(line):
     df = pandas.DataFrame(dict_line)
     return df
 
-if __name__=="__main__":
-    #get_systems_ip_list()
+def dest_ports_to_file():
     list_rules = get_dest_ports()
 
     with open('secure_track/ports.json', 'w') as outfile:
@@ -369,15 +368,40 @@ if __name__=="__main__":
     with open('secure_track/ports.json') as json_file:
         data = json.load(json_file)
 
-    list_exploded=proc_dest_port_tuples(data)
+    list_exploded = proc_dest_port_tuples(data)
     with open('secure_track/exploded.json', 'w') as outfile:
         json.dump(list_exploded, outfile)
 
-    df=bulk_json_to_df.create_dataframe('secure_track/exploded.json',df_from_line)
+    df = bulk_json_to_df.create_dataframe('secure_track/exploded.json', df_from_line)
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
     print("systems_group Done!")
 
+def all_red_networks_systems():
+    systems_ips = get_systems_ip_list()
+    # not anymore system_ips
+    filename = "systems.txt"
+    list_old = []
+    with open(filename) as infile:
+        for line in infile:
+            patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+            # [\s"]* anstatt \s*
+            resultPrefix = patternPrefixCIDR.match(line)
+            if resultPrefix:
+                prefix = resultPrefix.group(1)
+                list_old.append(prefix)
+            else:
+                raise ValueError
+    # new system_ips (1,2,3) old txt (1,2,4)
+    # only in old: old - new intersect old
+    # needs to be filtered out from hits
+    # only in new: new - new intersect_old
+    # need to be added to new transform
+    onlyInOld = set(list_old) - set(systems_ips)
+    onlyInNew = set(systems_ips) - set(list_old)
+    print("")
 
+if __name__=="__main__":
+    dest_ports_to_file()
