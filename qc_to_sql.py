@@ -226,8 +226,7 @@ def result_per_field(field):
     else:
         raise ValueError()
 
-def main():
-    filepath_qc = "se_ruleset_unpacked18Mar2022.xlsx"
+def main(filepath_qc):
     if os.path.exists(filepath_qc):
         qc = pandas.read_excel(filepath_qc, sheet_name=None,
                                index_col=None, engine='openpyxl')
@@ -273,4 +272,5 @@ def main():
     print("lel")
 
 if __name__=="__main__":
-    main()
+    filepath_qc = "se_ruleset_unpacked18Mar2022.xlsx"
+    main(filepath_qc)
