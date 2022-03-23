@@ -48,7 +48,7 @@ def resolve_white_apps(sqlEngine,dbConnection):
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    wa_ips.to_sql("white_apps_dns", dbConnection, if_exists='replace', index=True)
+    wa_ips.to_sql("white_apps_dns", dbConnection, if_exists='append', index=True)
 
 def resolve_hits(sqlEngine,dbConnection):
     wa_ips=pd.read_sql_query("SELECT src_ip FROM ip_unique GROUP BY src_ip",dbConnection)
@@ -56,7 +56,7 @@ def resolve_hits(sqlEngine,dbConnection):
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    wa_ips.to_sql("src_dns", dbConnection, if_exists='replace', index=True)
+    wa_ips.to_sql("src_dns", dbConnection, if_exists='append', index=True)
 
 def main():
     sqlEngine = create_engine(
