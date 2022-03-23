@@ -401,7 +401,7 @@ def all_red_networks_systems():
     # need to be added to new transform
     onlyInOld = set(list_old) - set(systems_ips)
     onlyInNew = set(systems_ips) - set(list_old)
-    print("")
+    return (onlyInOld,onlyInNew)
 
 if __name__=="__main__":
     dest_ports_to_file()
