@@ -13,6 +13,47 @@ SELECT group_concat(COLUMN_NAME)
 #19304 -> 20220 
 SELECT COUNT(*) FROM white_apps_se_ruleset;
 
+#TSA expiration date
+#filter deleted
+SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' LIMIT 10000;
+#filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
+SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
+
+#6353 where sysdb.ip is null
+SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
+#19624 -> 20283
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
+
+#38162 -> 42043
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
+
+#222
+SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
+SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
+
+#---> THIS IS WHY WE NEED TO GROUP BY IPs AND!!! APP ID
+SELECT * FROM white_apps_se_ruleset_merged_dns2 
+WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY IPs LIMIT 10000;
+
+#GROUP BY IPs AND APP ID, dns2 is filled but FQDN, FQDNs, dns is not removed
+SELECT ips,app_id,COUNT(*) as cardinality FROM white_apps_se_ruleset_merged_dns2 
+WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY ips,app_id LIMIT 10000;
+
+SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
+
+#t-1:409 t-0:9242 t+1: 90009
+SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
+WHERE cardinality!=1 LIMIT 20000;
+
+#Needed again because there is no APP ID field in SecureTrack
+#So the ports list cannot be yet determined, only a cross join
+SELECT * FROM 
+se_ruleset_st_ports GROUP BY ips,app_id LIMIT 20000;
+
+SELECT group_concat(COLUMN_NAME)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'se_ruleset_st_ports_qc';
+
 DROP TABLE white_apps_se_ruleset_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
 CREATE TABLE white_apps_se_ruleset_merged
@@ -35,17 +76,6 @@ FROM (SELECT * FROM white_apps_se_ruleset) as wa
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
 
-#TSA expiration date
-#filter deleted
-SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' LIMIT 10000;
-#filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
-SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
-
-#6353 where sysdb.ip is null
-SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
-#19624 -> 20283
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
-
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
 #choose either dns or FQDN (grep/sed of FQDNs)
@@ -63,24 +93,7 @@ FROM
 LEFT JOIN (SELECT IPs,dns as dns3 FROM white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
 WHERE change_type NOT LIKE 'deleted';
 
-#38162 -> 42043
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
-
-#222
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-
-#---> THIS IS WHY WE NEED TO GROUP BY IPs AND!!! APP ID
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY IPs LIMIT 10000;
-
-#GROUP BY IPs AND APP ID, dns2 is filled but FQDN, FQDNs, dns is not removed
-SELECT ips,app_id,COUNT(*) as cardinality FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY ips,app_id LIMIT 10000;
-
 SET group_concat_max_len=15000;
-
-SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
 
 DROP TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
 #t-1:7447 t-0:17042 t+1=18195
@@ -112,10 +125,6 @@ FROM white_apps_se_ruleset_merged_dns2
 WHERE dns4 IS NOT NULL GROUP BY ips,app_id
 ;
  
-#t-1:409 t-0:9242 t+1: 90009
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1 LIMIT 20000;
-
 DROP TABLE se_ruleset_st_ports;
 #INNER JOIN
 CREATE TABLE se_ruleset_st_ports
@@ -127,11 +136,6 @@ GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
 FROM st_ports GROUP BY st_dest_ip,rule_name)
 as ports ON wa.IPs = ports.st_dest_ip;
 
-#Needed again because there is no APP ID field in SecureTrack
-#So the ports list cannot be yet determined, only a cross join
-SELECT * FROM 
-se_ruleset_st_ports GROUP BY ips,app_id LIMIT 20000;
-
 DROP TABLE se_ruleset_st_ports_qc;
 #getting Application Name from QualityCheck 
 #for each dest_ip, app id in se_ruleset_st_ports
@@ -142,10 +146,6 @@ se_ruleset_st_ports)
 as wa_s LEFT JOIN 
 (SELECT IPs as qc_ip,`APP ID` as qc_app_id,group_concat(DISTINCT(`Application Name`)) as g_qc_app_name FROM white_apps 
  GROUP BY IPs,`APP ID` HAVING `APP ID` IS NOT NULL) as wa ON wa_s.ips=wa.qc_ip AND wa_s.app_id=wa.qc_app_id LIMIT 30000;
-
-SELECT group_concat(COLUMN_NAME)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'se_ruleset_st_ports_qc';
 
 DROP TABLE nice_se_ruleset_st_ports_qc;
 CREATE TABLE nice_se_ruleset_st_ports_qc
