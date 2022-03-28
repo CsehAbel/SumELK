@@ -13,6 +13,8 @@ SELECT group_concat(COLUMN_NAME)
 #19304 -> 20220 
 SELECT COUNT(*) FROM white_apps_se_ruleset;
 
+SELECT * From white_apps_se_ruleset WHERE IPs like '10.220.18.74';
+
 #TSA expiration date
 #filter deleted
 SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' LIMIT 10000;
