@@ -10,7 +10,7 @@ import bulk_json_to_df
 
 def save_new_transform_json():
 
-    # (onlyInOld,onlyInNew)
+    # (onlyInOld,onlyInNew) using systems.txt to read the old list
     (onlyInOld, onlyInNew) = systems_group.all_red_networks_systems()
 
     with open('transform.json') as json_file:

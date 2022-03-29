@@ -272,5 +272,5 @@ def main(filepath_qc):
     print("lel")
 
 if __name__=="__main__":
-    filepath_qc = "se_ruleset_unpacked18Mar2022.xlsx"
+    filepath_qc = "se_ruleset_unpacked28Mar2022.xlsx"
     main(filepath_qc)
