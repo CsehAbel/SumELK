@@ -6,6 +6,9 @@ import re
 from os import listdir
 from os.path import isfile, join
 
+from sqlalchemy import create_engine
+import secrets
+
 lt_date = datetime.datetime(day=23, year=2022, month=1)
 duration = datetime.timedelta(days=10)
 gt_date = lt_date - duration
@@ -77,16 +80,18 @@ def create_dataframe(full_path,func):
 
 def main():
     path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    #list_files checks for regex ^hit.*
     lf=list_files(path)
     df_list_per_file=[]
     for f in lf:
         df_list_per_file.append(create_dataframe(join(path, f),create_df_from_line))
         print("%s done!" %f)
 
-    file_name="df_hits.csv"
     df=pd.concat(df_list_per_file,ignore_index=True)
-    df.to_csv(file_name)
-    print("Concatenation done!")
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    df.to_sql("ip", dbConnection, if_exists='replace', index=True)
 
 
 if __name__ == '__main__':
