@@ -20,6 +20,11 @@ def save_new_transform_json():
     with open('new_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
 
+    with open('onlyInOld.json', 'w') as outfile:
+        for i in onlyInOld:
+            json.dump(i, outfile)
+            outfile.write("\n")
+
     print("")
 
 def main():
