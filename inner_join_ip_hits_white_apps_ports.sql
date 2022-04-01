@@ -17,25 +17,21 @@ INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     SELECT ip.source_ip,ip.dest_ip
     FROM ip;
 
-#t-1: 17182 t-0: 18053
+#t-1:17182 t-0:18053
 SELECT src_ip FROM ip_unique GROUP BY src_ip LIMIT 30000; 
 
-#2658
 SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
 #17182 -> needs to be updated to match 18053
 SELECT COUNT(*) FROM src_dns;
 
-#22936 ip_unique left join src_dns
+#ip_unique left join src_dns
 SELECT iu.*,src.dns FROM (SELECT * FROM ip_unique) as iu 
 LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src  ON src.src_ip=iu.src_ip;
 
-#38693 ip_unique left join sysdb
+#ip_unique left join sysdb
 SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN 
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
-
- #161 540
- SELECT COUNT(*) FROM ip_unique;
 
 #163 091
 SELECT iu.*,src.dns,s.dns as dns2 FROM (SELECT * FROM ip_unique) as iu  
