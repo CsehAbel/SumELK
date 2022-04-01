@@ -25,19 +25,13 @@ def save_new_transform_json():
     with open('new_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
 
-    #27
+    # 27
     with open('onlyInOld.json', 'w') as outfile:
         for i in onlyInOld:
             json.dump(i, outfile)
             outfile.write("\n")
 
-    df = pandas.DataFrame(onlyInOld)
-    sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    df.to_sql("onlyinold", dbConnection, if_exists='replace', index=True)
-
-    print("")
+    print("Done!")
 
 def main():
     # downloads SecureTrack
