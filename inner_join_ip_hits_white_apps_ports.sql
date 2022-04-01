@@ -54,7 +54,7 @@ LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src
 #Filter out EAGLE
 #FilterOnlyInOld
  
-SET group_concat_max_len=150000; 
+SET group_concat_max_len=1500000; 
  
 DROP TABLE ipunique_g_dns;
 #519 number of not null dns equals number of source ips
@@ -65,7 +65,10 @@ GROUP_CONCAT(DISTINCT(dns)) as g_dns,
 COUNT(dns) as countdns,
 #only counts not null
 COUNT(src_ip) as countsrc
-FROM ipunique_ljoin_sysdb_srcdns GROUP BY dst_ip
+FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as i 
+LEFT JOIN (SELECT `0` as dip FROM eagle) as e
+ON i.dst_ip=e.dip WHERE e.dip IS NULL 
+GROUP BY dst_ip
 #HAVING countsrc=countdns
 ;
 
