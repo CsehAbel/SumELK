@@ -63,7 +63,7 @@ def main():
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     resolve_white_apps(sqlEngine, dbConnection)
-    #resolve_hits(sqlEngine, dbConnection)
+    resolve_hits(sqlEngine, dbConnection)
 
 if __name__=="__main__":
     main()

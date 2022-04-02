@@ -25,7 +25,7 @@ def save_new_transform_json():
     with open('new_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
 
-    # 27
+    #21
     with open('onlyInOld.json', 'w') as outfile:
         for i in onlyInOld:
             json.dump(i, outfile)
@@ -54,7 +54,6 @@ def main():
     #     'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     # dbConnection = sqlEngine.connect()
     # resolveIpToName.resolve_white_apps(sqlEngine, dbConnection)
-
 
 if __name__ == "__main__":
     main()
