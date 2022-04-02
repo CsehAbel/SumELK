@@ -118,13 +118,14 @@ GROUP_CONCAT(DISTINCT(change_type)) as g_change_type,
 GROUP_CONCAT(DISTINCT(tufin_id)) as g_tufin_id,
 GROUP_CONCAT(DISTINCT(source)) as g_source,
 GROUP_CONCAT(DISTINCT(dest_info)) as g_dest_info,
-GROUP_CONCAT(DISTINCT(port)) as g_port,
+GROUP_CONCAT(DISTINCT(port)) as g_port,#dest port
 GROUP_CONCAT(DISTINCT(tsa_expiration_date)) as g_tsa_expiration_date,
 GROUP_CONCAT(DISTINCT(application_requestor)) as g_application_requestor,
 GROUP_CONCAT(DISTINCT(comment)) as g_comment,
-GROUP_CONCAT(DISTINCT(dns4)) as g_dns4
+GROUP_CONCAT(DISTINCT(dns4)) as g_dns4 #dest fqdn
 FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns4 IS NOT NULL GROUP BY ips,app_id
+#WHERE dns4 IS NOT NULL 
+GROUP BY ips,app_id
 ;
  
 DROP TABLE se_ruleset_st_ports;
