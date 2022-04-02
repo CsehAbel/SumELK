@@ -81,9 +81,17 @@ SELECT * FROM nice_se_ruleset_st_ports_qc;
 
 #ipunique INNER JOIN se_ruleset_st_ports
 SELECT ipunique_g_dns.*,nice_se_ruleset_st_ports_qc.* FROM nice_se_ruleset_st_ports_qc 
-INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip;
+INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip LIMIT 30000;
 
 #se_ruleset_st_ports RIGHT JOIN ipunique
 SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
 ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip
-WHERE nice_se_ruleset_st_ports_qc.ips LIMIT 30000;
+LIMIT 30000;
+
+SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
+ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip
+WHERE nice_se_ruleset_st_ports_qc.g_dns4 IS NULL LIMIT 30000;
+
+SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
+ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip
+WHERE nice_se_ruleset_st_ports_qc.ips IS NULL LIMIT 30000;
