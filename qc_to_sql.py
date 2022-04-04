@@ -242,29 +242,6 @@ def main(filepath_qc):
     print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
 
-    #file = "sysdb_2022-02-07.gz"
-    #df_sysdb = pandas.read_csv(file, sep=';', encoding="utf-8", dtype='str')
-    #df_sysdb = df_sysdb[["ip", "dns"]]
-    #df_qc = pandas.merge(left=df_qc, right=df_sysdb, left_on="IPs", right_on="ip", how="left")
-
-    #df_qc["dns2"] = df_qc.apply(lambda x: x["dns"] if x["dns"] != "-" else numpy.nan, axis=1)
-
-    #print("merged df_qc.shape[0]=%d" % df_qc.shape[0])
-    #two column for fqdn = FQDNs,dns2 NaN thrown away
-    #correct_indexes_2, correct_fqdns_2 = match_fqdn_strict(df_qc)
-    #df_qc_fqdn = df_qc.iloc[correct_indexes_2][["IPs","APP ID","Protocol type port","Application Name","FQDN","dns2"]]
-
-    #df_qc_fqdn.insert(0, "FQDN2", correct_fqdns_2, allow_duplicates=False)
-
-    #print("df_qc_fqdn.shape[0]=%d" %df_qc_fqdn.shape[0])
-    #df_qc_null = df_qc[ pandas.isnull(df_qc["dns2"]) & pandas.isnull(df_qc["FQDN"])]
-    #print("df_qc_null.shape[0]=%d" % df_qc_null.shape[0])
-    #df_qc_null = df_qc[~(pandas.isnull(df_qc["FQDN"]))]
-    #ToDo send dictionary to Claus
-    #ToDo df_qc replace Protocol Type port with ####/tcp
-    #ToDo clean up ip ranges, clean up port fields
-    #ToDo FQDN remove https,http
-    #ToDo df_qc.to_sql()
     sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
