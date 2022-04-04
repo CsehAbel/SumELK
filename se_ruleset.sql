@@ -10,10 +10,8 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
  
-#19304 -> 20220 
+#20653 
 SELECT COUNT(*) FROM white_apps_se_ruleset;
-
-SELECT * From white_apps_se_ruleset WHERE IPs like '10.220.18.74';
 
 #TSA expiration date
 #filter deleted
@@ -80,8 +78,9 @@ ON wa.IPs=s.ip;
 
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
-#choose either dns or FQDN (grep/sed of FQDNs)
+#choose either dns3 or FQDN (grep/sed of FQDNs)
 CREATE TABLE white_apps_se_ruleset_merged_dns2
+#dns2 -> from sysdb or (seruleset cleaned fqdn)
 SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
 ,wa.ips,change_type,tufin_id,app_id,source
 ,dest_info,port
@@ -98,7 +97,7 @@ WHERE change_type NOT LIKE 'deleted';
 SET group_concat_max_len=15000;
 
 DROP TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-#t-1:7447 t-0:17042 t+1=18195
+#t-1:7447 t-0:17042 t+1:18195 t+2:18940
 CREATE TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
@@ -153,27 +152,27 @@ as wa_s LEFT JOIN
 DROP TABLE nice_se_ruleset_st_ports_qc;
 CREATE TABLE nice_se_ruleset_st_ports_qc
 SELECT
-g_qc_app_name,
+g_qc_app_name as d_g_qc_app_name,
 qc_app_id,
 app_id,
-ips,
-qc_ip,
-st_dest_ip,
-g_s_ip,
+#ips,
+qc_ip as d_qc_ip,
+#st_dest_ip,
+#g_s_ip,
 cardinality,
-g_dns4,
-g_st_port,
+g_dns4 as d_g_dns4,
+g_st_port as d_g_st_port,
 rule_name,
 g_rule_number,
-g_st_serv_name,
+g_st_serv_name as d_g_st_serv_name,
 g_rule_order,
-g_s_c,
-g_s_ip_cidr,
-g_s_vpn_name,
-g_s_sys_type,
-g_s_region,
-g_s_snic_comment,
-g_s_info_extra,
+g_s_c as d_g_s_c,
+g_s_ip_cidr as d_g_s_ip_cidr ,
+g_s_vpn_name as d_g_s_vpn_name,
+g_s_sys_type as d_g_s_sys_type,
+g_s_region as d_g_s_region,
+g_s_snic_comment as d_g_s_snic_comment,
+g_s_info_extra as d_g_s_info_extra,
 g_s_info,
 g_s_hostname,
 g_s_domain,
