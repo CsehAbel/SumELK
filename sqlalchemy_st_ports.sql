@@ -1,6 +1,6 @@
 USE CSV_DB;
-
-SELECT * FROM st_ports LIMIT 30000;
+#106984
+SELECT COUNT(*) FROM st_ports LIMIT 30000;
 
 SELECT rule_name FROM st_ports GROUP BY rule_name;
 
