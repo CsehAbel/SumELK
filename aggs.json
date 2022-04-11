@@ -10,8 +10,27 @@
           { "dest_ip": {
             "terms": { "field": "destination.ip" }
           }
+          },
+          { "source_port": {
+            "terms": { "field": "source.port" }
           }
-
+          },
+          { "dest_port": {
+            "terms": { "field": "destination.port" }
+          }
+          },
+          { "rule_name": {
+            "terms": { "field": "rule.name" }
+          }
+          },
+          { "interface": {
+            "terms": { "field": "observer.ingress.interface.name" }
+          }
+          },
+          { "protocol": {
+            "terms": { "field": "input.type" }
+          }
+          }
         ]
       }
     }

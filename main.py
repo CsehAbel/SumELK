@@ -58,7 +58,44 @@ def main():
     print("Done!")
 
 
+def download_buckets(es,index, query, aggs, gte_date):
+    buckets_len = 10000
+    seq = 0
+    while buckets_len >= 10000:
+        resp = es.search(query=query, index=index, size=0, aggs=aggs)
+        hits_len = resp['hits']['total']['value']
+        print("Got %d Hits:" % hits_len)
+        buckets = resp['aggregations']['my-buckets']['buckets']
+        buckets_len = buckets.__len__()
 
+        with open('yellow/%s_%s_%d.json' % (index,gte_date, seq), 'w') as outfile:
+            for b in buckets:
+                b=flattenbucket(b)
+                b["index"]=index
+                json.dump(b, outfile)
+                outfile.write("\n")
+        seq = seq + 1
+
+        if (10000 <= buckets_len):
+            with open('buckets_saved/after_key.json', 'a') as outfile:
+                json.dump(resp['aggregations']['my-buckets']['after_key'], outfile)
+                outfile.write("\n")
+
+            aggs['my-buckets']['composite']['after'] = {}
+            aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
+                'source_ip']
+            aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key'][
+                'dest_ip']
+            aggs['my-buckets']['composite']['after']["source_port"] = resp['aggregations']['my-buckets']['after_key'][
+                "source_port"]
+            aggs['my-buckets']['composite']['after']["dest_port"] = resp['aggregations']['my-buckets']['after_key'][
+                "dest_port"]
+            aggs['my-buckets']['composite']['after']["protocol"] = resp['aggregations']['my-buckets']['after_key'][
+                "protocol"]
+            aggs['my-buckets']['composite']['after']["rule_name"] = resp['aggregations']['my-buckets']['after_key'][
+                "rule_name"]
+            aggs['my-buckets']['composite']['after']["interface"] = resp['aggregations']['my-buckets']['after_key'][
+                "interface"]
 
 
 def download_index(es,index,sort,gte_date,query,fields):
