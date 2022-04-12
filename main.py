@@ -25,7 +25,10 @@ def main():
     with open('aggs.json') as json_file:
         aggs = json.load(json_file)
 
+    #option firewall-name, start, stop datum, Ziel-Verzeichniss
+    #wegen des Speicherverbrauchs sollte Sachen gelöscht werden die älter als 30 Tage sind
     #lt_date = datetime.datetime(day=23, year=2022, month=1)
+
     dtn=datetime.datetime.now()
     lt_date = datetime.datetime(day=dtn.day, year=dtn.year, month=dtn.month)
     duration1 = datetime.timedelta(minutes=10)
