@@ -403,5 +403,26 @@ def all_red_networks_systems():
     onlyInNew = set(systems_ips) - set(list_old)
     return (onlyInOld,onlyInNew)
 
+def save_new_transform_json():
+
+    # (onlyInOld,onlyInNew) using systems.txt to read the old list
+    (onlyInOld, onlyInNew) = all_red_networks_systems()
+
+    with open('transform.json') as json_file:
+        transform = json.load(json_file)
+    #393
+    transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
+
+    with open('new_transform.json', 'w') as outfile:
+        json.dump(transform, outfile)
+
+    #21
+    with open('onlyInOld.json', 'w') as outfile:
+        for i in onlyInOld:
+            json.dump(i, outfile)
+            outfile.write("\n")
+
+    print("Done!")
+
 if __name__=="__main__":
-    dest_ports_to_file()
+    save_new_transform_json()
