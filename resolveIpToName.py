@@ -42,7 +42,10 @@ def ip2dns(ip): #defthw99m5bsrv.ad001.siemens.net 139.23.160.99
 
     #return names
 
-def resolve_white_apps(sqlEngine,dbConnection):
+def resolve_white_apps():
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
     wa_ips=pd.read_sql_query("SELECT IPs FROM white_apps_se_ruleset",dbConnection)
     wa_ips['dns'] = wa_ips["IPs"].map(lambda a: ip2dns(a))
     sqlEngine = create_engine(
@@ -62,7 +65,7 @@ def main():
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    resolve_white_apps(sqlEngine, dbConnection)
+
     resolve_hits(sqlEngine, dbConnection)
 
 if __name__=="__main__":

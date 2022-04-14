@@ -45,10 +45,7 @@ def main():
 
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to CSV_DB->src_dns
-    sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    resolveIpToName.resolve_white_apps(sqlEngine, dbConnection)
+    resolveIpToName.resolve_white_apps()
 
 if __name__ == "__main__":
     main()
