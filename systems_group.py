@@ -57,28 +57,7 @@ def ip2int(addr):
 def int2ip(addr):
     return socket.inet_ntoa(struct.pack("!I", addr))
 
-def get_systems_ip_list():
-    device_name = "CST-P-SAG-Energy"
-    device_id = st_helper.get_device_id_by_name(device_name)
-    #SystemsNetworkObjects_emea = st_helper.get_network_objects_for_device(device_id)
-    #group_names=[]
-    # for x in SystemsNetworkObjects_emea.network_objects:
-    #     if hasattr(x, 'type'):
-    #         if x.type=="group":
-    #             pattern_sys=re.compile(".*migrated_SNX_Systems",re.IGNORECASE)
-    #             if pattern_sys.match(x.name):
-    #                 group_names.append(x.name)
-    group_names=['NAM_migrated_SNX_Systems','EMEA_migrated_SNX_Systems','LATAM_migrated_SNX_Systems','AAE_migrated_SNX_Systems','CHINA_migrated_SNX_Systems']
-    system_ips=[]
-    for gn in group_names:
-        SystemsNetworkObjects = st_helper.get_network_objects_for_device(device_id, "group",{"name": gn })
-        for i in SystemsNetworkObjects.network_objects:
-            if(hasattr(i,"ip") and hasattr(i,"netmask")):
-                range={"ip":i.ip,"cidr":netmask_to_cidr(i.netmask)}
-                system_ips.append("%s/%s" %(range["ip"],range["cidr"]))
-            else:
-                pass
-    return system_ips
+
 
 def cidr_to_netmask(cidr):
   cidr = int(cidr)
@@ -200,6 +179,29 @@ def append_to_list(not_g_no,input_list):
         input_list.append(not_g_no.ip)
     else:
         [input_list.append(sipa) for sipa in ip_range_explode(not_g_no.ip, not_g_no.netmask)]
+
+def get_systems_ip_list():
+    device_name = "CST-P-SAG-Energy"
+    device_id = st_helper.get_device_id_by_name(device_name)
+    #SystemsNetworkObjects_emea = st_helper.get_network_objects_for_device(device_id)
+    #group_names=[]
+    # for x in SystemsNetworkObjects_emea.network_objects:
+    #     if hasattr(x, 'type'):
+    #         if x.type=="group":
+    #             pattern_sys=re.compile(".*migrated_SNX_Systems",re.IGNORECASE)
+    #             if pattern_sys.match(x.name):
+    #                 group_names.append(x.name)
+    group_names=['NAM_migrated_SNX_Systems','EMEA_migrated_SNX_Systems','LATAM_migrated_SNX_Systems','AAE_migrated_SNX_Systems','CHINA_migrated_SNX_Systems']
+    system_ips=[]
+    for gn in group_names:
+        SystemsNetworkObjects = st_helper.get_network_objects_for_device(device_id, "group",{"name": gn })
+        for i in SystemsNetworkObjects.network_objects:
+            if(hasattr(i,"ip") and hasattr(i,"netmask")):
+                range={"ip":i.ip,"cidr":netmask_to_cidr(i.netmask)}
+                system_ips.append("%s/%s" %(range["ip"],range["cidr"]))
+            else:
+                pass
+    return system_ips
 
 def get_dest_ports():
     device_name = "CST-P-SAG-Energy"
@@ -410,19 +412,20 @@ def save_new_transform_json():
 
     with open('transform.json') as json_file:
         transform = json.load(json_file)
+    print("Done reading transform.json!")
     #393
     transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
     with open('new_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
+    print("Done writing new_transform.json!")
 
     #21
     with open('onlyInOld.json', 'w') as outfile:
         for i in onlyInOld:
             json.dump(i, outfile)
             outfile.write("\n")
-
-    print("Done!")
+    print("Done writing onlyInOld.json!")
 
 if __name__=="__main__":
     save_new_transform_json()
