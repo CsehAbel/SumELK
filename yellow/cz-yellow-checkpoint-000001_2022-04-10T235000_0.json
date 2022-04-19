@@ -1,0 +1,9 @@
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.200", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.201", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.200", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.200", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.119.251", "dest_ip": "10.36.81.17", "source_port": 1948, "dest_port": 445, "protocol": "udp", "rule_name": null, "interface": "blue>yellow_other"}
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.201", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.82.65", "dest_ip": "10.35.0.200", "source_port": 68, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "10.36.80.1", "dest_ip": "10.35.0.201", "source_port": 67, "dest_port": 67, "protocol": "udp", "rule_name": null, "interface": "grey_yellow>blue"}
+{"source_ip": "192.168.196.1", "dest_ip": "192.168.196.2", "source_port": null, "dest_port": null, "protocol": "udp", "rule_name": null, "interface": null}
