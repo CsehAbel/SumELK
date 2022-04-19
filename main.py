@@ -1,5 +1,8 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
 import datetime
+import argparse
+import shlex
+import sys
 
 import pandas
 from elasticsearch import Elasticsearch
@@ -14,8 +17,23 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-def main():
+def get_cli_args():
+    parser = argparse.ArgumentParser("Choose Firewall")
+    parser.add_argument('--firewall','-f',dest="fw", type=str, required=True, choices = ["sfs","siemens","express","cz","energy"], help='firewall (sfs,siemens,express,cz,energy)')
+    parser.add_argument('--day', '-d', dest="day", type=int, required=True,
+                        choices=range(1, 31),
+                        help='day of month')
+    parser.add_argument('--month', '-m', dest="month", type=int, required=True,
+                        choices=range(1, 12),
+                        help='month of year')
+    parser.add_argument('--year', '-y', dest="year", type=int, required=True,
+                        choices=range(1, 12),
+                        help='year')
 
+    args = parser.parse_args(shlex.split(" ".join(sys.argv[1:])))
+    return args
+
+def main():
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True, max_retries=3)
 
@@ -29,8 +47,10 @@ def main():
     #wegen des Speicherverbrauchs sollte Sachen gelöscht werden die älter als 30 Tage sind
     #lt_date = datetime.datetime(day=23, year=2022, month=1)
 
-    dtn=datetime.datetime.now()
-    lt_date = datetime.datetime(day=dtn.day, year=dtn.year, month=dtn.month)
+    pday=get_cli_args().day
+    pmonth=get_cli_args().month
+    pyear=get_cli_args().year
+    lt_date = datetime.datetime(day=pday, year=pyear, month=pmonth)
     duration1 = datetime.timedelta(minutes=10)
     gte_date = lt_date - duration1
 
