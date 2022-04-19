@@ -33,8 +33,8 @@ def decimalDottedQuadToInteger(dottedquad):
         ip_as_int = ip_as_int + 2 ** 32
     return ip_as_int
 
-def list_files(path):
-    pttrn_bckt=re.compile("^hit.*")
+def list_files(path,regex):
+    pttrn_bckt=re.compile(regex)
     onlyfiles = []
     for f in listdir(path):
         if (isfile(join(path, f)) and pttrn_bckt.match(f)):
@@ -78,10 +78,9 @@ def create_dataframe(full_path,func):
     df = pd.concat(df_list_per_line, ignore_index=True)
     return df
 
-def main():
-    path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+def main(path,regex):
     #list_files checks for regex ^hit.*
-    lf=list_files(path)
+    lf=list_files(path,regex)
     df_list_per_file=[]
     for f in lf:
         df_list_per_file.append(create_dataframe(join(path, f),create_df_from_line))
@@ -95,4 +94,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    regex="^hit.*"
+    main(path,regex)
