@@ -39,7 +39,10 @@ def main():
 
     # download hits to hits/...json
     # hits.main()
-    # /mnt/c/ProgramData/MySQL/MySQL Server 8.0/Uploads
+    # .json to mysql table 'ip'
+    # path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    # regex = "^hit.*"
+    # bulk_json_to_df.main(path,regex)
 
     systems_group.save_new_transform_json()
 

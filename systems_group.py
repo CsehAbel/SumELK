@@ -428,4 +428,4 @@ def save_new_transform_json():
     print("Done writing onlyInOld.json!")
 
 if __name__=="__main__":
-    save_new_transform_json()
+    dest_ports_to_file()

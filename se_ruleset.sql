@@ -29,15 +29,7 @@ SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
 
 #222
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-
-#---> THIS IS WHY WE NEED TO GROUP BY IPs AND!!! APP ID
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY IPs LIMIT 10000;
-
-#GROUP BY IPs AND APP ID, dns2 is filled but FQDN, FQDNs, dns is not removed
-SELECT ips,app_id,COUNT(*) as cardinality FROM white_apps_se_ruleset_merged_dns2 
-WHERE dns2 NOT LIKE '-' AND dns2 IS NOT NULL GROUP BY ips,app_id LIMIT 10000;
+SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
 
 SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
 

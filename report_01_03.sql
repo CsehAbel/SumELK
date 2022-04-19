@@ -4,7 +4,7 @@ WHERE cardinality!=1;
 
 #222
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
+SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
 
 #requires 
 #white_apps_se-ruleset
