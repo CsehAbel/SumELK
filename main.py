@@ -25,14 +25,14 @@ def valid_date(s):
 
 def get_cli_args():
     parser = argparse.ArgumentParser("Query Elastic Yellow Indices, see --help for options")
-    choices=["sfs-yellow-checkpoint-000001"
-    ,"siemens-yellow-checkpoint-000001"
-    ,"express-yellow-checkpoint-000001"
-    ,"cz-yellow-checkpoint-000001"
-    ,"energy-yellow-checkpoint-000001"]
+    choices=["sfs-yellow-checkpoint"
+    ,"siemens-yellow-checkpoint"
+    ,"express-yellow-checkpoint"
+    ,"cz-yellow-checkpoint"
+    ,"energy-yellow-checkpoint"]
     parser.add_argument('--firewall','-f',dest="fw", type=str, required=True,
                         choices = choices,
-                        help='firewall (sfs-...,siemens-...,express-...,cz-...,energy-...)')
+                        help='elastic alias for elastic index(sfs-...,siemens-...,express-...,cz-...,energy-...)')
     parser.add_argument('--gte_date', '-g', dest="gte_date", type=valid_date, required=True,
                         help='greater than equal date HH:MM-dd-mm-yyyy')
     parser.add_argument('--lt_date', '-l', dest="lt_date", type=valid_date, required=True,
@@ -65,15 +65,16 @@ def main():
 
     gte_date = get_cli_args().gte_date
     lt_date = get_cli_args().lt_date
+    gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
+    lt_date = lt_date.strftime("%Y-%m-%dT%H:%M:%S")
+    query["bool"]['filter']['range']['@timestamp']['gte']=gte_date
+    query["bool"]['filter']['range']['@timestamp']['lt']=lt_date
 
-    query["bool"]['filter']['range']['@timestamp']['gte']=gte_date.strftime("%Y-%m-%dT%H:%M:%S")
-    query["bool"]['filter']['range']['@timestamp']['lt']=lt_date.strftime("%Y-%m-%dT%H:%M:%S")
-
-    indices=["sfs-yellow-checkpoint-000001"
-    ,"siemens-yellow-checkpoint-000001"
-    ,"express-yellow-checkpoint-000001"
-    ,"cz-yellow-checkpoint-000001"
-    ,"energy-yellow-checkpoint-000001"
+    indices=["sfs-yellow-checkpoint"
+    ,"siemens-yellow-checkpoint"
+    ,"express-yellow-checkpoint"
+    ,"cz-yellow-checkpoint"
+    ,"energy-yellow-checkpoint"
     ]
 
     current_index=get_cli_args().fw
