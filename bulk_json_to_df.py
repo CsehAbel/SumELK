@@ -5,6 +5,11 @@ import struct
 import re
 from os import listdir
 from os.path import isfile, join
+import sys
+import shlex
+from pathlib import Path
+import argparse
+import pandas as pd
 
 from sqlalchemy import create_engine
 import secrets
@@ -14,7 +19,7 @@ duration = datetime.timedelta(days=10)
 gt_date = lt_date - duration
 print(gt_date.strftime("%Y-%m-%dT%H:%M:%S"))
 
-import pandas as pd
+
 
 
 def integerToDecimalDottedQuad(ip_int):
@@ -33,15 +38,17 @@ def decimalDottedQuadToInteger(dottedquad):
         ip_as_int = ip_as_int + 2 ** 32
     return ip_as_int
 
-def list_files(path):
-    pttrn_bckt=re.compile("^hit.*")
-    onlyfiles = []
-    for f in listdir(path):
-        if (isfile(join(path, f)) and pttrn_bckt.match(f)):
-            onlyfiles.append(f)
-    return onlyfiles
-
-
+def get_cli_args():
+    parser = argparse.ArgumentParser("Query Elastic Yellow Indices, see --help for options")
+    parser.add_argument(
+        "--data_dir",
+        dest="data_dir",
+        type=lambda p: Path(p).absolute(),
+        required=True,
+        help="Path to the data directory",
+    )
+    args = parser.parse_args(shlex.split(" ".join(sys.argv[1:])))
+    return args
 
 def create_df_from_line(line):
     dict_line = json.loads(line)
@@ -61,14 +68,14 @@ def create_df_from_line(line):
     return df
 
 
-def create_dataframe(full_path,func):
+def create_dataframe(x,func):
 # ToDo iterate through files saved created during elastic query
     df_list_per_line=[]
-    with open(full_path, "r") as after_key:
-        print("create_dataframe: %s" %full_path)
+    with x.open("r",encoding="utf-8") as f:
+        print("create_dataframe: %s" %f)
         line=True
         while line:
-            line = after_key.readline().strip()
+            line = f.readline().strip()
             if line.__len__()==0:
                 continue
             df_list_per_line.append(func(line))
@@ -79,20 +86,16 @@ def create_dataframe(full_path,func):
     return df
 
 def main():
-    path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    #list_files checks for regex ^hit.*
-    lf=list_files(path)
-    df_list_per_file=[]
-    for f in lf:
-        df_list_per_file.append(create_dataframe(join(path, f),create_df_from_line))
-        print("%s done!" %f)
+    directory=get_cli_args().data_dir
+    pttrn_bckt = re.compile(".*\.json")
 
+    df_list_per_file = []
+    for x in directory.iterdir():
+        if x.is_file() and pttrn_bckt.match(x.name):
+            df_list_per_file.append(create_dataframe(x,create_df_from_line))
+            print("%s done!" %x.name)
     df=pd.concat(df_list_per_file,ignore_index=True)
-    sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    df.to_sql("ip", dbConnection, if_exists='replace', index=True)
-
+    print("Done! number of rows in df: %d" %df.shape[0])
 
 if __name__ == '__main__':
     main()
