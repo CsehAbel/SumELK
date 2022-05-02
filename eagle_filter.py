@@ -90,7 +90,7 @@ def correctAndCheckMatchedMask(cidr):
     return mask
 
 def main():
-    filepath_qc="20220330-snic_ip_network_assignments.csv"
+    filepath_qc="20220420-snic_ip_network_assignments.csv"
 
     attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 

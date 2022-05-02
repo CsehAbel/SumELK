@@ -427,5 +427,51 @@ def save_new_transform_json():
             outfile.write("\n")
     print("Done writing onlyInOld.json!")
 
+def onlyinold_to_sql():
+    list_unpacked_ips = []
+    with open("onlyInOld.json") as fp:
+        lines = fp.readlines()
+        for line in lines:
+            patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+            # [\s"]* anstatt \s*
+            resultPrefix = patternPrefixCIDR.match(line)
+            if not resultPrefix:
+                raise ValueError("onlyInOld.json not matching regex")
+
+            prefix2 = resultPrefix.group(2)
+            cidr = resultPrefix.group(3)
+            cidr2 = correctAndCheckMatchedMask(cidr)
+            base = integerToDecimalDottedQuad(
+                decimalDottedQuadToInteger(prefix2) & makeIntegerMask(
+                    cidr2))
+            if base != prefix2:
+                print("Not a network Adresse (possible ip base %s)" % base)
+
+            int_prefix_top = (~makeIntegerMask(
+                cidr2)) | decimalDottedQuadToInteger(prefix2)
+            if int_prefix_top - 2 * 32 == -4117887025:
+                print("Test singed to unsigned conversion")
+                # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
+                # Modified
+                #    decimalDottedQuadToInteger()
+                # to convert signed integers to unsigned.
+                # Das Folgende ist redundant, überreichlich, ersetzt:
+                #   int_prefix_top == -4117887025:
+                #   if int_prefix_top < 0:
+                #      int_prefix_top = int_prefix_top + (2**32)
+
+            prefix_top = integerToDecimalDottedQuad(int_prefix_top)
+            # print("netw.adrr.:{}".format(base))
+            for j in range(decimalDottedQuadToInteger(base) + 1,
+                           decimalDottedQuadToInteger(
+                               integerToDecimalDottedQuad(int_prefix_top)) + 1):
+                list_unpacked_ips.append(integerToDecimalDottedQuad(j))
+
+    df = pandas.DataFrame(list_unpacked_ips)
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    df.to_sql("onlyinold", dbConnection, if_exists='replace', index=True)
+
 if __name__=="__main__":
-    dest_ports_to_file()
+    onlyinold_to_sql()
