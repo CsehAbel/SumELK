@@ -11,23 +11,11 @@ from pathlib import Path
 import argparse
 import pandas as pd
 
-from sqlalchemy import create_engine
-import secrets
-
-lt_date = datetime.datetime(day=23, year=2022, month=1)
-duration = datetime.timedelta(days=10)
-gt_date = lt_date - duration
-print(gt_date.strftime("%Y-%m-%dT%H:%M:%S"))
-
-
-
-
 def integerToDecimalDottedQuad(ip_int):
     return (str((0xff000000 & ip_int) >> 24) + '.' +
             str((0x00ff0000 & ip_int) >> 16) + '.' +
             str((0x0000ff00 & ip_int) >> 8) + '.' +
             str((0x000000ff & ip_int)))
-
 
 def decimalDottedQuadToInteger(dottedquad):
     # convert decimal dotted quad string to long integer"
@@ -67,12 +55,11 @@ def create_df_from_line(line):
     df = pd.DataFrame(dict_line, index=index)
     return df
 
-
 def create_dataframe(x,func):
 # ToDo iterate through files saved created during elastic query
     df_list_per_line=[]
     with x.open("r",encoding="utf-8") as f:
-        print("create_dataframe: %s" %f)
+        print("create_dataframe: %s" %f.name)
         line=True
         while line:
             line = f.readline().strip()
