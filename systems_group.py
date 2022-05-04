@@ -474,4 +474,5 @@ def onlyinold_to_sql():
     df.to_sql("onlyinold", dbConnection, if_exists='replace', index=True)
 
 if __name__=="__main__":
+    save_new_transform_json()
     onlyinold_to_sql()
