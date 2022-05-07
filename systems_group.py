@@ -15,22 +15,14 @@ from pytos.common.functions.config import Secure_Config_Parser
 from pytos.common.logging.definitions import COMMON_LOGGER_NAME
 from pytos.common.logging.logger import setup_loggers
 from pytos.securechange.helpers import Secure_Change_Helper
-from pytos.securechange.xml_objects.rest import Group_Change_Member_Object
 from pytos.securetrack.helpers import Secure_Track_Helper
-from pytos.common.definitions.xml_tags import Attributes
-from pytos.securechange.xml_objects.rest import Group_Change_Member_Object,Group_Change_Node,Step_Field_Multi_Group_Change
-from pytos.common.base_types import XML_List
 from pytos.securetrack.xml_objects.rest.rules import Host_Network_Object
 
-from elasticsearch import Elasticsearch
 import json
-from ssl import create_default_context
-from elasticsearch import RequestsHttpConnection
 
 import secrets
 import bulk_json_to_df
 from sqlalchemy import create_engine
-import pymysql
 
 
 sc_helper = Secure_Change_Helper("cofw.siemens.com", (secrets.sc_u, secrets.sc_pw))
@@ -380,6 +372,7 @@ def dest_ports_to_file():
     dbConnection = sqlEngine.connect()
     df.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
     print("systems_group Done!")
+
 
 def all_red_networks_systems():
     systems_ips = get_systems_ip_list()
