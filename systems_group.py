@@ -396,12 +396,15 @@ def all_red_networks_systems():
                 list_old.append(prefix)
             else:
                 raise ValueError
-    # new system_ips (1,2,3) old txt (1,2,4)
-    # only in old: old - new intersect old
-    # needs to be filtered out from hits
-    # only in new: new - new intersect_old
-    # need to be added to new transform
+
+    # needs to be filtered out from hits ami egyszer valaha be is volt teve
+    # { business_partner_001-004,
+    #   (4xtransform job +
+    #   1xtransform job geliefert von save_new_transform_json() new_transform.json )
+    # } - { new all_red-networks systems }
     onlyInOld = set(list_old) - set(systems_ips)
+    # need to be added to new transform
+    #{ new all_red-networks systems } - { 4xtransform job }
     onlyInNew = set(systems_ips) - set(list_old)
     return (onlyInOld,onlyInNew)
 
