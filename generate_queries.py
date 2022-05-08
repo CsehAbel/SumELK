@@ -10,8 +10,13 @@
 # query1..4-ben lesznek olyan source-ip-k amiket nem szabad többe query1…4 -nek letölteni,
 # de megis le lettek töltve, ezek azok amik all_red_networks systems mar nincsenek benne,
 # de a transform-ban benne vannak
+import re
 
+import pandas
+from sqlalchemy import create_engine
 
+import ip_utils
+from pathlib import Path
 
 from elasticsearch import Elasticsearch
 import json
@@ -26,81 +31,91 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-def wasd():
-    with open('query.json') as json_file:
-        query = json.load(json_file)
-    wasd(query)
 
-#Generate multiple queries
-def wasd(query):
+#system_groups.py all_red_networks_systems() rewritten
+def read_query1to4():
+    systems_ips = systems_group.get_systems_ip_list()
+    p1 = ["query1.json","query2.json","query3.json","query4.json"]
+    trsfrm_path = lambda x: Path(x).absolute();
+    p2=[trsfrm_path(y) for y in p1]
+    #query1…4 altal lettek letoltve, a transform job 1-4 altal lettek letöltve
+    list_old = []
+    #q for query
+    for q in p2:
+        with q.open("r") as infile:
+            for line in infile:
+                patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+                # [\s"]* anstatt \s*
+                resultPrefix = patternPrefixCIDR.match(line)
+                if resultPrefix:
+                    prefix = resultPrefix.group(1)
+                    list_old.append(prefix)
+                else:
+                    raise ValueError
 
 
-    systems_ips=systems_group.get_systems_ip_list()
-    length = len(systems_ips)
+    # need to be added to new transform
+    #{ new all_red-networks systems } - { 4xtransform job business_partner_001-004 }
+    # save_new_transform_json() new_transform.json
+    onlyInNew = set(systems_ips) - set(list_old)
+    return onlyInNew
 
-    divisor=1000
-    quotient,rest = divmod(length,divisor)
+#moved from systems_group.py
+#onlyinold_to_sql() not needed anymore, table should be deleted
+#onlyInNew needs to be exploded to use as left join filter for the table hits
+def save_new_transform_json(onlyInNew):
 
-    slices=[] #[[list[0],...list[999]],]
-    lower_bound=0
-    for i in range(quotient+1):
-        upper_bound=(i+1)*divisor
-        if upper_bound<length:
-            slices.append(systems_ips[slice(lower_bound,upper_bound,1)])
-        else:
-            slices.append(systems_ips[slice(lower_bound, length,1)])
-        lower_bound=upper_bound
+    with open('transform.json') as json_file:
+        transform = json.load(json_file)
+    print("Done reading transform.json!")
+    #393
+    transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
-    asd=0
-    for s in slices:
-        query['bool']['filter'][0]['terms']['source.ip']=s
-        with open('query%d.json' %(asd+1), 'w') as outfile:
-            json.dump(query, outfile)
+    with open('new_transform.json', 'w') as outfile:
+        json.dump(transform, outfile)
+    print("Done writing new_transform.json!")
 
-#download bucket aggregation where each bucket is a ip+prefix of source ip
-def download_buckets():
-    es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
-                       http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True,
-                       max_retries=3)
-    with open('aggs.json') as json_file:
-        aggs= json.load(json_file)
+#systems_group.py onlyinold_to_sql() repurposed
+def onlyinnew_to_sql(onlyInNew):
+    list_unpacked_ips = []
+    for line in onlyInNew:
+        patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+        # [\s"]* anstatt \s*
+        resultPrefix = patternPrefixCIDR.match(line)
+        if not resultPrefix:
+            raise ValueError("onlyInOld.json not matching regex")
 
-    with open('query.json') as json_file:
-        query = json.load(json_file)
+        prefix2 = resultPrefix.group(2)
+        cidr = resultPrefix.group(3)
+        cidr2 = ip_utils.correctAndCheckMatchedMask(cidr)
+        base = ip_utils.integerToDecimalDottedQuad(
+            ip_utils.decimalDottedQuadToInteger(prefix2) & ip_utils.makeIntegerMask(
+                cidr2))
+        if base != prefix2:
+            print("Not a network Adresse (possible ip base %s)" % base)
 
-    #alias for business_partner_001-4 indices
-    index="business_partner"
+        int_prefix_top = (~ip_utils.makeIntegerMask(
+            cidr2)) | ip_utils.decimalDottedQuadToInteger(prefix2)
+        if int_prefix_top - 2 * 32 == -4117887025:
+            print("Test singed to unsigned conversion")
+            # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
+            # Modified
+            #    decimalDottedQuadToInteger()
+            # to convert signed integers to unsigned.
+            # Das Folgende ist redundant, überreichlich, ersetzt:
+            #   int_prefix_top == -4117887025:
+            #   if int_prefix_top < 0:
+            #      int_prefix_top = int_prefix_top + (2**32)
 
-    download_buckets(es,index,query,aggs)
+        prefix_top = ip_utils.integerToDecimalDottedQuad(int_prefix_top)
+        # print("netw.adrr.:{}".format(base))
+        for j in range(ip_utils.decimalDottedQuadToInteger(base) + 1,
+                       ip_utils.decimalDottedQuadToInteger(
+                           ip_utils.integerToDecimalDottedQuad(int_prefix_top)) + 1):
+            list_unpacked_ips.append(ip_utils.integerToDecimalDottedQuad(j))
 
-#repurpose for bucketing source ip into ip range buckets
-def download_buckets(es,index,query,aggs):
-    buckets_len = 10000
-    seq = 0
-    while buckets_len >= 10000:
-        resp = es.search(query=query, index=index, size=0, aggs=aggs)
-        hits_len = resp['hits']['total']['value']
-        print("Got %d Hits:" % hits_len)
-        buckets = resp['aggregations']['my-buckets']['buckets']
-        buckets_len = buckets.__len__()
-
-        with open('buckets_saved/bucket%s_%d.json' % (gte_date, seq), 'w') as outfile:
-            # json.dump(buckets)
-            for b in buckets:
-                json.dump(flattenbucket_ports(b), outfile)
-                outfile.write("\n")
-        seq = seq + 1
-
-        if (10000<=buckets_len):
-            with open('buckets_saved/after_key.json', 'a') as outfile:
-                json.dump(resp['aggregations']['my-buckets']['after_key'], outfile)
-                outfile.write("\n")
-
-            aggs['my-buckets']['composite']['after'] = {}
-            aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
-                'source_ip']
-            aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
-            aggs['my-buckets']['composite']['after']['source_port'] = resp['aggregations']['my-buckets']['after_key'][
-                'source_port']
-            aggs['my-buckets']['composite']['after']['dest_port'] = resp['aggregations']['my-buckets']['after_key'][
-                'dest_port']
+    df = pandas.DataFrame(list_unpacked_ips)
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    df.to_sql("onlyinnew", dbConnection, if_exists='replace', index=True)
