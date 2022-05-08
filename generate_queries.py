@@ -58,12 +58,12 @@ def wasd(query):
             json.dump(query, outfile)
 
 #download bucket aggregation where each bucket is a ip+prefix of source ip
-def download_buckets_ports():
+def download_buckets():
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True,
                        max_retries=3)
-    with open('aggs_ports.json') as json_file:
-        aggs_ports = json.load(json_file)
+    with open('aggs.json') as json_file:
+        aggs= json.load(json_file)
 
     with open('query.json') as json_file:
         query = json.load(json_file)
@@ -71,9 +71,10 @@ def download_buckets_ports():
     #alias for business_partner_001-4 indices
     index="business_partner"
 
-    download_buckets_ports(es,index,query,aggs_ports)
+    download_buckets(es,index,query,aggs)
 
-def download_buckets_ports(es,index,query,aggs):
+#repurpose for bucketing source ip into ip range buckets
+def download_buckets(es,index,query,aggs):
     buckets_len = 10000
     seq = 0
     while buckets_len >= 10000:
