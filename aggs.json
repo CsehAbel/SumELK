@@ -2,17 +2,11 @@
     "my-buckets": {
       "composite": {
         "size": 10000,
-        "sources": [
+        "sources":
           { "source_ip": {
             "terms": { "field": "source.ip" }
           }
-          },
-          { "dest_ip": {
-            "terms": { "field": "destination.ip" }
           }
-          }
-
-        ]
       }
     }
 }
