@@ -1,6 +1,7 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
 import datetime
 import logging
+from pathlib import Path
 
 from elasticsearch import Elasticsearch
 import json
@@ -41,11 +42,9 @@ def download_index(es,index,nth,sort,gte_date):
     hits = resp['hits']['hits']
 
     p = "hits"
-    path = Path(x).absolute()
-
-    p2 = [trsfrm_path(y) for y in p1]
-    with open('hits/hit_00%d_%s_%d.json' % (nth, gte_date, seq), 'w') as outfile:
-        # json.dump(buckets)
+    path = Path(p).absolute()
+    filepath = path / ('hit_00%d_%s_%d.json' % (nth, gte_date, seq))
+    with filepath.open('w') as outfile:
         for b in hits:
             json.dump(flattenhit(b), outfile)
             outfile.write("\n")
