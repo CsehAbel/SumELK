@@ -39,6 +39,11 @@ def download_index(es,index,nth,sort,gte_date):
     print("Got %d Hits:" % hits_len)
     seq = 0
     hits = resp['hits']['hits']
+
+    p = "hits"
+    path = Path(x).absolute()
+
+    p2 = [trsfrm_path(y) for y in p1]
     with open('hits/hit_00%d_%s_%d.json' % (nth, gte_date, seq), 'w') as outfile:
         # json.dump(buckets)
         for b in hits:

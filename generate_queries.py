@@ -36,7 +36,7 @@ port='9200'
 def read_query1to4():
     systems_ips = systems_group.get_systems_ip_list()
     p1 = ["query1.json","query2.json","query3.json","query4.json"]
-    trsfrm_path = lambda x: Path(x).absolute();
+    trsfrm_path = lambda x: Path(x).absolute()
     p2=[trsfrm_path(y) for y in p1]
     #query1…4 altal lettek letoltve, a transform job 1-4 altal lettek letöltve
     list_old = []
