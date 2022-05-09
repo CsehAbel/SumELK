@@ -43,13 +43,14 @@ def read_query1to4():
     #q for query
     for q in p2:
         with q.open("r") as infile:
-            for line in infile:
-                patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+            query=json.load(infile)
+            prefixlist=query['bool']['filter'][0]['terms']['source.ip'] if q.name == "query1.json" else query['bool']['filter']['terms']['source.ip']
+            for line in prefixlist:
+                patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
                 # [\s"]* anstatt \s*
                 resultPrefix = patternPrefixCIDR.match(line)
                 if resultPrefix:
-                    prefix = resultPrefix.group(1)
-                    list_old.append(prefix)
+                    list_old.append(line)
                 else:
                     raise ValueError
 
@@ -79,7 +80,7 @@ def save_new_transform_json(onlyInNew):
 def onlyinnew_to_sql(onlyInNew):
     list_unpacked_ips = []
     for line in onlyInNew:
-        patternPrefixCIDR = re.compile('^.*\"(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))\".*$')
+        patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
         # [\s"]* anstatt \s*
         resultPrefix = patternPrefixCIDR.match(line)
         if not resultPrefix:
@@ -119,3 +120,12 @@ def onlyinnew_to_sql(onlyInNew):
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("onlyinnew", dbConnection, if_exists='replace', index=True)
+
+def main():
+    onlyinnew=read_query1to4()
+    save_new_transform_json(onlyInNew=onlyinnew)
+    onlyinnew_to_sql(onlyInNew=onlyinnew)
+
+
+if __name__=="__main__":
+    main()
