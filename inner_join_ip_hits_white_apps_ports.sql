@@ -47,7 +47,8 @@ LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src
 
 SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
 #Filter out EAGLE
-#Filter out OnlyInOld
+#Filter only all_red_networks_systems
+SELECT COUNT(*) FROM systems;
 
 SELECT COUNT(*) FROM eagle;
 SELECT `0` FROM eagle; 
@@ -66,12 +67,16 @@ GROUP_CONCAT(DISTINCT(dns)) as s_g_dns,
 COUNT(dns) as countdns,
 #only counts not null
 COUNT(src_ip) as countsrc
- FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as a 
-LEFT JOIN (SELECT `0` as dip FROM eagle) as b
-ON a.dst_ip=b.dip WHERE b.dip IS NULL
+FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as i 
+LEFT JOIN (SELECT `0` as dip FROM eagle) as e
+ON i.dst_ip=e.dip 
+LEFT JOIN (SELECT `0` as sip FROM systems) as o 
+ON i.src_ip=o.sip 
+WHERE e.dip IS NULL AND o.sip IS NOT NULL 
 GROUP BY dst_ip
 #HAVING countsrc=countdns
 ;
+
 
 #Look at number of source adresses descending
 SELECT dst_ip,
@@ -92,10 +97,9 @@ SELECT * FROM nice_se_ruleset_st_ports_qc;
 
 #ipunique INNER JOIN se_ruleset_st_ports
 SELECT ipunique_g_dns.*,nice_se_ruleset_st_ports_qc.* FROM nice_se_ruleset_st_ports_qc 
-INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.d_qc_ip=ipunique_g_dns.dst_ip LIMIT 3000;
+INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip LIMIT 30000;
 
 #se_ruleset_st_ports RIGHT JOIN ipunique
-SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* 
-FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
-ON nice_se_ruleset_st_ports_qc.d_qc_ip=ipunique_g_dns.dst_ip
-WHERE nice_se_ruleset_st_ports_qc.d_qc_ip IS NULL LIMIT 30000;
+SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
+ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip
+LIMIT 30000;
