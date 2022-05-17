@@ -77,9 +77,9 @@ def save_new_transform_json(onlyInNew):
     print("Done writing new_transform.json!")
 
 #systems_group.py onlyinold_to_sql() repurposed
-def onlyinnew_to_sql(onlyInNew):
+def systems_to_sql(systems):
     list_unpacked_ips = []
-    for line in onlyInNew:
+    for line in systems:
         patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
         # [\s"]* anstatt \s*
         resultPrefix = patternPrefixCIDR.match(line)
@@ -119,12 +119,12 @@ def onlyinnew_to_sql(onlyInNew):
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df.to_sql("onlyinnew", dbConnection, if_exists='replace', index=True)
+    df.to_sql("systems", dbConnection, if_exists='replace', index=True)
 
 def main():
-    onlyinnew=read_query1to4()
-    save_new_transform_json(onlyInNew=onlyinnew)
-    onlyinnew_to_sql(onlyInNew=onlyinnew)
+    #onlyinnew=read_query1to4()
+    #save_new_transform_json(onlyInNew=onlyinnew)
+    systems_to_sql(systems=systems_group.get_systems_ip_list())
 
 
 if __name__=="__main__":
