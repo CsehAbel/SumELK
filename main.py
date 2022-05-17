@@ -16,7 +16,6 @@ port='9200'
 
 def main():
     #print matched iterating: lista["i_f","vuser","wuser123","a_123","App_123"]
-
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True, max_retries=3)
 
@@ -26,7 +25,6 @@ def main():
     gte_date = lt_date - duration1
 
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
-
 
     for i in range(4):
         download_index(es=es,index="business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)

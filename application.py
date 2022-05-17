@@ -38,17 +38,17 @@ def main():
     systems_group.dest_ports_to_file()
 
     # download hits to hits/...json
-    # hits.main()
+    #hits.main()
     # .json to mysql table 'ip'
-    # path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    # regex = "^hit.*"
-    # bulk_json_to_df.main(path,regex)
+    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    #regex = "^hit.*"
+    #bulk_json_to_df.main(path,regex)
 
-    systems_group.save_new_transform_json()
+    #systems_group.save_new_transform_json()
 
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to CSV_DB->src_dns
-    resolveIpToName.resolve_white_apps()
+    # resolveIpToName.resolve_white_apps()
 
 if __name__ == "__main__":
     main()
