@@ -1,5 +1,6 @@
 /secrets.py
 secure_track/**
+!secure_track/gitkeep
 /se_ruleset_unpacked?
 yellow
 yellow/**
