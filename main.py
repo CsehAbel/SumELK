@@ -56,11 +56,14 @@ def download_index(es,index,nth,sort,gte_date):
         print("Got %d Hits:" % hits_len)
         hits = resp['hits']['hits']
 
-        with open('hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
-            # json.dump(buckets)
-            for b in hits:
-                json.dump(flattenhit(b), outfile)
-                outfile.write("\n")
+        if hits_len==0:
+            print("Not creating hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
+        else:
+            with open('hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
+                # json.dump(buckets)
+                for b in hits:
+                    json.dump(flattenhit(b), outfile)
+                    outfile.write("\n")
         seq = seq + 1
 
 def flattenhit(h):
