@@ -74,8 +74,11 @@ def create_dataframe(full_path,func):
             df_list_per_line.append(func(line))
             # can be run after while loop, will it save performance?
             #df = df.drop_duplicates()
+    try:
+        df = pd.concat(df_list_per_line, ignore_index=True)
+    except ValueError as v:
+        print("Anhalten!")
 
-    df = pd.concat(df_list_per_line, ignore_index=True)
     return df
 
 def main(path,regex):

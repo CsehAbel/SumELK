@@ -32,17 +32,17 @@ def main():
     # systems_group.dest_ports_to_file()
     # first run SGRE to unpack se_ruleset
     # filepath_qc = "se_ruleset_unpacked22Mar2022.xlsx"
-    filepath_qc = get_cli_args().qualitycheck
-    qc_to_sql.main(filepath_qc)
+    #filepath_qc = get_cli_args().qualitycheck
+    #qc_to_sql.main(filepath_qc)
     #downloading securetrack dest_ip,port
-    systems_group.dest_ports_to_file()
+    #systems_group.dest_ports_to_file()
 
     # download hits to hits/...json
     #hits.main()
     # .json to mysql table 'ip'
-    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    #regex = "^hit.*"
-    #bulk_json_to_df.main(path,regex)
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    regex = "^hit.*"
+    bulk_json_to_df.main(path,regex)
 
     #systems_group.save_new_transform_json()
 
