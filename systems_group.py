@@ -1,14 +1,6 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
-import datetime
 import logging
-import argparse
-import math
 import re
-import shlex
-import socket
-import struct
-import sys
-import os
 
 import pandas
 from pytos.common.functions.config import Secure_Config_Parser
@@ -37,11 +29,6 @@ logger = logging.getLogger(COMMON_LOGGER_NAME)
 conf = Secure_Config_Parser(config_file_path=config_file_path)
 setup_loggers(conf.dict("log_levels"),log_file_path,log_file_name,log_to_stdout=True)  # cli_args.debug)
 
-def append_to_list(not_g_no,input_list):
-    if isinstance(not_g_no, Host_Network_Object):
-        input_list.append(not_g_no.ip)
-    else:
-        [input_list.append(sipa) for sipa in ip_utils.ip_range_explode(not_g_no.ip, not_g_no.netmask)]
 
 def get_systems_ip_list():
     device_name = "CST-P-SAG-Energy"
@@ -66,6 +53,64 @@ def get_systems_ip_list():
                 pass
     return system_ips
 
+#ld list of destination ips to complete with ips found inside group network objects
+#members list of members either Host_Network_Obj or Group_Network_Obj
+def get_dest_ports_ips(device_id,ld,members):
+    ids = [x.id for x in members]
+    for id in ids:
+        try:
+            not_g_no = st_helper.get_network_object_by_device_and_object_id(device_id, id)
+            if isinstance(not_g_no, Host_Network_Object):
+                ld.append(not_g_no.ip)
+            #replace else with elif isinstance(not_g_no,?)
+            else:
+                [ld.append(sipa) for sipa in ip_utils.ip_range_explode(not_g_no.ip, not_g_no.netmask)]
+        except AttributeError as aex:
+            if aex.args[0] == '\'Group_Network_Object\' object has no attribute \'ip\'':
+                #not_g_no turns out to be doch group network object
+                get_dest_ports_ips(device_id, ld, not_g_no.members._list_data)
+            elif aex.args[0] == '\'Range_Network_Object\' object has no attribute \'ip\'':
+                r_no = st_helper.get_network_object_by_device_and_object_id(device_id, id)
+                for ra in range(ip_utils.ip2int(r_no.first_ip), ip_utils.ip2int(r_no.last_ip) + 1):
+                    r_ip = ip_utils.int2ip(ra)
+                    ld.append(r_ip)
+
+            else:
+                raise aex
+        except ValueError as vex:
+            patternNotExist = re.compile("Network object with id \d+ does not exists on device id 1")
+            resultNotExist = patternNotExist.match(aex.args[0])
+            if not resultNotExist:
+                raise vex
+            else:
+                patternPrefix = re.compile(
+                    '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+                resultPrefix = patternPrefix.match(id.name)  # 'SAG_163.242.205.140'
+                dip = resultPrefix.group(1)
+                ld.append(dip)
+        except BaseException as err:
+            print(f"Unexpected {err=}, {type(err)=}")
+            raise
+
+def get_dest_ports_ports(device_id,l_e,members):
+    lid = [x.id for x in members]
+    # gibt Liste von Services_List zurück
+    # Services_List beinhaltet services Feld
+    # services Feld ist eine Liste
+    l_sl_sf_l = [st_helper.get_services_by_device_and_object_ids(device_id, x) for x in lid]
+    # Liste von services Feld
+    l_sf_l = [sl.services for sl in l_sl_sf_l]
+
+    for sf_l in l_sf_l:
+        for e in sf_l:
+            try:
+                l_e.append((e.max, e.min, e.protocol, e.display_name))
+            except BaseException as err:
+                if err.args[0] == '\'Group_Service\' object has no attribute \'max\'':
+                    get_dest_ports_ports(device_id, l_e, e.members._list_data)
+                else:
+                    raise err
+
 def get_dest_ports():
     device_name = "CST-P-SAG-Energy"
     device_id = st_helper.get_device_id_by_name(device_name)
@@ -76,119 +121,22 @@ def get_dest_ports():
     for r in rules._list_data:
         if r.name=='atos_vuln_scans':#,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
+        if r.name == "a_17042_CDC":
+            print("129.73.226.0/24 should be added to return value list_rules")
         try:
             resultApp=patternApp.match(r.name)
-        except Exception:
+        except BaseException:
             continue
         resultWuser=patternWuser.match(r.name)
 
         if resultWuser or resultApp:
-
-
             try:
-                lid=[x.id for x in r.dst_networks]
-                l_dest_ip = []
-                for x in lid:
-                    try:
-                        not_g_no=st_helper.get_network_object_by_device_and_object_id(device_id, x)
-                        append_to_list(not_g_no,l_dest_ip)
-                    except AttributeError as aex:
-                        if aex.args[0]=='\'Group_Network_Object\' object has no attribute \'ip\'':
-                            #not_g_no turns out to be doch group network object
-                            lid12=[bo1.id for bo1 in not_g_no.members._list_data]
-                            for x12 in lid12:
-                                try:
-                                    not_g_no2 = st_helper.get_network_object_by_device_and_object_id(device_id, x12)
-                                    append_to_list(not_g_no2,l_dest_ip)
-                                except Exception as qex:
-                                    if qex.args[0] == '\'Group_Network_Object\' object has no attribute \'ip\'':
-                                        # not_g_no turns out to be doch group network object
-                                        lid123 = [bo1.id for bo1 in not_g_no2.members._list_data]
-                                        for x123 in lid123:
-                                            try:
-                                                not_g_no3 = st_helper.get_network_object_by_device_and_object_id(
-                                                    device_id, x123)
-                                                append_to_list(not_g_no3, l_dest_ip)
-                                            except Exception as qex2:
-                                                if qex2.args[
-                                                    0] == '\'Group_Network_Object\' object has no attribute \'ip\'':
-                                                    # not_g_no turns out to be doch group network object
-                                                    lid1234 = [bo1.id for bo1 in not_g_no3.members._list_data]
-                                                    for x1234 in lid1234:
-                                                        try:
-                                                            not_g_no4 = st_helper.get_network_object_by_device_and_object_id(
-                                                                device_id, x1234)
-                                                            append_to_list(not_g_no4, l_dest_ip)
-                                                        except Exception as qex23:
-                                                            raise qex23
-                                                else:
-                                                    raise qex2
-                                    else:
-                                        raise qex
-                        elif aex.args[0]=='\'Range_Network_Object\' object has no attribute \'ip\'':
-                            r_no=st_helper.get_network_object_by_device_and_object_id(device_id, x)
-                            for ra in range(ip_utils.ip2int(r_no.first_ip),ip_utils.ip2int(r_no.last_ip)+1):
-                                r_ip=ip_utils.int2ip(ra)
-                                l_dest_ip.append(r_ip)
-
-                        else:
-                            raise aex
-                    except ValueError as vex:
-                        patternNotExist=re.compile("Network object with id \d+ does not exists on device id 1")
-                        resultNotExist=patternNotExist.match(aex.args[0])
-                        if not resultNotExist :
-                            raise vex
-                        else:
-                            patternPrefix = re.compile(
-                                '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
-                            resultPrefix = patternPrefix.match(x.name) #'SAG_163.242.205.140'
-                            dip=resultPrefix.group(1)
-                            l_dest_ip.append(dip)
-
-
-
-                lid=[x.id for x in r.dst_services]
-                #gibt Liste von Services_List zurück
-                #Services_List beinhaltet services Feld
-                # services Feld ist eine Liste
-                l_sl_sf_l=[st_helper.get_services_by_device_and_object_ids(device_id, x) for x in lid]
-                #Liste von services Feld
-                l_sf_l=[sl.services for sl in l_sl_sf_l]
+                ld = []
+                get_dest_ports_ips(device_id, ld, r.dst_networks)
                 l_e=[]
-                for sf_l in l_sf_l:
-                    for e in sf_l:
-                        try:
-                            l_e.append((e.max,e.min,e.protocol,e.display_name))
-                        except Exception as xex2:
-                            if xex2.args[0]=='\'Group_Service\' object has no attribute \'max\'':
-                                lid2=[bo.id for bo in e.members._list_data]
-                                l_sl_sf_l2=[st_helper.get_services_by_device_and_object_ids(device_id, x) for x in lid2]
-                                l_sf_l2 = [sl.services for sl in l_sl_sf_l2]
-                                for sf_l2 in l_sf_l2:
-                                    for e2 in sf_l2:
-
-                                        try:
-                                            l_e.append((e2.max, e2.min, e2.protocol,e2.display_name))
-                                        except Exception as ex3:
-                                            if ex3.args[0] == '\'Group_Service\' object has no attribute \'max\'':
-                                                lid3 = [bo.id for bo in e2.members._list_data]
-                                                l_sl_sf_l3 = [
-                                                    st_helper.get_services_by_device_and_object_ids(device_id, x) for x
-                                                    in lid3]
-                                                l_sf_l3 = [sl.services for sl in l_sl_sf_l3]
-                                                for sf_l3 in l_sf_l3:
-                                                    for e3 in sf_l3:
-
-                                                        try:
-                                                            l_e.append((e3.max, e3.min, e3.protocol,e3.display_name))
-                                                        except Exception as ex4:
-                                                            raise ex4
-
-                            else:
-                                raise xex2
-
-                list_rules.append([[r.name,r.order,r.rule_number],l_dest_ip,l_e])
-            except Exception as ex:
+                get_dest_ports_ports(device_id, l_e, r.dst_services)
+                list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
+            except BaseException as ex:
                 raise ex
     return list_rules
 
