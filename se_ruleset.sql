@@ -147,7 +147,7 @@ SELECT
 g_qc_app_name as d_g_qc_app_name,
 qc_app_id,
 app_id,
-#ips,
+ips,
 qc_ip as d_qc_ip,
 #st_dest_ip,
 #g_s_ip,
