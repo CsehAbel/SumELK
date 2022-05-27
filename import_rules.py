@@ -35,6 +35,9 @@ from pathlib import Path
 #from_rule: 1, port: 600/udp, ip: 10.2.
 #from_rule: 1, port: 415-450/tcp, ip: 149.1.
 #from_rule: 1, port: 415-450/tcp, ip: 149.1.
+import pandas
+
+
 def proc_dest_port_tuples(list_rules):
     list_exploded=[]
     for i in range(len(list_rules)):
@@ -58,6 +61,21 @@ def proc_dest_port_tuples(list_rules):
                 #rule.name,order,rule_number
                 list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"st_serv_name":service_display_name,"rule_name":list_rules[i][0][0],"rule_order":list_rules[i][0][1],"rule_number":list_rules[i][0][2]})
     return list_exploded
+
+def get_network_object_by_id(id):
+    dir_path="/home/akecse/PycharmProjectsSumELK"
+    file=Path(dir_path)/"Standard_objects.json"
+    with file.open() as f:
+        objects=json.load(f)
+    df=pandas.DataFrame(objects)
+    #df_ngh keep rows where type=network, group, or host
+    df_ngh = df["type"].isin(["network", "group", "host"])
+    #DataFrame->Series contaning index, and a field True or False
+    matches=df_ngh["uid"].isin([id])
+    if 1<matches.value_counts().loc[True]:
+        raise ValueError()
+    print("")
+
 
 def main(path):
     #list_files checks for regex ^hit.*
@@ -87,5 +105,6 @@ def main(path):
 
 
 if __name__ == '__main__':
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
-    main(path)
+    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
+    #main(path)
+    get_network_object_by_id(1)
