@@ -100,6 +100,7 @@ def get_network_object_by_id(id):
     with file.open() as f:
         objects=json.load(f)
     df=pandas.DataFrame(objects)
+    types=df["type"].unique()
     #df_ngh keep rows where type=network, group, or host
     df_ngh = df["type"].isin(["network", "group", "host"])
     #DataFrame->Series contaning index, and a field True or False
@@ -122,6 +123,14 @@ def main(path):
     print("")
     patternApp=re.compile("^a.*",re.IGNORECASE)
     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
+    df_rules = pandas.DataFrame(rules)
+    #access-section, access-rule
+    types=df_rules.type.unique()
+    #there is no row which doesnt have a type
+    notype = df_rules.type.isna().value_counts()
+    #7 doesn't have name
+    hasname = df_rules[df_rules.name.notna()]
+    noname = df_rules[df_rules.name.isna()]
     for rule in rules:
         if rule.name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
@@ -131,7 +140,10 @@ def main(path):
         resultWuser = patternWuser.match(rule.name)
         if resultWuser or resultApp:
             ld = []
-            #get_dest_ports_ips(ld,)
+            # get_dest_ports_ips(ld,r.dst_networks)
+            # l_e=[]
+            # get_dest_ports_ports(l_e,r.dst_services)
+            # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
             print("")
 
     # df=pd.concat(df_list_per_file,ignore_index=True)
@@ -142,6 +154,7 @@ def main(path):
 
 
 if __name__ == '__main__':
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
-    main(path)
-    #get_network_object_by_id(1)
+    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
+    #main(path)
+    #test access section a_white
+    get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
