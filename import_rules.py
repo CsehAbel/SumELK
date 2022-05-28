@@ -2,6 +2,8 @@ import json
 import pathlib
 import re
 from pathlib import Path
+import pandas
+import ip_utils
 
 # def get_dest_ports():
 #     device_name = "CST-P-SAG-Energy"
@@ -31,13 +33,43 @@ from pathlib import Path
 #                 raise ex
 #     return list_rules
 
+def get_dest_ports_ips(ld,members):
+    ids = [x.id for x in members]
+    for id in ids:
+        try:
+            df_obj = get_network_object_by_id(id)
+            if df_obj.type.values[0]=="host":
+                ld.append(df_obj.ip.values[0])
+            #replace else with elif isinstance(not_g_no,?)
+            elif df_obj.type.values[0]=="network":
+                [ld.append(sipa) for sipa in ip_utils.ip_range_explode(df_obj.ip.values[0], df_obj.netmask.values[0])]
+            elif df_obj.type.values[0]=="group":
+                get_dest_ports_ips(df_obj.members)
+            # else:
+            #     patternPrefix = re.compile(
+            #         '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+            #     resultPrefix = patternPrefix.match(id.name)  # 'SAG_163.242.205.140'
+            #     dip = resultPrefix.group(1)
+            #     ld.append(dip)
+        # except AttributeError as aex:
+        #     if aex.args[0] == '\'Group_Network_Object\' object has no attribute \'ip\'':
+        #         #not_g_no turns out to be doch group network object
+        #         get_dest_ports_ips(device_id, ld, not_g_no.members._list_data)
+        #     elif aex.args[0] == '\'Range_Network_Object\' object has no attribute \'ip\'':
+        #         r_no = st_helper.get_network_object_by_device_and_object_id(device_id, id)
+        #         for ra in range(ip_utils.ip2int(r_no.first_ip), ip_utils.ip2int(r_no.last_ip) + 1):
+        #             r_ip = ip_utils.int2ip(ra)
+        #             ld.append(r_ip)
+        except ValueError as vex:
+                raise vex
+        except BaseException as err:
+            print(f"Unexpected {err=}, {type(err)=}")
+            raise
+
 #from_rule: 1, port: 415-450/tcp, ip: 10.2.
 #from_rule: 1, port: 600/udp, ip: 10.2.
 #from_rule: 1, port: 415-450/tcp, ip: 149.1.
 #from_rule: 1, port: 415-450/tcp, ip: 149.1.
-import pandas
-
-
 def proc_dest_port_tuples(list_rules):
     list_exploded=[]
     for i in range(len(list_rules)):
@@ -72,9 +104,12 @@ def get_network_object_by_id(id):
     df_ngh = df["type"].isin(["network", "group", "host"])
     #DataFrame->Series contaning index, and a field True or False
     matches=df_ngh["uid"].isin([id])
-    if 1<matches.value_counts().loc[True]:
-        raise ValueError()
-    print("")
+    if 1!=matches.value_counts().loc[True]:
+        error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" %(error,id))
+    #DataFrame containing single row
+    df_obj=df_ngh.loc[matches]
+    return df_obj
 
 
 def main(path):
@@ -95,6 +130,8 @@ def main(path):
         resultApp=patternApp.match(rule.name)
         resultWuser = patternWuser.match(rule.name)
         if resultWuser or resultApp:
+            ld = []
+            #get_dest_ports_ips(ld,)
             print("")
 
     # df=pd.concat(df_list_per_file,ignore_index=True)
@@ -105,6 +142,6 @@ def main(path):
 
 
 if __name__ == '__main__':
-    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
-    #main(path)
-    get_network_object_by_id(1)
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
+    main(path)
+    #get_network_object_by_id(1)
