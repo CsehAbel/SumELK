@@ -95,21 +95,23 @@ def proc_dest_port_tuples(list_rules):
     return list_exploded
 
 def get_network_object_by_id(id):
-    dir_path="/home/akecse/PycharmProjectsSumELK"
+    dir_path="./"
     file=Path(dir_path)/"Standard_objects.json"
     with file.open() as f:
         objects=json.load(f)
     df=pandas.DataFrame(objects)
     types=df["type"].unique()
     #df_ngh keep rows where type=network, group, or host
-    df_ngh = df["type"].isin(["network", "group", "host"])
+    #df_ngh = df[df["type"].isin(["network", "group", "host","address-range"])]
+    df_ngh=df
     #DataFrame->Series contaning index, and a field True or False
     matches=df_ngh["uid"].isin([id])
     if 1!=matches.value_counts().loc[True]:
         error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
         raise ValueError("%s\n\r uid: %s" %(error,id))
     #DataFrame containing single row
-    df_obj=df_ngh.loc[matches]
+    #df_obj=df_ngh.loc[matches]
+    df_obj=df_ngh[matches]
     return df_obj
 
 
@@ -131,19 +133,23 @@ def main(path):
     #7 doesn't have name
     hasname = df_rules[df_rules.name.notna()]
     noname = df_rules[df_rules.name.isna()]
-    for rule in rules:
-        if rule.name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
+    df_rules=df_rules[df_rules.name.notna()]
+    list_rules=[]
+    for index,rule in df_rules.iterrows():
+        rule_name = rule["name"]
+        if rule_name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
-        if rule.name == "a_17042_CDC":
+        if rule_name == "a_17042_CDC":
             print("129.73.226.0/24 should be added to return value list_rules")
-        resultApp=patternApp.match(rule.name)
-        resultWuser = patternWuser.match(rule.name)
+        resultApp=patternApp.match(rule_name)
+        resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
             ld = []
-            # get_dest_ports_ips(ld,r.dst_networks)
-            # l_e=[]
-            # get_dest_ports_ports(l_e,r.dst_services)
+            get_dest_ports_ips(ld,rule["destination"])
+            l_e=[]
+            get_dest_ports_ports(l_e,r.dst_services)
             # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
+            list_rules.append([[rule_name, rule["rule-number"], rule["source"]], ld, l_e])
             print("")
 
     # df=pd.concat(df_list_per_file,ignore_index=True)
@@ -154,7 +160,7 @@ def main(path):
 
 
 if __name__ == '__main__':
-    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/Network-CST-P-SAG-Energy.json"
-    #main(path)
+    path = "./Network-CST-P-SAG-Energy.json"
+    main(path)
     #test access section a_white
     get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
