@@ -90,15 +90,14 @@ def correctAndCheckMatchedMask(cidr):
     return mask
 
 def main():
-    filepath_qc="20220420-snic_ip_network_assignments.csv"
+    filepath_qc="20220530-snic_ip_network_assignments.csv"
 
     attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 
     list_unpacked_ips=[]
     for index,row in attachment_qc.iterrows():
-        location=row["Location"]
-        if location.strip()=="MCH P DC SAG":
-
+        location=row["USSM"]
+        if location.strip()=="Milbradt, Thomas (Z000F1XC)":
             b=row["IP-net-base"]
             cidr=row["CIDR"]
             prefix2 = b
