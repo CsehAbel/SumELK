@@ -125,7 +125,7 @@ def ip_range_explode(ip,netmask):
         int_prefix_top = (~makeIntegerMask(
             cidr2)) | decimalDottedQuadToInteger(prefix2)
         prefix_top = integerToDecimalDottedQuad(int_prefix_top)
-        print("netw.adrr.:{}".format(base))
+
         list_unpacked_ips=[]
         for j in range(decimalDottedQuadToInteger(base) + 1,
                        decimalDottedQuadToInteger(
