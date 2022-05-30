@@ -1,5 +1,7 @@
-SELECT * FROM white_apps_dns WHERE IPs="10.140.49.108";
+SELECT * FROM white_apps_dns WHERE IPs="139.22.192.171";
 SET SQL_SAFE_UPDATES = 0;
+#INSERT INTO white_apps_dns (IPs,dns) VALUES ("139.22.192.171","d3i.siemens.com");
+UPDATE white_apps_dns SET `index`=20684 WHERE IPs LIKE "139.22.192.171";
 UPDATE white_apps_dns SET dns="miq.daai.siemens.cloud" WHERE IPs LIKE "10.140.49.108";
 UPDATE white_apps_dns SET dns="miq.daai.siemens.cloud" WHERE IPs LIKE "10.140.49.108";
 UPDATE white_apps_dns SET dns="rabbitmq.miqtest.daai.siemens.cloud" WHERE IPs LIKE "10.140.49.83";
