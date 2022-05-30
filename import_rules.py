@@ -33,38 +33,70 @@ import ip_utils
 #                 raise ex
 #     return list_rules
 
-def get_dest_ports_ips(ld,members):
-    ids = [x.id for x in members]
+def get_dest_ports_ips(ld,ids,st_obj_df):
     for id in ids:
         try:
-            df_obj = get_network_object_by_id(id)
+            df_obj = get_network_object_by_id(id,st_obj_df)
             if df_obj.type.values[0]=="host":
-                ld.append(df_obj.ip.values[0])
+                ld.append(df_obj["ipv4-address"].values[0])
             #replace else with elif isinstance(not_g_no,?)
             elif df_obj.type.values[0]=="network":
                 [ld.append(sipa) for sipa in ip_utils.ip_range_explode(df_obj.ip.values[0], df_obj.netmask.values[0])]
             elif df_obj.type.values[0]=="group":
                 get_dest_ports_ips(df_obj.members)
-            # else:
+            elif df_obj.type.values[0] == "address-range":
+                for ra in range(ip_utils.ip2int(df_obj.first_ip), ip_utils.ip2int(df_obj.last_ip) + 1):
+                    r_ip = ip_utils.int2ip(ra)
+                    ld.append(r_ip)
+            else:
+                raise ValueError("type is not host,netw,group,range")
             #     patternPrefix = re.compile(
             #         '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
             #     resultPrefix = patternPrefix.match(id.name)  # 'SAG_163.242.205.140'
             #     dip = resultPrefix.group(1)
             #     ld.append(dip)
-        # except AttributeError as aex:
-        #     if aex.args[0] == '\'Group_Network_Object\' object has no attribute \'ip\'':
-        #         #not_g_no turns out to be doch group network object
-        #         get_dest_ports_ips(device_id, ld, not_g_no.members._list_data)
-        #     elif aex.args[0] == '\'Range_Network_Object\' object has no attribute \'ip\'':
-        #         r_no = st_helper.get_network_object_by_device_and_object_id(device_id, id)
-        #         for ra in range(ip_utils.ip2int(r_no.first_ip), ip_utils.ip2int(r_no.last_ip) + 1):
-        #             r_ip = ip_utils.int2ip(ra)
-        #             ld.append(r_ip)
         except ValueError as vex:
                 raise vex
         except BaseException as err:
             print(f"Unexpected {err=}, {type(err)=}")
             raise
+
+def get_dest_ports_ports(l_e,lid,st_obj_df):
+    # get_network_object_by_id() need repurposing to work as get_services_by_id()
+    elements = [get_network_object_by_id(x,st_obj_df) for x in lid]
+
+    for df in elements:
+        for index,service in df.iterrows():
+            try:
+                #e["type"]
+                pttrn_type = re.compile("service-(.+)", re.IGNORECASE)
+                res_type=pttrn_type.match(service["type"])
+                #group_service
+                #pttrn_type = re.compile("service-(.+)", re.IGNORECASE)
+                #res_type = pttrn_type.match(e["type"])
+                if res_type:
+                    tcp_udp=res_type.group(1)
+
+                    pttrn_port = re.compile("(\d+)-?(\d*)")
+                    res_port = pttrn_port.match(service["port"])
+                    if not res_port:
+                        raise ValueError()
+                    min = res_port.group(1)
+                    if res_port.groups().__len__()<2:
+                        max=""
+                    else:
+                        max=res_port.group(2)
+
+                    if not pandas.isna(service["members"]):
+                        raise ValueError()
+                    l_e.append({"min":min,"max":max,"tcp_udp":tcp_udp})
+                else:
+                    raise ValueError()
+            except BaseException as err:
+            #     if err.args[0] == '\'Group_Service\' object has no attribute \'max\'':
+            #         get_dest_ports_ports(l_e, e.members._list_data)
+            #     else:
+                     raise err
 
 #from_rule: 1, port: 415-450/tcp, ip: 10.2.
 #from_rule: 1, port: 600/udp, ip: 10.2.
@@ -94,24 +126,15 @@ def proc_dest_port_tuples(list_rules):
                 list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"st_serv_name":service_display_name,"rule_name":list_rules[i][0][0],"rule_order":list_rules[i][0][1],"rule_number":list_rules[i][0][2]})
     return list_exploded
 
-def get_network_object_by_id(id):
-    dir_path="./"
-    file=Path(dir_path)/"Standard_objects.json"
-    with file.open() as f:
-        objects=json.load(f)
-    df=pandas.DataFrame(objects)
-    types=df["type"].unique()
-    #df_ngh keep rows where type=network, group, or host
-    #df_ngh = df[df["type"].isin(["network", "group", "host","address-range"])]
-    df_ngh=df
+def get_network_object_by_id(id,st_obj_df):
     #DataFrame->Series contaning index, and a field True or False
-    matches=df_ngh["uid"].isin([id])
+    matches=st_obj_df["uid"].isin([id])
     if 1!=matches.value_counts().loc[True]:
         error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
         raise ValueError("%s\n\r uid: %s" %(error,id))
     #DataFrame containing single row
     #df_obj=df_ngh.loc[matches]
-    df_obj=df_ngh[matches]
+    df_obj=st_obj_df[matches]
     return df_obj
 
 
@@ -135,6 +158,20 @@ def main(path):
     noname = df_rules[df_rules.name.isna()]
     df_rules=df_rules[df_rules.name.notna()]
     list_rules=[]
+
+    st_obj_dir_path = "./"
+    st_obj_file = Path(st_obj_dir_path) / "Standard_objects.json"
+    with st_obj_file.open() as sof:
+        objects = json.load(sof)
+    st_obj_df = pandas.DataFrame(objects)
+    types = st_obj_df["type"].unique()
+    # df_ngh keep rows where type=network, group, or host
+    # usage inside get_dest_ports_ips()
+    # df_ngh = st_obj_df[st_obj_df["type"].isin(["network", "group", "host","address-range"])]
+    # usage inside get_dest_ports_ports()
+    # df_ngh = st_obj_df[st_obj_df["type"].isin(["services"])]
+
+
     for index,rule in df_rules.iterrows():
         rule_name = rule["name"]
         if rule_name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
@@ -145,11 +182,12 @@ def main(path):
         resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
             ld = []
-            get_dest_ports_ips(ld,rule["destination"])
+            get_dest_ports_ips(ld,rule["destination"],st_obj_df)
             l_e=[]
-            get_dest_ports_ports(l_e,r.dst_services)
+            get_dest_ports_ports(l_e,rule["service"],st_obj_df)
             # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
-            list_rules.append([[rule_name, rule["rule-number"], rule["source"]], ld, l_e])
+            sources=rule["source"]
+            list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":rule["source"], "destinations":ld, "services":l_e})
             print("")
 
     # df=pd.concat(df_list_per_file,ignore_index=True)
