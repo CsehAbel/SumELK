@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 import pandas
 import ip_utils
+from sqlalchemy import create_engine
 
 # def get_dest_ports():
 #     device_name = "CST-P-SAG-Energy"
@@ -32,6 +33,8 @@ import ip_utils
 #             except BaseException as ex:
 #                 raise ex
 #     return list_rules
+import secrets
+
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
@@ -48,7 +51,7 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
                 elif df_obj.type.values[0]=="group":
                     get_dest_ports_ips(ld,[x["uid"] for x in df_obj["members"].values[0]],st_obj_df)
                 elif df_obj.type.values[0] == "address-range":
-                    for ra in range(ip_utils.ip2int(df_obj.first_ip), ip_utils.ip2int(df_obj.last_ip) + 1):
+                    for ra in range(ip_utils.ip2int(df_obj["ipv4-address-first"].values[0]), ip_utils.ip2int(df_obj["ipv4-address-last"].values[0]) + 1):
                         r_ip = ip_utils.int2ip(ra)
                         ld.append(r_ip)
                 else:
@@ -72,31 +75,37 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
         for df in elements:
             for index,service in df.iterrows():
                 try:
-                    #e["type"]
+                    service_type_ = service["type"]
                     pttrn_type1 = re.compile("service-(tcp)", re.IGNORECASE)
-                    res_type1=pttrn_type1.match(service["type"])
+                    res_type1=pttrn_type1.match(service_type_)
                     pttrn_type2 = re.compile("service-(udp)", re.IGNORECASE)
-                    res_type2 = pttrn_type2.match(service["type"])
+                    res_type2 = pttrn_type2.match(service_type_)
                     pttrn_type3 = re.compile("service-group", re.IGNORECASE)
-                    res_type3 = pttrn_type3.match(service["type"])
+                    res_type3 = pttrn_type3.match(service_type_)
+                    pttrn_type4 = re.compile("service-other", re.IGNORECASE)
+                    res_type4 = pttrn_type4.match(service_type_)
                     if res_type1 or res_type2:
                         tcp_udp=res_type1.group(1) if res_type1 else res_type2.group(1)
 
-                        pttrn_port = re.compile("(\d+)-?(\d*)")
-                        res_port = pttrn_port.match(service["port"])
-                        if not res_port:
-                            raise ValueError()
-                        min = res_port.group(1)
-                        if res_port.groups().__len__()<2:
-                            max=""
-                        else:
-                            max=res_port.group(2)
+                        service_port_ = service["port"]
+
+                        pttrn_port1 = re.compile("(\d+)-?(\d*)")
+                        res_port1 = pttrn_port1.match(service_port_)
+                        pttrn_port2 = re.compile(">(\d+)")
+                        res_port2 = pttrn_port2.match(service_port_)
+                        if res_port1:
+                            l_e.append({"port": service_port_, "tcp_udp": tcp_udp})
+                        elif res_port2:
+                            min = res_port2.group(1)
+                            max = "65535"
+                            l_e.append({"port": "%s-%s" %(min,max), "tcp_udp": tcp_udp})
 
                         if not pandas.isna(service["members"]):
                             raise ValueError()
-                        l_e.append({"min":min,"max":max,"tcp_udp":tcp_udp})
                     elif res_type3:
                         get_dest_ports_ports(l_e,[y["uid"] for y in service["members"]],st_obj_df)
+                    elif res_type4:
+                        l_e.append({"port": service["ip-protocol"], "tcp_udp": service["name"].lower})
                     else:
                         raise ValueError()
                 except BaseException as err:
@@ -111,25 +120,12 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
 def proc_dest_port_tuples(list_rules):
     list_exploded=[]
     for i in range(len(list_rules)):
-        for ip in list_rules[i][1]:
-            for t in list_rules[i][2]:
-                max=t[0]
-                min=t[1]
-                service_display_name=t[3]
-                tcp_udp=""
-                if t[2] == 6:
-                    tcp_udp = "tcp"
-                elif t[2] == 17:
-                    tcp_udp = "udp"
-                elif (t[2] == None) and (max==min) and (max==50):
-                    tcp_udp = "esp"
-                else:
-                    print("")
-
-                range_or_not= str(max) if max==min else "%d-%d" %(min,max)
-                complete_port="%s/%s" %(range_or_not,tcp_udp)
-                #rule.name,order,rule_number
-                list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"st_serv_name":service_display_name,"rule_name":list_rules[i][0][0],"rule_order":list_rules[i][0][1],"rule_number":list_rules[i][0][2]})
+        for ip in list_rules[i]["destinations"]:
+            for t in list_rules[i]["services"]:
+                port=t["port"]
+                tcp_udp=t["tcp_udp"]
+                complete_port="%s/%s" %(port,tcp_udp)
+                list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"rule_name":list_rules[i]["name"],"rule_number":"%d" %list_rules[i]["number"]})
     return list_exploded
 
 def get_network_object_by_id(id,st_obj_df):
@@ -151,7 +147,7 @@ def main(path):
         raise FileNotFoundError(path)
     with file.open() as f:
         rules=json.load(f)
-    print("")
+
     patternApp=re.compile("^a.*",re.IGNORECASE)
     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
     df_rules = pandas.DataFrame(rules)
@@ -194,18 +190,21 @@ def main(path):
             get_dest_ports_ports(l_e,rule["service"],st_obj_df)
             # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
             sources=rule["source"]
-            list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":rule["source"], "destinations":ld, "services":l_e})
-            print("")
+            list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":sources, "destinations":ld, "services":l_e})
 
-    # df=pd.concat(df_list_per_file,ignore_index=True)
-    # sqlEngine = create_engine(
-    #     'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
-    # dbConnection = sqlEngine.connect()
-    # df.to_sql("ip", dbConnection, if_exists='replace', index=True)
+
+    list_exploded=proc_dest_port_tuples(list_rules)
+    print("")
+    dfx=pandas.DataFrame(list_exploded)
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
+    print("systems_group Done!")
 
 
 if __name__ == '__main__':
     path = "./Network-CST-P-SAG-Energy.json"
     main(path)
     #test access section a_white
-    get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
+    #get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
