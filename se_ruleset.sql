@@ -123,9 +123,9 @@ DROP TABLE se_ruleset_st_ports;
 #INNER JOIN
 CREATE TABLE se_ruleset_st_ports
 SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id) as wa INNER JOIN
-(SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
+(SELECT st_dest_ip,GROUP_CONCAT(DISTINCT(rule_name)) as g_rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
 GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
-FROM st_ports GROUP BY st_dest_ip,rule_name)
+FROM st_ports GROUP BY st_dest_ip)
 as ports ON wa.IPs = ports.st_dest_ip;
 
 DROP TABLE se_ruleset_st_ports_qc;
@@ -152,7 +152,7 @@ qc_ip as d_qc_ip,
 cardinality,
 g_dns4 as d_g_dns4,
 g_st_port as d_g_st_port,
-rule_name,
+g_rule_name,
 g_rule_number,
 g_s_c as d_g_s_c,
 g_s_ip_cidr as d_g_s_ip_cidr ,
