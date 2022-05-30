@@ -200,7 +200,7 @@ def main(path):
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
-    print("systems_group Done!")
+    print("import_rules.py Done!")
 
 
 if __name__ == '__main__':
