@@ -34,69 +34,75 @@ import ip_utils
 #     return list_rules
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
-    for id in ids:
-        try:
-            df_obj = get_network_object_by_id(id,st_obj_df)
-            if df_obj.type.values[0]=="host":
-                ld.append(df_obj["ipv4-address"].values[0])
-            #replace else with elif isinstance(not_g_no,?)
-            elif df_obj.type.values[0]=="network":
-                [ld.append(sipa) for sipa in ip_utils.ip_range_explode(df_obj.ip.values[0], df_obj.netmask.values[0])]
-            elif df_obj.type.values[0]=="group":
-                get_dest_ports_ips(df_obj.members)
-            elif df_obj.type.values[0] == "address-range":
-                for ra in range(ip_utils.ip2int(df_obj.first_ip), ip_utils.ip2int(df_obj.last_ip) + 1):
-                    r_ip = ip_utils.int2ip(ra)
-                    ld.append(r_ip)
-            else:
-                raise ValueError("type is not host,netw,group,range")
-            #     patternPrefix = re.compile(
-            #         '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
-            #     resultPrefix = patternPrefix.match(id.name)  # 'SAG_163.242.205.140'
-            #     dip = resultPrefix.group(1)
-            #     ld.append(dip)
-        except ValueError as vex:
-                raise vex
-        except BaseException as err:
-            print(f"Unexpected {err=}, {type(err)=}")
-            raise
+    try:
+        for id in ids:
+            try:
+                df_obj = get_network_object_by_id(id,st_obj_df)
+                if df_obj.type.values[0]=="host":
+                    ld.append(df_obj["ipv4-address"].values[0])
+                #replace else with elif isinstance(not_g_no,?)
+                elif df_obj.type.values[0]=="network":
+                    subnet=df_obj["subnet4"].values[0]
+                    netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
+                    [ld.append(sipa) for sipa in ip_utils.ip_range_explode(subnet, netmask)]
+                elif df_obj.type.values[0]=="group":
+                    get_dest_ports_ips(ld,[x["uid"] for x in df_obj["members"].values[0]],st_obj_df)
+                elif df_obj.type.values[0] == "address-range":
+                    for ra in range(ip_utils.ip2int(df_obj.first_ip), ip_utils.ip2int(df_obj.last_ip) + 1):
+                        r_ip = ip_utils.int2ip(ra)
+                        ld.append(r_ip)
+                else:
+                    raise ValueError("type is not host,netw,group,range")
+                #     patternPrefix = re.compile(
+                #         '^\s*SAG_(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}))\s*$')
+                #     resultPrefix = patternPrefix.match(id.name)  # 'SAG_163.242.205.140'
+                #     dip = resultPrefix.group(1)
+                #     ld.append(dip)
+            except BaseException as ex:
+                    raise ex
+    except BaseException as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 def get_dest_ports_ports(l_e,lid,st_obj_df):
     # get_network_object_by_id() need repurposing to work as get_services_by_id()
-    elements = [get_network_object_by_id(x,st_obj_df) for x in lid]
+    try:
+        elements = [get_network_object_by_id(x,st_obj_df) for x in lid]
 
-    for df in elements:
-        for index,service in df.iterrows():
-            try:
-                #e["type"]
-                pttrn_type = re.compile("service-(.+)", re.IGNORECASE)
-                res_type=pttrn_type.match(service["type"])
-                #group_service
-                #pttrn_type = re.compile("service-(.+)", re.IGNORECASE)
-                #res_type = pttrn_type.match(e["type"])
-                if res_type:
-                    tcp_udp=res_type.group(1)
+        for df in elements:
+            for index,service in df.iterrows():
+                try:
+                    #e["type"]
+                    pttrn_type1 = re.compile("service-(tcp)", re.IGNORECASE)
+                    res_type1=pttrn_type1.match(service["type"])
+                    pttrn_type2 = re.compile("service-(udp)", re.IGNORECASE)
+                    res_type2 = pttrn_type2.match(service["type"])
+                    pttrn_type3 = re.compile("service-group", re.IGNORECASE)
+                    res_type3 = pttrn_type3.match(service["type"])
+                    if res_type1 or res_type2:
+                        tcp_udp=res_type1.group(1) if res_type1 else res_type2.group(1)
 
-                    pttrn_port = re.compile("(\d+)-?(\d*)")
-                    res_port = pttrn_port.match(service["port"])
-                    if not res_port:
-                        raise ValueError()
-                    min = res_port.group(1)
-                    if res_port.groups().__len__()<2:
-                        max=""
+                        pttrn_port = re.compile("(\d+)-?(\d*)")
+                        res_port = pttrn_port.match(service["port"])
+                        if not res_port:
+                            raise ValueError()
+                        min = res_port.group(1)
+                        if res_port.groups().__len__()<2:
+                            max=""
+                        else:
+                            max=res_port.group(2)
+
+                        if not pandas.isna(service["members"]):
+                            raise ValueError()
+                        l_e.append({"min":min,"max":max,"tcp_udp":tcp_udp})
+                    elif res_type3:
+                        get_dest_ports_ports(l_e,[y["uid"] for y in service["members"]],st_obj_df)
                     else:
-                        max=res_port.group(2)
-
-                    if not pandas.isna(service["members"]):
                         raise ValueError()
-                    l_e.append({"min":min,"max":max,"tcp_udp":tcp_udp})
-                else:
-                    raise ValueError()
-            except BaseException as err:
-            #     if err.args[0] == '\'Group_Service\' object has no attribute \'max\'':
-            #         get_dest_ports_ports(l_e, e.members._list_data)
-            #     else:
-                     raise err
+                except BaseException as err:
+                         raise err
+    except BaseException as be:
+        raise be
 
 #from_rule: 1, port: 415-450/tcp, ip: 10.2.
 #from_rule: 1, port: 600/udp, ip: 10.2.
@@ -151,6 +157,7 @@ def main(path):
     df_rules = pandas.DataFrame(rules)
     #access-section, access-rule
     types=df_rules.type.unique()
+    df_rules = df_rules[df_rules["type"].isin(["access-rule"])]
     #there is no row which doesnt have a type
     notype = df_rules.type.isna().value_counts()
     #7 doesn't have name
