@@ -96,8 +96,9 @@ def main():
 
     list_unpacked_ips=[]
     for index,row in attachment_qc.iterrows():
-        location=row["USSM"]
-        if location.strip()=="Milbradt, Thomas (Z000F1XC)":
+        ussm=row["USSM"]
+        vpn=row["VPN name"]
+        if ussm.strip()=="Milbradt, Thomas (Z000F1XC)" and vpn.strip()=="Siemens VPN":
             b=row["IP-net-base"]
             cidr=row["CIDR"]
             prefix2 = b
