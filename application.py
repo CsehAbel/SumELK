@@ -34,8 +34,8 @@ def main():
     # first run SGRE to unpack se_ruleset
     # filepath_qc = get_cli_args().qualitycheck
     # qc_to_sql.main(filepath_qc)
-    # path = "./Network-CST-P-SAG-Energy.json"
-    # import_rules.main(path)
+    path = "./Network-CST-P-SAG-Energy.json"
+    import_rules.main(path)
 
     # download hits to hits/...json
     #hits.main()
@@ -45,11 +45,11 @@ def main():
     # bulk_json_to_df.main(path,regex)
 
     #systems_group.save_new_transform_json()
-    onlyinnew = generate_queries.read_query1to4()
+    #onlyinnew = generate_queries.read_query1to4()
     #new_transform.json
-    generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
+    #generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
     #upload all_red_networks systems to mysql systems table
-    generate_queries.main()
+    #generate_queries.main()
 
     # save_new_transform_json(onlyInNew=onlyinnew)
     # resolving ip to fqdn for white_apps
