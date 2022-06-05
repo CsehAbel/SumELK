@@ -18,7 +18,7 @@ def test_matches(attachment):
     for index, row in attachment.iterrows():
 
 
-        dict_raw_field = {"app_id": [], "tufin_id": row["Tufin ID"], "ips_field": row["IPs"]}
+        dict_raw_field = {"app_id": [], "ips_field": row["IPs"]}
         # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
         field = dict_raw_field["ips_field"]
         field_list=[]
@@ -242,12 +242,12 @@ def main(filepath_qc):
     print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
 
-    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
+    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","DARWIN_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
+    df_qc.to_sql("darwin_white_apps", dbConnection,if_exists='replace', index=True)
     #df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
     print("lel")
 
 if __name__=="__main__":
-    filepath_qc = "se_ruleset_unpacked19Apr2022.xlsx"
+    filepath_qc = "darwin_whitelist_unpacked05Jun2022.xlsx"
     main(filepath_qc)
