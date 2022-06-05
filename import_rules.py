@@ -6,33 +6,6 @@ import pandas
 import ip_utils
 from sqlalchemy import create_engine
 
-# def get_dest_ports():
-#     device_name = "CST-P-SAG-Energy"
-#     rules=st_helper.get_rules_for_device(device_id)
-#     patternApp=re.compile("^a.*",re.IGNORECASE)
-#     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
-#     list_rules=[]
-#     for r in rules._list_data:
-#         if r.name=='atos_vuln_scans':#,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
-#             continue
-#         if r.name == "a_17042_CDC":
-#             print("129.73.226.0/24 should be added to return value list_rules")
-#         try:
-#             resultApp=patternApp.match(r.name)
-#         except BaseException:
-#             continue
-#         resultWuser=patternWuser.match(r.name)
-#
-#         if resultWuser or resultApp:
-#             try:
-#                 ld = []
-#                 get_dest_ports_ips(device_id, ld, r.dst_networks)
-#                 l_e=[]
-#                 get_dest_ports_ports(device_id, l_e, r.dst_services)
-#                 list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
-#             except BaseException as ex:
-#                 raise ex
-#     return list_rules
 import secrets
 
 
@@ -163,7 +136,7 @@ def main(path):
     list_rules=[]
 
     st_obj_dir_path = "./"
-    st_obj_file = Path(st_obj_dir_path) / "Standard_objects.json"
+    st_obj_file = Path(st_obj_dir_path) / "Standard_objects_darwin.json"
     with st_obj_file.open() as sof:
         objects = json.load(sof)
     st_obj_df = pandas.DataFrame(objects)
@@ -173,14 +146,12 @@ def main(path):
     # df_ngh = st_obj_df[st_obj_df["type"].isin(["network", "group", "host","address-range"])]
     # usage inside get_dest_ports_ports()
     # df_ngh = st_obj_df[st_obj_df["type"].isin(["services"])]
-
+    obji = get_network_object_by_id('9c1d850b-3ecb-4b26-b3a6-fa68e8ccd30d', st_obj_df)
 
     for index,rule in df_rules.iterrows():
         rule_name = rule["name"]
         if rule_name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
-        if rule_name == "a_17042_CDC":
-            print("129.73.226.0/24 should be added to return value list_rules")
         resultApp=patternApp.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
@@ -204,7 +175,7 @@ def main(path):
 
 
 if __name__ == '__main__':
-    path = "./Network-CST-P-SAG-Energy.json"
+    path = "./Network-CST-P-SAG-Darwin.json"
     main(path)
     #test access section a_white
     #get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
