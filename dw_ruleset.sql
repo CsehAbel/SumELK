@@ -63,7 +63,7 @@ CASE WHEN FQDN IS NOT NULL
 		END
 END AS 'dns2'
 ,IPs as ips,`Change Type` as change_type,`APP ID` as app_id
-,`Application Name` as dest_info,`Protocol type port` as port
+,`Application Name` as app_name,`Protocol type port` as port
 
 ,ip
 #dns,ip,
@@ -79,7 +79,7 @@ CREATE TABLE darwin_white_apps_merged_dns2
 #dns2 -> from sysdb or (seruleset cleaned fqdn)
 SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
 ,wa.ips,change_type,app_id
-,port
+,wa.port,wa.app_name
 
 
 ,ip,   c,l,sys_type,corpflag,info_extra,info,hostname,domain,region
@@ -96,6 +96,7 @@ DROP TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id;
 #t-1:7447 t-0:17042 t+1:18195 t+2:18940
 CREATE TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
+GROUP_CONCAT(DISTINCT(app_name)) as g_app_name,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
 GROUP_CONCAT(DISTINCT(c)) as g_s_c,
 GROUP_CONCAT(DISTINCT(l)) as g_s_l,
@@ -128,32 +129,19 @@ GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
 FROM st_ports GROUP BY st_dest_ip,rule_name)
 as ports ON wa.IPs = ports.st_dest_ip;
 
-DROP TABLE se_ruleset_st_ports_qc;
-#getting Application Name from QualityCheck 
-#for each dest_ip, app id in se_ruleset_st_ports
-CREATE TABLE se_ruleset_st_ports_qc
-SELECT * FROM (
-SELECT * FROM 
-se_ruleset_st_ports)
-as wa_s LEFT JOIN 
-(SELECT IPs as qc_ip,`APP ID` as qc_app_id,group_concat(DISTINCT(`Application Name`)) as g_qc_app_name FROM white_apps 
- GROUP BY IPs,`APP ID` HAVING `APP ID` IS NOT NULL) as wa ON wa_s.ips=wa.qc_ip AND wa_s.app_id=wa.qc_app_id LIMIT 30000;
 
-DROP TABLE nice_se_ruleset_st_ports_qc;
-CREATE TABLE nice_se_ruleset_st_ports_qc
+DROP TABLE nice_dw_ruleset_st_ports;
+CREATE TABLE nice_dw_ruleset_st_ports
 SELECT
-g_qc_app_name as d_g_qc_app_name,
-qc_app_id,
 app_id,
 ips,
-qc_ip as d_qc_ip,
-#st_dest_ip,
-#g_s_ip,
 cardinality,
+g_app_name as d_g_app_name,
 g_dns4 as d_g_dns4,
 g_st_port as d_g_st_port,
 rule_name,
 g_rule_number,
+
 g_s_c as d_g_s_c,
 g_s_ip_cidr as d_g_s_ip_cidr ,
 g_s_vpn_name as d_g_s_vpn_name,
@@ -165,14 +153,9 @@ g_s_info,
 g_s_hostname,
 g_s_domain,
 g_s_corpflag
-,#g_tsa_expiration_date,
-g_application_requestor
-#g_comment,
+
 ,g_change_type
-,g_tufin_id
-#,g_source
-#,g_dest_info
 #.g_port
-FROM se_ruleset_st_ports_qc;
+FROM dw_ruleset_st_ports;
 
 
