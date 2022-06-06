@@ -8,6 +8,16 @@ from sqlalchemy import create_engine
 
 import secrets
 
+def get_network_object_by_id(id,st_obj_df):
+    #DataFrame->Series contaning index, and a field True or False
+    matches=st_obj_df["uid"].isin([id])
+    if 1!=matches.value_counts().loc[True]:
+        error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" %(error,id))
+    #DataFrame containing single row
+    #df_obj=df_ngh.loc[matches]
+    df_obj=st_obj_df[matches]
+    return df_obj
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
@@ -101,16 +111,19 @@ def proc_dest_port_tuples(list_rules):
                 list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"rule_name":list_rules[i]["name"],"rule_number":"%d" %list_rules[i]["number"]})
     return list_exploded
 
-def get_network_object_by_id(id,st_obj_df):
+
+
+def get_white_rules(df_rules):
     #DataFrame->Series contaning index, and a field True or False
-    matches=st_obj_df["uid"].isin([id])
-    if 1!=matches.value_counts().loc[True]:
-        error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
-        raise ValueError("%s\n\r uid: %s" %(error,id))
-    #DataFrame containing single row
-    #df_obj=df_ngh.loc[matches]
-    df_obj=st_obj_df[matches]
-    return df_obj
+    a = df_rules[df_rules["type"].isin(["access-section"])]
+    b = a["name"].isin(["white rules"])
+    #Anzahl der 'True' values
+    c = b.value_counts().loc[True]
+    if 1 != c:
+        error = "'white_rules' not found" if c == 0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" % (error, id))
+    white_rules = a[b].iloc[0]
+    return white_rules
 
 
 def main(path):
@@ -121,19 +134,21 @@ def main(path):
     with file.open() as f:
         rules=json.load(f)
 
-    patternApp=re.compile("^a.*",re.IGNORECASE)
-    patternWuser=re.compile("^wuser.*",re.IGNORECASE)
     df_rules = pandas.DataFrame(rules)
     #access-section, access-rule
     types=df_rules.type.unique()
+
+    section=get_white_rules(df_rules)
+    _from=int(section["from"])
+    _to=int(section["to"])
     df_rules = df_rules[df_rules["type"].isin(["access-rule"])]
+    df_rules = df_rules[df_rules["rule-number"].isin(range(_from, _to+1))]
+
     #there is no row which doesnt have a type
     notype = df_rules.type.isna().value_counts()
     #7 doesn't have name
-    hasname = df_rules[df_rules.name.notna()]
-    noname = df_rules[df_rules.name.isna()]
-    df_rules=df_rules[df_rules.name.notna()]
-    list_rules=[]
+    noname = df_rules.name.notna().value_counts()
+    df_rules = df_rules[df_rules.name.notna()]
 
     st_obj_dir_path = "./"
     st_obj_file = Path(st_obj_dir_path) / "Standard_objects_darwin.json"
@@ -141,17 +156,12 @@ def main(path):
         objects = json.load(sof)
     st_obj_df = pandas.DataFrame(objects)
     types = st_obj_df["type"].unique()
-    # df_ngh keep rows where type=network, group, or host
-    # usage inside get_dest_ports_ips()
-    # df_ngh = st_obj_df[st_obj_df["type"].isin(["network", "group", "host","address-range"])]
-    # usage inside get_dest_ports_ports()
-    # df_ngh = st_obj_df[st_obj_df["type"].isin(["services"])]
-    obji = get_network_object_by_id('9c1d850b-3ecb-4b26-b3a6-fa68e8ccd30d', st_obj_df)
 
+    patternApp = re.compile("^a.*", re.IGNORECASE)
+    patternWuser = re.compile("^wuser.*", re.IGNORECASE)
+    list_rules = []
     for index,rule in df_rules.iterrows():
         rule_name = rule["name"]
-        if rule_name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
-            continue
         resultApp=patternApp.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
@@ -168,7 +178,7 @@ def main(path):
     print("")
     dfx=pandas.DataFrame(list_exploded)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
     print("import_rules.py Done!")
