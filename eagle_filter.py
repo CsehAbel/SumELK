@@ -89,8 +89,16 @@ def correctAndCheckMatchedMask(cidr):
     mask = int(mask)
     return mask
 
-def main():
-    filepath_qc="20220530-snic_ip_network_assignments.csv"
+def snic_to_sql(filepath_qc):
+
+    attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
+
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    attachment_qc.to_sql("snic_export", dbConnection, if_exists='replace', index=True)
+
+def main(filepath_qc):
 
     attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 
@@ -127,7 +135,7 @@ def main():
             for j in range(decimalDottedQuadToInteger(base) + 1,
                            decimalDottedQuadToInteger(
                                integerToDecimalDottedQuad(int_prefix_top)) + 1):
-                list_unpacked_ips.append(integerToDecimalDottedQuad(j))
+                list_unpacked_ips.append({"ip":integerToDecimalDottedQuad(j),"base":b,"cidr":cidr})
 
     df=pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
@@ -137,4 +145,6 @@ def main():
     print("Done!")
 
 if __name__=="__main__":
-    main()
+    filepath_qc = "20220608-snic_ip_network_assignments.csv"
+    snic_to_sql(filepath_qc)
+    #main(filepath_qc)
