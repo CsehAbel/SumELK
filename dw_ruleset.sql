@@ -10,26 +10,18 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'DARWIN_DB' AND TABLE_NAME = 'darwin_white_apps';
  
-#2614
+#2614->1368
 SELECT COUNT(*) FROM darwin_white_apps;
 
-#TSA expiration date
-#filter deleted
-SELECT COUNT(*) FROM darwin_white_apps_merged; #2628
-SELECT COUNT(*) FROM darwin_white_apps_merged WHERE change_type IS NULL; #2433
-SELECT COUNT(*) FROM darwin_white_apps_merged WHERE change_type IS NOT NULL;
-SELECT COUNT(*) FROM darwin_white_apps_merged WHERE change_type IS NULL OR change_type NOT LIKE 'staging' LIMIT 10000; #2552
-SELECT COUNT(*) FROM darwin_white_apps_merged WHERE change_type IS NULL OR change_type LIKE 'staging' LIMIT 10000; #2509
-#filter Where App ID is NULL -> 22
-SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL AND change_type NOT LIKE 'staging' LIMIT 20000;
+#filter TSA expiration date
+SELECT COUNT(*) FROM darwin_white_apps_merged; #2628->1371
+SELECT * FROM darwin_white_apps_merged WHERE '2022-06-31'<tsa OR tsa IS NULL; #955
+SELECT * FROM darwin_white_apps_merged WHERE tsa<'2022-06-31'; #416
 
-#6353 where sysdb.ip is null
-SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
-#19624 -> 20283
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
+SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL OR app_id LIKE '-'; #5
 
-#38162 -> 42043
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
+#542
+SELECT * FROM darwin_white_apps_merged WHERE ip IS NULL LIMIT 10000;
 
 #222
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
@@ -62,8 +54,9 @@ CASE WHEN FQDN IS NOT NULL
 			dns
 		END
 END AS 'dns2'
-,IPs as ips,`Change Type` as change_type,`APP ID` as app_id
+,IPs as ips,`APP ID` as app_id
 ,`Application Name` as app_name,`Protocol type port` as port
+,TSA as tsa
 
 ,ip
 #dns,ip,
@@ -78,8 +71,9 @@ DROP TABLE darwin_white_apps_merged_dns2;
 CREATE TABLE darwin_white_apps_merged_dns2
 #dns2 -> from sysdb or (seruleset cleaned fqdn)
 SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
-,wa.ips,change_type,app_id
+,wa.ips,wa.app_id
 ,wa.port,wa.app_name
+,wa.tsa
 
 
 ,ip,   c,l,sys_type,corpflag,info_extra,info,hostname,domain,region
@@ -88,7 +82,7 @@ SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
 FROM 
 (SELECT * FROM darwin_white_apps_merged) as wa
 LEFT JOIN (SELECT IPs,dns as dns3 FROM darwin_white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
-WHERE change_type IS NULL OR change_type NOT LIKE 'staging';
+WHERE '2022-06-31'<tsa OR tsa IS NULL;
 
 SET group_concat_max_len=15000;
 
@@ -97,6 +91,8 @@ DROP TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id;
 CREATE TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(app_name)) as g_app_name,
+GROUP_CONCAT(DISTINCT(tsa)) as g_tsa,
+
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
 GROUP_CONCAT(DISTINCT(c)) as g_s_c,
 GROUP_CONCAT(DISTINCT(l)) as g_s_l,
@@ -110,7 +106,6 @@ GROUP_CONCAT(DISTINCT(region)) as g_s_region,
 GROUP_CONCAT(DISTINCT(snic_comment)) as g_s_snic_comment,
 GROUP_CONCAT(DISTINCT(ip_cidr)) as g_s_ip_cidr,
 GROUP_CONCAT(DISTINCT(vpn_name)) as g_s_vpn_name,
-GROUP_CONCAT(DISTINCT(change_type)) as g_change_type,
 
 GROUP_CONCAT(DISTINCT(port)) as g_port,#dest port
 
@@ -137,6 +132,7 @@ app_id,
 ips,
 cardinality,
 g_app_name as d_g_app_name,
+g_tsa as g_tsa,
 g_dns4 as d_g_dns4,
 g_st_port as d_g_st_port,
 rule_name,
@@ -154,7 +150,6 @@ g_s_hostname,
 g_s_domain,
 g_s_corpflag
 
-,g_change_type
 #.g_port
 FROM dw_ruleset_st_ports;
 

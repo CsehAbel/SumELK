@@ -249,5 +249,5 @@ def main(filepath_qc):
     print("lel")
 
 if __name__=="__main__":
-    filepath_qc = "darwin_whitelist_unpacked05Jun2022.xlsx"
+    filepath_qc = "darwin_ruleset_unpacked13Jun2022.xlsx"
     main(filepath_qc)
