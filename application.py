@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 import secrets
 import main as hits
 import bulk_json_to_df
+import eagle_filter
 from sqlalchemy import create_engine
 
 import secrets
@@ -34,8 +35,13 @@ def main():
     # first run SGRE to unpack se_ruleset
     # filepath_qc = get_cli_args().qualitycheck
     # qc_to_sql.main(filepath_qc)
-    path = "./Network-CST-P-SAG-Energy.json"
-    import_rules.main(path)
+    # path = "./Network-CST-P-SAG-Energy.json"
+    # import_rules.main(path)
+
+    #fill mysql tables eagle, snic_export, run eagle_comparison.sql
+    filepath_qc = "20220614-snic_ip_network_assignments.csv"
+    eagle_filter.main(filepath_qc)
+    eagle_filter.snic_to_sql(filepath_qc)
 
     # download hits to hits/...json
     #hits.main()
