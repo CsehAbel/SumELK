@@ -73,7 +73,8 @@ def save_new_transform_json(onlyInNew):
     transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
     with open('new_transform.json', 'w') as outfile:
-        json.dump(transform, outfile)
+        transform2=json.dumps(transform, indent=4) #,sort_keys=True)
+        outfile.write(transform2)
     print("Done writing new_transform.json!")
 
 #systems_group.py onlyinold_to_sql() repurposed
