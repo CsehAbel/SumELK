@@ -2,7 +2,6 @@ import json
 
 import generate_queries
 import import_rules
-import resolveIpToName
 import systems_group
 import qc_to_sql
 from sqlalchemy import create_engine
@@ -32,9 +31,9 @@ def main():
     # where rule_name like a.* and like wuser.*  and not like atos_vuln_scan
     # to CSV_DB -> st_ports
     # first run SGRE to unpack se_ruleset
-    # filepath_qc = get_cli_args().qualitycheck
-    # qc_to_sql.main(filepath_qc)
-    path = "./Network-CST-P-SAG-Energy.json"
+    filepath_qc = get_cli_args().qualitycheck
+    qc_to_sql.main(filepath_qc)
+    path = "./Network-CST-P-SAG-Darwin.json"
     import_rules.main(path)
 
     # download hits to hits/...json
