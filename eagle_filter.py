@@ -135,7 +135,7 @@ def main(filepath_qc):
             for j in range(decimalDottedQuadToInteger(base) + 1,
                            decimalDottedQuadToInteger(
                                integerToDecimalDottedQuad(int_prefix_top)) + 1):
-                list_unpacked_ips.append({"ip":integerToDecimalDottedQuad(j),"base":b,"cidr":cidr})
+                list_unpacked_ips.append({"ip":integerToDecimalDottedQuad(j),"base":b,"cidr":cidr,"ussm":ussm,"vpn":vpn})
 
     df=pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
@@ -145,6 +145,6 @@ def main(filepath_qc):
     print("Done!")
 
 if __name__=="__main__":
-    filepath_qc = "20220608-snic_ip_network_assignments.csv"
+    filepath_qc = "20220614-snic_ip_network_assignments.csv"
     snic_to_sql(filepath_qc)
     #main(filepath_qc)
