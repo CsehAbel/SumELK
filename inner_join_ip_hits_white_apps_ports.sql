@@ -1,7 +1,7 @@
 USE CSV_DB;
 USE CSV_DB;
 
-#t-1:161 661 t-0: 195 511
+#223394
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 
@@ -68,7 +68,7 @@ COUNT(dns) as countdns,
 #only counts not null
 COUNT(src_ip) as countsrc
 FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as i 
-LEFT JOIN (SELECT `0` as dip FROM eagle) as e
+LEFT JOIN (SELECT ip as dip FROM eagle) as e
 ON i.dst_ip=e.dip 
 LEFT JOIN (SELECT `0` as sip FROM systems) as o 
 ON i.src_ip=o.sip 
@@ -85,7 +85,7 @@ COUNT(dns) as countdns,
 #only counts not null
 COUNT(src_ip) as countsrc, nice_se_ruleset_st_ports_qc.*
  FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as a 
-LEFT JOIN (SELECT `0` as dip FROM eagle) as b
+LEFT JOIN (SELECT ip as dip FROM eagle) as b
 ON a.dst_ip=b.dip 
 INNER JOIN nice_se_ruleset_st_ports_qc 
 ON nice_se_ruleset_st_ports_qc.d_qc_ip=a.dst_ip
