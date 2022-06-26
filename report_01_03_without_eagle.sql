@@ -1,8 +1,4 @@
-#409 where ip,app-id cardinality!=1
-SELECT ips,app_id,cardinality,g_dns2 as fqdn,g_change_type,g_s_ip_cidr as list_snic_network,g_s_vpn_name as list_snic_vpn FROM white_apps_se_ruleset
-WHERE cardinality!=1;
-
-#222
+#1650
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
 SELECT * FROM white_apps_se_ruleset_merged_dns2 
 LEFT JOIN (SELECT ip as dip FROM eagle) as e

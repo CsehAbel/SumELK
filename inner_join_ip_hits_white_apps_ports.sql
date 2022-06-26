@@ -25,16 +25,16 @@ SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
 SELECT COUNT(*) FROM
 (SELECT src_ip,MAX(dns) as dns FROM src_dns WHERE dns IS NOT NULL GROUP BY src_ip) as sd;
 
-#22936 ip_unique left join src_dns
+#235844 ip_unique left join src_dns
 SELECT iu.*,src.dns FROM (SELECT * FROM ip_unique) as iu 
 LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src  ON src.src_ip=iu.src_ip;
 
-#38693 ip_unique left join sysdb
+#212219 ip_unique left join sysdb
 SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN 
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
  
- #163 974
+ #238472
  DROP TABLE ipunique_ljoin_sysdb_srcdns;
  CREATE TABLE ipunique_ljoin_sysdb_srcdns
  SELECT iu.*,CASE WHEN src.dns IS NOT NULL THEN src.dns ELSE s.dns END as dns FROM 
@@ -50,8 +50,7 @@ SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
 #Filter only all_red_networks_systems
 SELECT COUNT(*) FROM systems;
 
-SELECT COUNT(*) FROM eagle;
-SELECT `0` FROM eagle; 
+SELECT COUNT(*) FROM eagle; 
  
 SET SESSION group_concat_max_len=1500000; 
  

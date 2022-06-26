@@ -10,7 +10,7 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
  
-#20653 
+#20168
 SELECT COUNT(*) FROM white_apps_se_ruleset;
 
 #TSA expiration date
@@ -21,19 +21,19 @@ SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type 
 
 #6353 where sysdb.ip is null
 SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
-#19624 -> 20283
+#20225
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
 
-#38162 -> 42043
+#117257
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
 
-#222
+#1650
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
 SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
 
 SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
 
-#t-1:409 t-0:9242 t+1: 90009
+#17492
 SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
 WHERE cardinality!=1 LIMIT 20000;
 

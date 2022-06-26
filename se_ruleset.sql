@@ -10,7 +10,7 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
  
-#20653 
+#20077
 SELECT COUNT(*) FROM white_apps_se_ruleset;
 
 #TSA expiration date
