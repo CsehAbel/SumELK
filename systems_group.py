@@ -16,6 +16,7 @@ import secrets
 import bulk_json_to_df
 from sqlalchemy import create_engine
 import ip_utils
+from pathlib import Path
 
 
 sc_helper = Secure_Change_Helper("cofw.siemens.com", (secrets.sc_u, secrets.sc_pw))
@@ -29,29 +30,88 @@ logger = logging.getLogger(COMMON_LOGGER_NAME)
 conf = Secure_Config_Parser(config_file_path=config_file_path)
 setup_loggers(conf.dict("log_levels"),log_file_path,log_file_name,log_to_stdout=True)  # cli_args.debug)
 
+def get_white_rules(df_rules):
+    #DataFrame->Series contaning index, and a field True or False
+    a = df_rules[df_rules["type"].isin(["access-section"])]
+    b = a["name"].isin(["white rules"])
+    #Anzahl der 'True' values
+    c = b.value_counts().loc[True]
+    if 1 != c:
+        error = "'white_rules' not found" if c == 0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" % (error, id))
+    white_rules = a[b].iloc[0]
+    return white_rules
 
-def get_systems_ip_list():
-    device_name = "CST-P-SAG-Energy"
-    device_id = st_helper.get_device_id_by_name(device_name)
-    #SystemsNetworkObjects_emea = st_helper.get_network_objects_for_device(device_id)
-    #group_names=[]
-    # for x in SystemsNetworkObjects_emea.network_objects:
-    #     if hasattr(x, 'type'):
-    #         if x.type=="group":
-    #             pattern_sys=re.compile(".*migrated_SNX_Systems",re.IGNORECASE)
-    #             if pattern_sys.match(x.name):
-    #                 group_names.append(x.name)
-    group_names=['NAM_migrated_SNX_Systems','EMEA_migrated_SNX_Systems','LATAM_migrated_SNX_Systems','AAE_migrated_SNX_Systems','CHINA_migrated_SNX_Systems']
-    system_ips=[]
-    for gn in group_names:
-        SystemsNetworkObjects = st_helper.get_network_objects_for_device(device_id, "group",{"name": gn })
-        for i in SystemsNetworkObjects.network_objects:
-            if(hasattr(i,"ip") and hasattr(i,"netmask")):
-                range={"ip":i.ip,"cidr":ip_utils.netmask_to_cidr(i.netmask)}
-                system_ips.append("%s/%s" %(range["ip"],range["cidr"]))
-            else:
-                pass
-    return system_ips
+def get_systems_ip_list(darwin_json):
+    st_obj_dir_path = "./"
+    st_obj_file = Path(st_obj_dir_path) / darwin_json
+
+    if not st_obj_file.is_file():
+        raise FileNotFoundError(st_obj_file.name)
+
+    # df_rules = pandas.DataFrame(rules)
+    # #access-section, access-rule
+    # types = df_rules.type.unique()
+    #
+    # section=get_white_rules(df_rules)
+    # _from=int(section["from"])
+    # _to=int(section["to"])
+    # df_rules = df_rules[df_rules["type"].isin(["access-rule"])]
+    # df_rules = df_rules[df_rules["rule-number"].isin(range(_from, _to+1))]
+    #
+    # #there is no row which doesnt have a type
+    # notype = df_rules.type.isna().value_counts()
+    # #7 doesn't have name
+    # noname = df_rules.name.notna().value_counts()
+    # df_rules = df_rules[df_rules.name.notna()]
+    with st_obj_file.open() as sof:
+        objects = json.load(sof)
+    st_obj_df = pandas.DataFrame(objects)
+    types = st_obj_df["type"].unique()
+
+    patternApp = re.compile("^a.*", re.IGNORECASE)
+    patternWuser = re.compile("^wuser.*", re.IGNORECASE)
+    list_rules = []
+    # for index,rule in df_rules.iterrows():
+    #     rule_name = rule["name"]
+    #     resultApp=patternApp.match(rule_name)
+    #     resultWuser = patternWuser.match(rule_name)
+    #     if resultWuser or resultApp:
+    #         ld = []
+    #         get_dest_ports_ips(ld,rule["destination"],st_obj_df)
+    #         l_e=[]
+    #         get_dest_ports_ports(l_e,rule["service"],st_obj_df)
+    #         # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
+    #         sources=rule["source"]
+    #         list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":sources, "destinations":ld, "services":l_e})
+
+
+    list_exploded=proc_dest_port_tuples(list_rules)
+    print("")
+    dfx=pandas.DataFrame(list_exploded)
+
+#def get_systems_ip_list():
+#     device_name = "CST-P-SAG-Energy"
+#     device_id = st_helper.get_device_id_by_name(device_name)
+#     #SystemsNetworkObjects_emea = st_helper.get_network_objects_for_device(device_id)
+#     #group_names=[]
+#     # for x in SystemsNetworkObjects_emea.network_objects:
+#     #     if hasattr(x, 'type'):
+#     #         if x.type=="group":
+#     #             pattern_sys=re.compile(".*migrated_SNX_Systems",re.IGNORECASE)
+#     #             if pattern_sys.match(x.name):
+#     #                 group_names.append(x.name)
+#     group_names=['NAM_migrated_SNX_Systems','EMEA_migrated_SNX_Systems','LATAM_migrated_SNX_Systems','AAE_migrated_SNX_Systems','CHINA_migrated_SNX_Systems']
+#     system_ips=[]
+#     for gn in group_names:
+#         SystemsNetworkObjects = st_helper.get_network_objects_for_device(device_id, "group",{"name": gn })
+#         for i in SystemsNetworkObjects.network_objects:
+#             if(hasattr(i,"ip") and hasattr(i,"netmask")):
+#                 range={"ip":i.ip,"cidr":ip_utils.netmask_to_cidr(i.netmask)}
+#                 system_ips.append("%s/%s" %(range["ip"],range["cidr"]))
+#             else:
+#                 pass
+#     return system_ips
 
 #ld list of destination ips to complete with ips found inside group network objects
 #members list of members either Host_Network_Obj or Group_Network_Obj
@@ -192,5 +252,10 @@ def dest_ports_to_file():
     df.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
     print("systems_group Done!")
 
+def main():
+    darwin_json = "Standard_objects_darwin.json"
+    get_systems_ip_list(darwin_json)
+
 if __name__=="__main__":
-    print("lel")
+    main()
+    print("systems_group.py done!")
