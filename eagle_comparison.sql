@@ -4,7 +4,7 @@ SELECT * FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Si
 SELECT COUNT(*) FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Siemens VPN';
 SELECT Location FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Siemens VPN' GROUP BY Location;
 
-#322970
+#323351
 SELECT * FROM eagle;
 
 SELECT e.*,wa.* FROM 
