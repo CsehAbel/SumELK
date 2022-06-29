@@ -26,8 +26,8 @@ def main():
 
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
 
-    for i in range(4):
-        download_index(es=es,index="business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)
+    for i in range(1):
+        download_index(es=es,index="darwin_business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)
     
     print("Done!")
 
@@ -39,7 +39,7 @@ def download_index(es,index,nth,sort,gte_date):
     seq = 0
     hits = resp['hits']['hits']
 
-    p = "hits"
+    p = "darwin_hits"
     path = Path(p).absolute()
     filepath = path / ('hit_00%d_%s_%d.json' % (nth, gte_date, seq))
     with filepath.open('w') as outfile:
@@ -57,9 +57,9 @@ def download_index(es,index,nth,sort,gte_date):
         hits = resp['hits']['hits']
 
         if hits_len==0:
-            print("Not creating hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
+            print("Not creating darwin_hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
         else:
-            with open('hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
+            with open('darwin_hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
                 # json.dump(buckets)
                 for b in hits:
                     json.dump(flattenhit(b), outfile)
