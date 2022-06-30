@@ -31,24 +31,27 @@ def main():
     # where rule_name like a.* and like wuser.*  and not like atos_vuln_scan
     # to CSV_DB -> st_ports
     # first run SGRE to unpack se_ruleset
-    filepath_qc = get_cli_args().qualitycheck
-    qc_to_sql.main(filepath_qc)
-    path = "./Network-CST-P-SAG-Darwin.json"
-    import_rules.main(path)
+    #filepath_qc = get_cli_args().qualitycheck
+    #qc_to_sql.main(filepath_qc)
+    #path = "./Network-CST-P-SAG-Darwin.json"
+    #import_rules.main(path)
 
     # download hits to hits/...json
-    #hits.main()
+    # hits.main()
     # .json to mysql table 'ip'
-    # path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    # path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/darwin_hits/"
     # regex = "^hit.*"
     # bulk_json_to_df.main(path,regex)
 
-    #systems_group.save_new_transform_json()
     #onlyinnew = generate_queries.read_query1to4()
-    #new_transform.json
+    darwin_json = "Standard_objects_darwin.json"
+    sag_systems=systems_group.get_systems_ip_list(darwin_json)
+    #darwin_transform.json
     #generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
+    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
     #upload all_red_networks systems to mysql systems table
     #generate_queries.main()
+    generate_queries.systems_to_sql(sag_systems)
 
     # save_new_transform_json(onlyInNew=onlyinnew)
     # resolving ip to fqdn for white_apps

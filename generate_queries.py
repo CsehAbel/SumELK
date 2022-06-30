@@ -35,7 +35,7 @@ port='9200'
 #system_groups.py all_red_networks_systems() rewritten
 def read_query1to4():
     systems_ips = systems_group.get_systems_ip_list()
-    p1 = ["query1.json","query2.json","query3.json","query4.json"]
+    p1 = ["old_darwin_transform.json"]
     trsfrm_path = lambda x: Path(x).absolute()
     p2=[trsfrm_path(y) for y in p1]
     #query1…4 altal lettek letoltve, a transform job 1-4 altal lettek letöltve
@@ -44,7 +44,7 @@ def read_query1to4():
     for q in p2:
         with q.open("r") as infile:
             query=json.load(infile)
-            prefixlist=query['bool']['filter'][0]['terms']['source.ip'] if q.name == "query1.json" else query['bool']['filter']['terms']['source.ip']
+            prefixlist=query['bool']['filter']['terms']['source.ip']
             for line in prefixlist:
                 patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
                 # [\s"]* anstatt \s*
@@ -69,12 +69,12 @@ def save_new_transform_json(onlyInNew):
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
-    #393
+    #275
     transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
-    with open('new_transform.json', 'w') as outfile:
+    with open('darwin_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
-    print("Done writing new_transform.json!")
+    print("Done writing darwin_transform.json!")
 
 #systems_group.py onlyinold_to_sql() repurposed
 def systems_to_sql(systems):
@@ -117,7 +117,7 @@ def systems_to_sql(systems):
 
     df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("systems", dbConnection, if_exists='replace', index=True)
 
