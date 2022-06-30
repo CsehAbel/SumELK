@@ -91,7 +91,7 @@ def main(path,regex):
 
     df=pd.concat(df_list_per_file,ignore_index=True)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("ip", dbConnection, if_exists='replace', index=True)
 
