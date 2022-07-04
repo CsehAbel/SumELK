@@ -1,10 +1,10 @@
-USE CSV_DB;
-USE CSV_DB;
+USE DARWIN_DB;
 
-#t-1:161 661 t-0: 195 511
+#1 968 335
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 
+DROP TABLE `ip_unique`;
 CREATE TABLE `ip_unique` (
   `src_ip` VARCHAR(15) NOT NULL,
   `dst_ip` VARCHAR(15) NOT NULL,
@@ -18,6 +18,7 @@ INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     FROM ip;
 
 SELECT * FROM ip_unique;
+#1 968 335
 SELECT COUNT(*) FROM ip_unique;
 
 #python appends the fqdns to this table, select only one fqdn per src_ip
@@ -33,25 +34,13 @@ LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src  ON src.src_ip=iu
 SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN 
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
- 
- #163 974
- DROP TABLE ipunique_ljoin_sysdb_srcdns;
- CREATE TABLE ipunique_ljoin_sysdb_srcdns
- SELECT iu.*,CASE WHEN src.dns IS NOT NULL THEN src.dns ELSE s.dns END as dns FROM 
- (SELECT * FROM ip_unique) as iu  
-LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src 
- ON iu.src_ip=src.src_ip
- LEFT JOIN (SELECT * FROM sysdb
- WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s
- ON iu.src_ip=s.ip;
 
-SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
 #Filter out EAGLE
 #Filter only all_red_networks_systems
 SELECT COUNT(*) FROM systems;
 
 SELECT COUNT(*) FROM eagle;
-SELECT `0` FROM eagle; 
+SELECT ip FROM eagle; 
  
 SET SESSION group_concat_max_len=1500000; 
  
@@ -63,12 +52,9 @@ DROP TABLE ipunique_g_dns;
 CREATE TABLE ipunique_g_dns
 SELECT dst_ip,
 GROUP_CONCAT(DISTINCT(src_ip)) as s_g_src_ip,
-GROUP_CONCAT(DISTINCT(dns)) as s_g_dns,
-COUNT(dns) as countdns,
-#only counts not null
 COUNT(src_ip) as countsrc
-FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as i 
-LEFT JOIN (SELECT `0` as dip FROM eagle) as e
+FROM (SELECT * FROM ip_unique) as i 
+LEFT JOIN (SELECT ip as dip FROM eagle) as e
 ON i.dst_ip=e.dip 
 LEFT JOIN (SELECT `0` as sip FROM systems) as o 
 ON i.src_ip=o.sip 
@@ -77,27 +63,12 @@ GROUP BY dst_ip
 #HAVING countsrc=countdns
 ;
 
-
-#Look at number of source adresses descending
-SELECT dst_ip,
-GROUP_CONCAT(DISTINCT(dns)) as s_g_dns,
-COUNT(dns) as countdns,
-#only counts not null
-COUNT(src_ip) as countsrc, nice_se_ruleset_st_ports_qc.*
- FROM (SELECT * FROM ipunique_ljoin_sysdb_srcdns) as a 
-LEFT JOIN (SELECT `0` as dip FROM eagle) as b
-ON a.dst_ip=b.dip 
-INNER JOIN nice_se_ruleset_st_ports_qc 
-ON nice_se_ruleset_st_ports_qc.d_qc_ip=a.dst_ip
-WHERE b.dip IS NULL
-GROUP BY dst_ip;
-
 #WHERE dns IS NOT NULL AND dns NOT LIKE '-';
-SELECT * FROM nice_se_ruleset_st_ports_qc;
+SELECT * FROM nice_dw_ruleset_st_ports;
 
 #ipunique INNER JOIN se_ruleset_st_ports
-SELECT ipunique_g_dns.*,nice_se_ruleset_st_ports_qc.* FROM nice_se_ruleset_st_ports_qc 
-INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip LIMIT 30000;
+SELECT ipunique_g_dns.*,nice_dw_ruleset_st_ports.* FROM nice_dw_ruleset_st_ports 
+INNER JOIN ipunique_g_dns ON nice_dw_ruleset_st_ports.ips=ipunique_g_dns.dst_ip LIMIT 30000;
 
 #se_ruleset_st_ports RIGHT JOIN ipunique
 SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 

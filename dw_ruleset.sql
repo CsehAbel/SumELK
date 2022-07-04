@@ -23,25 +23,6 @@ SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL OR app_id LIKE '-'; 
 #542
 SELECT * FROM darwin_white_apps_merged WHERE ip IS NULL LIMIT 10000;
 
-#222
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
-
-SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-
-#t-1:409 t-0:9242 t+1: 90009
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1 LIMIT 20000;
-
-#Needed again because there is no APP ID field in SecureTrack
-#So the ports list cannot be yet determined, only a cross join
-SELECT * FROM 
-se_ruleset_st_ports GROUP BY ips,app_id LIMIT 20000;
-
-SELECT group_concat(COLUMN_NAME)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'se_ruleset_st_ports_qc';
-
 DROP TABLE darwin_white_apps_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
 CREATE TABLE darwin_white_apps_merged
