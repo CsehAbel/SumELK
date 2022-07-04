@@ -89,8 +89,16 @@ def correctAndCheckMatchedMask(cidr):
     mask = int(mask)
     return mask
 
-def main():
-    filepath_qc="20220530-snic_ip_network_assignments.csv"
+def snic_to_sql(filepath_qc):
+
+    attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
+
+    sqlEngine = create_engine(
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
+    dbConnection = sqlEngine.connect()
+    attachment_qc.to_sql("snic_export", dbConnection, if_exists='replace', index=True)
+
+def fill_eagle_from_snic(filepath_qc):
 
     attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 
@@ -117,7 +125,7 @@ def main():
                 # Modified
                 #    decimalDottedQuadToInteger()
                 # to convert signed integers to unsigned.
-                # Das Folgende ist redundant, überreichlich, ersetzt:
+                # Das Folgende ist redundant, Ã¼berreichlich, ersetzt:
                 #   int_prefix_top == -4117887025:
                 #   if int_prefix_top < 0:
                 #      int_prefix_top = int_prefix_top + (2**32)
@@ -127,14 +135,15 @@ def main():
             for j in range(decimalDottedQuadToInteger(base) + 1,
                            decimalDottedQuadToInteger(
                                integerToDecimalDottedQuad(int_prefix_top)) + 1):
-                list_unpacked_ips.append(integerToDecimalDottedQuad(j))
+                list_unpacked_ips.append({"ip":integerToDecimalDottedQuad(j),"base":b,"cidr":cidr,"ussm":ussm,"vpn":vpn})
 
     df=pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("eagle", dbConnection, if_exists='replace', index=True)
     print("Done!")
 
 if __name__=="__main__":
-    main()
+    path="20220630-snic_ip_network_assignments.csv"
+    fill_eagle_from_snic(filepath_qc=path)
