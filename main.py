@@ -27,7 +27,7 @@ def main():
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
 
     for i in range(1):
-        download_index(es=es,index="darwin_business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)
+        download_index(es=es,index="darwin_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date)
     
     print("Done!")
 
