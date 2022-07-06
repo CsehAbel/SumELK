@@ -55,6 +55,11 @@ def main():
     #new_transform.json
     generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
     #upload all_red_networks systems to mysql systems table
+    #calls generate_queries.systems_to_sql()
+    #ToDo: replace generate_queries with methods from darwin branch
+    #darwin_json = "Standard_objects_darwin.json"
+    #sag_systems = systems_group.get_systems_ip_list(darwin_json)
+    #generate_queries.systems_to_sql(sag_systems)
     generate_queries.main()
 
     # resolving ip to fqdn for white_apps
