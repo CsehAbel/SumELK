@@ -46,7 +46,7 @@ def main():
     bulk_json_to_df.main(path,regex)
 
     #onlyinnew = generate_queries.read_query1to4()
-    darwin_json = "Standard_objects_darwin.json"
+    darwin_json = "Standard_objects.json"
     sag_systems=systems_group.get_systems_ip_list(darwin_json)
     #darwin_transform.json
     #generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
