@@ -1,4 +1,4 @@
-#1650
+#1694
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
 SELECT * FROM white_apps_se_ruleset_merged_dns2 
 LEFT JOIN (SELECT ip as dip FROM eagle) as e

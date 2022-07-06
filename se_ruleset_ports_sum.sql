@@ -19,8 +19,6 @@ SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' 
 #filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
 SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
 
-#6353 where sysdb.ip is null
-SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
 #20785
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
 
@@ -31,16 +29,8 @@ SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
 SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
 SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
 
+#19342
 SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-
-#17494
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1 LIMIT 20000;
-
-#Needed again because there is no APP ID field in SecureTrack
-#So the ports list cannot be yet determined, only a cross join
-SELECT * FROM 
-se_ruleset_st_ports GROUP BY ips,app_id LIMIT 20000;
 
 SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS

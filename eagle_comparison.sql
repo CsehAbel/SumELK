@@ -1,11 +1,11 @@
-#34346
-SELECT * FROM snic_export;
+#34384
+SELECT COUNT(*) FROM snic_export;
 SELECT * FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Siemens VPN';
 SELECT COUNT(*) FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Siemens VPN';
 SELECT Location FROM snic_export WHERE `USSM` LIKE '%Milbradt%' AND `VPN name` LIKE 'Siemens VPN' GROUP BY Location;
 
 #323351
-SELECT * FROM eagle;
+SELECT COUNT(*) FROM eagle;
 
 SELECT e.*,wa.* FROM 
 (SELECT * FROM white_apps_se_ruleset) as wa 

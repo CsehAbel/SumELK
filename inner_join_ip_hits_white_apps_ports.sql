@@ -4,7 +4,7 @@ USE CSV_DB;
 #231409
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
-
+#217100
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE ip_unique;
 CREATE TABLE `ip_unique` (
@@ -22,11 +22,11 @@ SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
 SELECT COUNT(*) FROM
 (SELECT src_ip,MAX(dns) as dns FROM src_dns WHERE dns IS NOT NULL GROUP BY src_ip) as sd;
 
-#244312 ip_unique left join src_dns
+#ip_unique left join src_dns
 SELECT iu.*,src.dns FROM (SELECT * FROM ip_unique) as iu 
 LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src  ON src.src_ip=iu.src_ip;
 
-#219723 ip_unique left join sysdb
+#ip_unique left join sysdb
 SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN 
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
@@ -53,10 +53,10 @@ SET SESSION group_concat_max_len=1500000;
  
 #show processlist;
 #kill 55;
-#1238
+#1252
 SELECT COUNT(*) FROM ipunique_g_dns;
 DROP TABLE ipunique_g_dns;
-#519 number of not null dns equals number of source ips
+
 CREATE TABLE ipunique_g_dns
 SELECT dst_ip,
 GROUP_CONCAT(DISTINCT(src_ip)) as s_g_src_ip,
