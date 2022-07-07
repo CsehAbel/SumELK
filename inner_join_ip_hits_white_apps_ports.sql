@@ -1,9 +1,11 @@
 USE DARWIN_DB;
 
-#1 968 335
+#2 265 351
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 
+#2 262 784
+SELECT COUNT(*) FROM ip_unique;
 DROP TABLE `ip_unique`;
 CREATE TABLE `ip_unique` (
   `src_ip` VARCHAR(15) NOT NULL,
@@ -11,15 +13,9 @@ CREATE TABLE `ip_unique` (
   PRIMARY KEY (`src_ip`,`dst_ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-TRUNCATE TABLE ip_unique;
-
 INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     SELECT ip.source_ip,ip.dest_ip
     FROM ip;
-
-SELECT * FROM ip_unique;
-#1 968 335
-SELECT COUNT(*) FROM ip_unique;
 
 #python appends the fqdns to this table, select only one fqdn per src_ip
 SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
@@ -35,10 +31,12 @@ SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
 
-#Filter out EAGLE
+#4169
 #Filter only all_red_networks_systems
 SELECT COUNT(*) FROM systems;
 
+#327827
+#Filter out EAGLE
 SELECT COUNT(*) FROM eagle;
 SELECT ip FROM eagle; 
  

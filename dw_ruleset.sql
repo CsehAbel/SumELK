@@ -10,18 +10,15 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'DARWIN_DB' AND TABLE_NAME = 'darwin_white_apps';
  
-#2614->1368
+#1351
 SELECT COUNT(*) FROM darwin_white_apps;
 
 #filter TSA expiration date
-SELECT COUNT(*) FROM darwin_white_apps_merged; #2628->1371
-SELECT * FROM darwin_white_apps_merged WHERE '2022-06-31'<tsa OR tsa IS NULL; #955
-SELECT * FROM darwin_white_apps_merged WHERE tsa<'2022-06-31'; #416
+SELECT COUNT(*) FROM darwin_white_apps_merged; #1343->1352
+SELECT * FROM darwin_white_apps_merged WHERE '2022-06-31'<tsa OR tsa IS NULL; #1112-<1160
+SELECT * FROM darwin_white_apps_merged WHERE tsa<'2022-06-31'; #231->193
 
-SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL OR app_id LIKE '-'; #5
-
-#542
-SELECT * FROM darwin_white_apps_merged WHERE ip IS NULL LIMIT 10000;
+SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL OR app_id LIKE '-'; #7
 
 DROP TABLE darwin_white_apps_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
