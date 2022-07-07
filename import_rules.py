@@ -116,7 +116,8 @@ def proc_dest_port_tuples(list_rules):
 def get_white_rules(df_rules):
     #DataFrame->Series contaning index, and a field True or False
     a = df_rules[df_rules["type"].isin(["access-section"])]
-    b = a["name"].isin(["white rules"])
+    pat_white_rules="^white\s+rules.*$"
+    b = a["name"].str.contains(pat_white_rules, case=False, regex=True)
     #Anzahl der 'True' values
     c = b.value_counts().loc[True]
     if 1 != c:
@@ -126,11 +127,11 @@ def get_white_rules(df_rules):
     return white_rules
 
 
-def main(path):
+def main(network_path, standard_path):
     #list_files checks for regex ^hit.*
-    file=Path(path).absolute()
+    file=Path(network_path).absolute()
     if not file.is_file():
-        raise FileNotFoundError(path)
+        raise FileNotFoundError(network_path)
     with file.open() as f:
         rules=json.load(f)
 
@@ -150,8 +151,7 @@ def main(path):
     noname = df_rules.name.notna().value_counts()
     df_rules = df_rules[df_rules.name.notna()]
 
-    st_obj_dir_path = "./"
-    st_obj_file = Path(st_obj_dir_path) / "Standard_objects_darwin.json"
+    st_obj_file = Path(standard_path)
     with st_obj_file.open() as sof:
         objects = json.load(sof)
     st_obj_df = pandas.DataFrame(objects)
