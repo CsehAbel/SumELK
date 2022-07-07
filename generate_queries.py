@@ -72,7 +72,7 @@ def save_new_transform_json(onlyInNew):
     #275
     transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
-    with open('old_darwin_transform.json', 'w') as outfile:
+    with open('darwin_transform.json', 'w') as outfile:
         json.dump(transform, outfile)
     print("Done writing darwin_transform.json!")
 
