@@ -39,7 +39,7 @@ def main():
     import_rules.main(path)
 
     #fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    filepath_qc = "20220627-snic_ip_network_assignments.csv"
+    filepath_qc = "20220706-snic_ip_network_assignments.csv"
     eagle_filter.main(filepath_qc)
     eagle_filter.snic_to_sql(filepath_qc)
 
