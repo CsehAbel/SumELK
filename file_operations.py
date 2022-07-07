@@ -103,35 +103,25 @@ def rename_darwin_transform_json():
         darwin_transform_json.rename(target_string)
 
 #removes all ########-snic_network_assigments.csv in project_dir
+#"\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"
 #copies Alois's file to project_dir
-def replace_snic_csv():
-    #"20220630-snic_ip_network_assignments.csv"
-    pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
-    for x in project_dir.iterdir():
-        if pttrn_snic.match(x.name):
-            abs_snic_path = x.resolve().__str__()
-            unlink_file(abs_snic_path,x.name,x)
-
-    snic_fil_path = project_dir / Path("snic_network_assignments_xxx.csv")
-
-#def replace_snic_csv():
-
 
 # regex for finding darwin_ruleset.xlsx
-def remove_ruleset_csv():
-    drwn_ruleset_file_path=project_dir/Path("darwin_ruleset_unpacked_xxx.xlsx")
-    abs_drwn_ruleset_file_path=drwn_ruleset_file_path.absolute()
-    pttr_ruleset=re.compile(abs_drwn_ruleset_file_path.name)
+#"darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx"
+def remove_file_in_project_dir(pttrn_ruleset):
     for x in project_dir.iterdir():
-        if pttr_ruleset.match(x.name):
-            x.unlink()
-    if Path(abs_drwn_ruleset_file_path):
-        raise RuntimeError("%s still exists!" % (abs_drwn_ruleset_file_path))
+        if pttrn_ruleset.match(x.name):
+            unlink_file(x.resolve().__str__(),x.name,x)
 
 #[child.unlink() for child in Path("darwin_hits).listdir()]
 #def clear_darwin_hits():
 def main():
     extract_policy_to_project_dir()
+    delete_hits(dir="darwin_hits")
+    # pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
+    # remove_file_in_project_dir(pttrn_ruleset=pttrn_snic)
+    # pttrn_ruleset = re.compile("darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx")
+    # remove_file_in_project_dir(pttrn_ruleset=pttrn_ruleset)
 
 if __name__=="__main__":
     main()
