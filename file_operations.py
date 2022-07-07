@@ -4,6 +4,14 @@ import re
 
 project_dir=Path("/home/akecse/PycharmProjectsSumELK")
 
+def delete_hits(dir):
+    hits_folder=Path(project_dir/dir)
+    b_exists = hits_folder.exists()
+    b_is_dir = hits_folder.is_dir()
+    if b_exists and b_is_dir:
+        for child in hits_folder.iterdir():
+            unlink_file(child.resolve().__str__(),child.name,child)
+
 def extract_policy_to_project_dir():
     #find index of standard_objects,network_objects
     network="Network-CST-P-SAG-Darwin.json"
