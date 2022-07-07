@@ -1,10 +1,10 @@
 USE CSV_DB;
 USE CSV_DB;
 
-#231409
+#233446
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
-#217100
+#218971
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE ip_unique;
 CREATE TABLE `ip_unique` (
@@ -31,7 +31,7 @@ SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
 
- #247112
+ #249217
  DROP TABLE ipunique_ljoin_sysdb_srcdns;
  CREATE TABLE ipunique_ljoin_sysdb_srcdns
  SELECT iu.*,CASE WHEN src.dns IS NOT NULL THEN src.dns ELSE s.dns END as dns FROM 
@@ -53,7 +53,7 @@ SET SESSION group_concat_max_len=1500000;
  
 #show processlist;
 #kill 55;
-#1252
+#1271
 SELECT COUNT(*) FROM ipunique_g_dns;
 DROP TABLE ipunique_g_dns;
 
