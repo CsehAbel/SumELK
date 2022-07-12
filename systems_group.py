@@ -50,8 +50,7 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-                    #ld.append(df_obj["ipv4-address"].values[0])
-                    raise ValueError("type is not netw,range")
+                    ld.append({"subnet":df_obj["ipv4-address"].values[0],"cidr":32})
                 elif df_obj.type.values[0]=="network":
                     subnet=df_obj["subnet4"].values[0]
                     #netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])

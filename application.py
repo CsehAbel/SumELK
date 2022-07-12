@@ -74,8 +74,8 @@ def main():
     regex = "^hit.*"
     bulk_json_to_df.main(path,regex)
 
-    #new_transform.json
-    sag_systems = systems_group.get_systems_ip_list()
+    # new_transform.json
+    sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
     generate_queries.save_new_transform_json(onlyInNew=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
