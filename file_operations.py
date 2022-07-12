@@ -1,8 +1,19 @@
+import datetime
 from pathlib import Path
 from tarfile import TarFile
 import re
+import shutil
 
 project_dir=Path("/home/akecse/PycharmProjectsSumELK")
+
+def delete_hits(dir):
+    hits_folder=Path(project_dir/dir)
+    b_exists = hits_folder.exists()
+    b_is_dir = hits_folder.is_dir()
+    if b_exists and b_is_dir:
+        for child in hits_folder.iterdir():
+            unlink_file(child.resolve().__str__(),child.name,child)
+            print("%s unlinked" %child.resolve().__str__())
 
 def extract_policy_to_project_dir():
     #find index of standard_objects,network_objects
@@ -23,23 +34,26 @@ def extract_policy_to_project_dir():
     #target:
     #abs_network_string, abs_standard_darwin_string
     darwin_policy_dir = Path('/mnt/z/se/se_cofw_policies/')
-    regex="^Energy_policy.*\.tar\.gz"
-    extract_tarinfo(regex,darwin_policy_dir,abs_network_string, abs_standard_string, network, standard)
-    print("lel")
+    pttrn=re.compile("^Energy_policy.*\.tar\.gz")
+    newest_tar_gz=search_newest_in_folder(darwin_policy_dir,pttrn)
+    extract_tarinfo(newest_tar_gz,abs_network_string, abs_standard_string, network, standard)
+    print("extraction done!")
 
-def extract_tarinfo(regex,darwin_policy_dir,abs_network_file, abs_standard_darwin_file, network, standard):
-    # darwin_policy_dir.resolve().__str__()
-    # '/mnt/z/darwin/darwin_cofw_policies'
-    b_exists = darwin_policy_dir.exists()
-    b_is_dir = darwin_policy_dir.is_dir()
-    pttrn = re.compile(regex)
+def search_newest_in_folder(dir, pttrn):
+    b_exists = dir.exists()
+    b_is_dir = dir.is_dir()
     stats = []
     if b_exists and b_is_dir:
-        for child in darwin_policy_dir.iterdir():
+        for child in dir.iterdir():
             res = pttrn.match(child.name)
             if res:
                 stats.append(child)
     newest_tar_gz = max(stats, key=lambda x: x.stat().st_mtime)
+    return newest_tar_gz
+
+def extract_tarinfo(newest_tar_gz,abs_network_file, abs_standard_darwin_file, network, standard):
+    # darwin_policy_dir.resolve().__str__()
+    # '/mnt/z/darwin/darwin_cofw_policies'
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
     network_tarinfo = list(filter(lambda x: (x.name in [network]), tar_members))
@@ -88,43 +102,54 @@ def unlink_file(check_if_exists_path, print_out_path, to_be_unlinked_file):
 #delete Network_objects.json, Standard_objects.json from SumELK
 #select Network_objects.json, Standard_objects.json, copy to SumELK
 def rename_darwin_transform_json():
-    darwin_transform_json=Path("darwin_transform.json")
-    #ToDo: put datetime in front instead of 'old'
-    target_string="old_darwin_transform.json"
-    target = Path(target_string)
-    if not target.exists():
-        darwin_transform_json.rename(target_string)
+    source=Path("new_transform.json")
+    if not source.exists():
+        print(source.name + " not in dir, nothing to be rename\n")
+    else:
+        dtm=datetime.datetime.now()
+        d_m=dtm.strftime("%d_%m")
+        target_string=("%s_new_transform.json" %d_m)
+        target = Path(target_string)
+        if not target.exists():
+            source.rename(target_string)
+            print(source.name+"\n renamed to \n"+target.name)
 
-#removes all ########-snic_network_assigments.csv in project_dir
-#copies Alois's file to project_dir
-def replace_snic_csv():
-    #"20220630-snic_ip_network_assignments.csv"
-    pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
+def one_file_found_in_folder(filepath_list, project_dir, pttrn_snic):
     for x in project_dir.iterdir():
         if pttrn_snic.match(x.name):
-            abs_snic_path = x.resolve().__str__()
-            unlink_file(abs_snic_path,x.name,x)
-
-    snic_fil_path = project_dir / Path("snic_network_assignments_xxx.csv")
-
-#def replace_snic_csv():
-
+            filepath_list.append(x.resolve().__str__())
+    if filepath_list.__len__() != 1:
+        raise ValueError(project_dir.name+": more than one file matching "+pttrn_snic.pattern)
 
 # regex for finding darwin_ruleset.xlsx
-def remove_ruleset_csv():
-    drwn_ruleset_file_path=project_dir/Path("darwin_ruleset_unpacked_xxx.xlsx")
-    abs_drwn_ruleset_file_path=drwn_ruleset_file_path.absolute()
-    pttr_ruleset=re.compile(abs_drwn_ruleset_file_path.name)
+#"darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx"
+def remove_files_in_project_dir(pttrn_ruleset):
     for x in project_dir.iterdir():
-        if pttr_ruleset.match(x.name):
-            x.unlink()
-    if Path(abs_drwn_ruleset_file_path):
-        raise RuntimeError("%s still exists!" % (abs_drwn_ruleset_file_path))
+        if pttrn_ruleset.match(x.name):
+            unlink_file(x.resolve().__str__(),x.name,x)
+            print("%s unlinked" %x.resolve().__str__())
+
 
 #[child.unlink() for child in Path("darwin_hits).listdir()]
 #def clear_darwin_hits():
 def main():
-    extract_policy_to_project_dir()
+    # extract_policy_to_project_dir()
+    # delete_hits(dir="hits")
+
+    # removes all ########-snic_network_assigments.csv in project_dir
+    # copies Alois's file to project_dir
+    # pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
+    # remove_file_in_project_dir(pttrn_ruleset=pttrn_snic)
+
+    # snic_dir = Path('/mnt/y/')
+    # newest_snic=search_newest_in_folder(dir=snic_dir,pttrn=pttrn_snic)
+    # target=project_dir/newest_snic.name
+    # shutil.copy(newest_snic,target)
+    #
+    # pttrn_ruleset = re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx")
+    # remove_file_in_project_dir(pttrn_ruleset=pttrn_ruleset)
+
+    rename_darwin_transform_json()
 
 if __name__=="__main__":
     main()

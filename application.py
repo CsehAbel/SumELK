@@ -1,5 +1,9 @@
 import json
+import re
+import shutil
+from pathlib import Path
 
+import file_operations
 import generate_queries
 import import_rules
 import resolveIpToName
@@ -29,19 +33,39 @@ def get_cli_args():
     return args
 
 def main():
-    # downloads SecureTrack
-    # where rule_name like a.* and like wuser.*  and not like atos_vuln_scan
-    # to CSV_DB -> st_ports
     # first run SGRE to unpack se_ruleset
+    file_operations.remove_files_in_project_dir(pttrn_ruleset=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx"))
+    file_operations.extract_policy_to_project_dir()
+    #remove snic.csv
+    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
+    file_operations.remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
+    #copy new snic.csv
+    newest_snic = file_operations.search_newest_in_folder(dir=Path('/mnt/y/'),
+                                                          pttrn=pttrn_snic)
+    shutil.copy(src=newest_snic,
+                dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
+    #delete hits
+    file_operations.delete_hits(dir="hits")
+    #renames new_transform.json
+    file_operations.rename_darwin_transform_json()
+
     filepath_qc = get_cli_args().qualitycheck
     qc_to_sql.main(filepath_qc)
+
+    #mysql db:CSV_DB mysql table:st_ports
     path = "./Network-CST-P-SAG-Energy.json"
-    import_rules.main(path)
+    standard_path = "Standard_objects.json"
+    import_rules.main(path,standard_path)
+
+    filepath_list = []
+    file_operations.one_file_found_in_folder(filepath_list=filepath_list,
+                                             project_dir=Path("/home/akecse/PycharmProjectsSumELK"),
+                                             pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+    print("%s used to fill mysql tables eagle, snic_export" %filepath_list[1])
 
     #fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    filepath_qc = "20220706-snic_ip_network_assignments.csv"
-    eagle_filter.main(filepath_qc)
-    eagle_filter.snic_to_sql(filepath_qc)
+    eagle_filter.main(filepath_list[1])
+    eagle_filter.snic_to_sql(filepath_list[1])
 
     # download hits to hits/...json
     hits.main()
@@ -49,7 +73,6 @@ def main():
     path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
     regex = "^hit.*"
     bulk_json_to_df.main(path,regex)
-
 
     onlyinnew = generate_queries.read_query1to4()
     #new_transform.json

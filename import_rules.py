@@ -140,7 +140,7 @@ def get_network_object_by_id(id,st_obj_df):
     return df_obj
 
 
-def main(path):
+def main(path,standard_path):
     #list_files checks for regex ^hit.*
     file=Path(path).absolute()
     if not file.is_file():
@@ -162,8 +162,7 @@ def main(path):
     df_rules=df_rules[df_rules.name.notna()]
     list_rules=[]
 
-    st_obj_dir_path = "./"
-    st_obj_file = Path(st_obj_dir_path) / "Standard_objects.json"
+    st_obj_file = Path(standard_path)
     with st_obj_file.open() as sof:
         objects = json.load(sof)
     st_obj_df = pandas.DataFrame(objects)
