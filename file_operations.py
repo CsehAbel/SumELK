@@ -133,22 +133,20 @@ def remove_files_in_project_dir(pttrn_ruleset):
 #[child.unlink() for child in Path("darwin_hits).listdir()]
 #def clear_darwin_hits():
 def main():
-    # extract_policy_to_project_dir()
-    # delete_hits(dir="hits")
-
-    # removes all ########-snic_network_assigments.csv in project_dir
-    # copies Alois's file to project_dir
-    # pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
-    # remove_file_in_project_dir(pttrn_ruleset=pttrn_snic)
-
-    # snic_dir = Path('/mnt/y/')
-    # newest_snic=search_newest_in_folder(dir=snic_dir,pttrn=pttrn_snic)
-    # target=project_dir/newest_snic.name
-    # shutil.copy(newest_snic,target)
-    #
-    # pttrn_ruleset = re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx")
-    # remove_file_in_project_dir(pttrn_ruleset=pttrn_ruleset)
-
+    remove_files_in_project_dir(
+        pttrn_ruleset=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx"))
+    extract_policy_to_project_dir()
+    # remove snic.csv
+    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
+    remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
+    # copy new snic.csv
+    newest_snic = search_newest_in_folder(dir=Path('/mnt/y/'),
+                                                          pttrn=pttrn_snic)
+    shutil.copy(src=newest_snic,
+                dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
+    # delete hits
+    delete_hits(dir="hits")
+    # renames new_transform.json
     rename_darwin_transform_json()
 
 if __name__=="__main__":

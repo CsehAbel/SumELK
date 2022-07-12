@@ -33,22 +33,9 @@ def get_cli_args():
     return args
 
 def main():
-    # first run SGRE to unpack se_ruleset
-    file_operations.remove_files_in_project_dir(pttrn_ruleset=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx"))
-    file_operations.extract_policy_to_project_dir()
-    #remove snic.csv
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
-    file_operations.remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
-    #copy new snic.csv
-    newest_snic = file_operations.search_newest_in_folder(dir=Path('/mnt/y/'),
-                                                          pttrn=pttrn_snic)
-    shutil.copy(src=newest_snic,
-                dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
-    #delete hits
-    file_operations.delete_hits(dir="hits")
-    #renames new_transform.json
-    file_operations.rename_darwin_transform_json()
+    file_operations.main()
 
+    # first run SGRE to unpack se_ruleset
     filepath_qc = get_cli_args().qualitycheck
     qc_to_sql.main(filepath_qc)
 
