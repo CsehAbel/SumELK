@@ -1,10 +1,10 @@
 USE CSV_DB;
 USE CSV_DB;
 
-#233446
+#235953
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
-#218971
+#219959
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE ip_unique;
 CREATE TABLE `ip_unique` (
@@ -31,7 +31,8 @@ SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
 
- #249217
+ #250357
+ SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
  DROP TABLE ipunique_ljoin_sysdb_srcdns;
  CREATE TABLE ipunique_ljoin_sysdb_srcdns
  SELECT iu.*,CASE WHEN src.dns IS NOT NULL THEN src.dns ELSE s.dns END as dns FROM 
@@ -42,7 +43,7 @@ LEFT JOIN (SELECT * FROM src_dns WHERE dns IS NOT NULL) as src
  WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s
  ON iu.src_ip=s.ip;
 
-SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
+
 #Filter out EAGLE
 #Filter only all_red_networks_systems
 SELECT COUNT(*) FROM systems;
