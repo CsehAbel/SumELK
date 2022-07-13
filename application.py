@@ -33,10 +33,11 @@ def get_cli_args():
     return args
 
 def main():
-    file_operations.main()
-
     # first run SGRE to unpack se_ruleset
-    filepath_qc = get_cli_args().qualitycheck
+    pttrn_rlst = re.compile("^.+se_ruleset.+\.xlsx$")
+    newest_rlst = file_operations.search_newest_in_folder(Path("./"), pttrn_rlst)
+    print("Using " + newest_rlst.resolve().__str__())
+    filepath_qc = newest_rlst.resolve().__str__()
     qc_to_sql.main(filepath_qc)
 
     #mysql db:CSV_DB mysql table:st_ports
@@ -46,7 +47,7 @@ def main():
 
     filepath_list = []
     file_operations.one_file_found_in_folder(filepath_list=filepath_list,
-                                             project_dir=Path("/home/akecse/PycharmProjectsSumELK"),
+                                             project_dir=Path("./"),
                                              pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
     print("%s used to fill mysql tables eagle, snic_export" %filepath_list[1])
 
