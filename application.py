@@ -1,5 +1,6 @@
 import json
 import re
+from pathlib import Path
 
 import file_operations
 import generate_queries
@@ -31,14 +32,13 @@ def get_cli_args():
     return args
 
 def main():
-    # downloads SecureTrack
-    # where rule_name like a.* and like wuser.*  and not like atos_vuln_scan
-    # to CSV_DB -> st_ports
-    # first run SGRE to unpack se_ruleset
-    #pttrn_ruleset = re.compile("darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx")
-    #file_operations.remove_file_in_project_dir(pttrn_ruleset=pttrn_ruleset)
-    #ToDo copy darwin_ruleset_unpacked.xlsx from SGRE project directory
-    filepath_qc = get_cli_args().qualitycheck
+    # first     run file_operations.py
+    # second    run SGRE to unpack se_ruleset, copy here
+    ptrn = re.compile("darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
+    newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
+    print("Using " + newest_rlst.resolve().__str__())
+
+    filepath_qc = newest_rlst.resolve().__str__()
     qc_to_sql.main(filepath_qc)
     #file_operations.extract_policy_to_project_dir()
     netw_path = "./Network-CST-P-SAG-Darwin.json"
@@ -62,12 +62,15 @@ def main():
     #generate_queries.main()
     generate_queries.systems_to_sql(sag_systems)
 
-    #pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv")
-    #file_operations.remove_file_in_project_dir(pttrn_ruleset=pttrn_snic)
-    #ToDo change read path parameter for fill_eagle_from_snic(filepath_qc=
-    # after copying new snic.csv
-    snic_path = "20220707-snic_ip_network_assignments.csv"
-    eagle_filter.fill_eagle_from_snic(filepath_qc=snic_path)
+    filepath_list = []
+    file_operations.one_file_found_in_folder(filepath_list=filepath_list,
+                                             project_dir=Path("./"),
+                                             pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+    print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
+
+    # fill mysql tables eagle, snic_export, run eagle_comparison.sql
+    eagle_filter.main(filepath_list[0])
+    eagle_filter.snic_to_sql(filepath_list[0])
 
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to DARWIN_DB->src_dns

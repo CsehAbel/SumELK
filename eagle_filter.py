@@ -98,7 +98,7 @@ def snic_to_sql(filepath_qc):
     dbConnection = sqlEngine.connect()
     attachment_qc.to_sql("snic_export", dbConnection, if_exists='replace', index=True)
 
-def fill_eagle_from_snic(filepath_qc):
+def main(filepath_qc):
 
     attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 
@@ -145,5 +145,5 @@ def fill_eagle_from_snic(filepath_qc):
     print("Done!")
 
 if __name__=="__main__":
-    path="20220630-snic_ip_network_assignments.csv"
-    fill_eagle_from_snic(filepath_qc=path)
+    filepath_qc = "20220614-snic_ip_network_assignments.csv"
+    snic_to_sql(filepath_qc)
