@@ -10,16 +10,18 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'DARWIN_DB' AND TABLE_NAME = 'darwin_white_apps';
  
-#1351
+#1355
 SELECT COUNT(*) FROM darwin_white_apps;
 
 #filter TSA expiration date
-SELECT COUNT(*) FROM darwin_white_apps_merged; #1343->1352
 SELECT * FROM darwin_white_apps_merged WHERE '2022-06-31'<tsa OR tsa IS NULL; #1112-<1160
 SELECT * FROM darwin_white_apps_merged WHERE tsa<'2022-06-31'; #231->193
 
 SELECT * FROM darwin_white_apps_merged WHERE app_id IS NULL OR app_id LIKE '-'; #7
 
+SET GLOBAL innodb_buffer_pool_size=268435456;
+#1357
+SELECT COUNT(*) FROM darwin_white_apps_merged;
 DROP TABLE darwin_white_apps_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
 CREATE TABLE darwin_white_apps_merged
@@ -65,7 +67,6 @@ WHERE '2022-06-31'<tsa OR tsa IS NULL;
 SET group_concat_max_len=15000;
 
 DROP TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id;
-#t-1:7447 t-0:17042 t+1:18195 t+2:18940
 CREATE TABLE darwin_white_apps_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(app_name)) as g_app_name,

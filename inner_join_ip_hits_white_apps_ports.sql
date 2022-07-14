@@ -1,10 +1,10 @@
 USE DARWIN_DB;
 
-#2 265 351
+#2 360 000
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 
-#2 262 784
+#2 230 173
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE `ip_unique`;
 CREATE TABLE `ip_unique` (
