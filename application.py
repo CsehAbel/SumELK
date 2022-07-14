@@ -45,23 +45,6 @@ def main():
     darwin_path = "Standard_objects.json"
     import_rules.main(netw_path,darwin_path)
 
-    #file_operations.delete_hits(dir="darwin_hits")
-    # download hits to darwin_hits/...json
-    #hits.main()
-    # .json to mysql table 'ip'
-    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/darwin_hits/"
-    #regex = "^hit.*"
-    #bulk_json_to_df.main(path,regex)
-
-    #onlyinnew = generate_queries.read_query1to4()
-    sag_systems=systems_group.get_systems_ip_list(darwin_path)
-    #darwin_transform.json
-    #generate_queries.save_new_transform_json(onlyInNew=onlyinnew)
-    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
-    #upload all_red_networks systems to mysql systems table
-    #generate_queries.main()
-    generate_queries.systems_to_sql(sag_systems)
-
     filepath_list = []
     file_operations.one_file_found_in_folder(filepath_list=filepath_list,
                                              project_dir=Path("./"),
@@ -71,6 +54,18 @@ def main():
     # fill mysql tables eagle, snic_export, run eagle_comparison.sql
     eagle_filter.main(filepath_list[0])
     eagle_filter.snic_to_sql(filepath_list[0])
+
+    # darwin_transform.json
+    sag_systems = systems_group.get_systems_ip_list(darwin_path)
+    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
+    generate_queries.systems_to_sql(sag_systems)
+
+    # download hits to darwin_hits/...json
+    hits.main()
+    # .json to mysql table 'ip'
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/darwin_hits/"
+    regex = "^hit.*"
+    bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to DARWIN_DB->src_dns
