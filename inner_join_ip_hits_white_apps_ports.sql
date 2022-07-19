@@ -1,10 +1,10 @@
 USE CSV_DB;
 USE CSV_DB;
 
-#235953
+#235729
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
-#219959
+#221127
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE ip_unique;
 CREATE TABLE `ip_unique` (
@@ -31,7 +31,7 @@ SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
 
- #250357
+ #251634
  SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
  DROP TABLE ipunique_ljoin_sysdb_srcdns;
  CREATE TABLE ipunique_ljoin_sysdb_srcdns
@@ -54,7 +54,7 @@ SET SESSION group_concat_max_len=1500000;
  
 #show processlist;
 #kill 55;
-#1271
+#1363
 SELECT COUNT(*) FROM ipunique_g_dns;
 DROP TABLE ipunique_g_dns;
 
@@ -95,7 +95,10 @@ SELECT * FROM nice_se_ruleset_st_ports_qc;
 
 #ipunique INNER JOIN se_ruleset_st_ports
 SELECT ipunique_g_dns.*,nice_se_ruleset_st_ports_qc.* FROM nice_se_ruleset_st_ports_qc 
-INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip LIMIT 30000;
+INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip ORDER BY countsrc DESC;
+
+SELECT ipunique_g_dns.*,nice_se_ruleset_st_ports_qc.* FROM nice_se_ruleset_st_ports_qc 
+INNER JOIN ipunique_g_dns ON nice_se_ruleset_st_ports_qc.ips=ipunique_g_dns.dst_ip WHERE dst_ip LIKE "139.23.230.92" LIMIT 30000;
 
 #se_ruleset_st_ports RIGHT JOIN ipunique
 SELECT countsrc,countdns,nice_se_ruleset_st_ports_qc.*,ipunique_g_dns.* FROM nice_se_ruleset_st_ports_qc RIGHT JOIN ipunique_g_dns 
