@@ -1,10 +1,10 @@
 USE DARWIN_DB;
 
-#2 360 000
+#2386616
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 
-#2 230 173
+#2386250
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE `ip_unique`;
 CREATE TABLE `ip_unique` (
@@ -16,7 +16,7 @@ CREATE TABLE `ip_unique` (
 INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     SELECT ip.source_ip,ip.dest_ip
     FROM ip;
-
+#SHOW PROCESSLIST;
 #python appends the fqdns to this table, select only one fqdn per src_ip
 SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
 SELECT COUNT(*) FROM

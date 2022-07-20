@@ -44,7 +44,7 @@ END AS 'dns2'
 FROM (SELECT * FROM darwin_white_apps) as wa 
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
-
+#SHOW PROCESSLIST;
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE darwin_white_apps_merged_dns2;
 #choose either dns3 or FQDN (grep/sed of FQDNs)
