@@ -116,7 +116,7 @@ def proc_dest_port_tuples(list_rules):
 def get_white_rules(df_rules):
     #DataFrame->Series contaning index, and a field True or False
     a = df_rules[df_rules["type"].isin(["access-section"])]
-    pat_white_rules="^white\s+rules.*$"
+    pat_white_rules="^white\s+rules((?!eagle).)*$"
     b = a["name"].str.contains(pat_white_rules, case=False, regex=True)
     #Anzahl der 'True' values
     c = b.value_counts().loc[True]
