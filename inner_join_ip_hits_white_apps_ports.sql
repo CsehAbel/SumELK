@@ -1,7 +1,7 @@
 USE CSV_DB;
 USE CSV_DB;
 
-#235729
+#239786
 SELECT COUNT(*) FROM ip;
 SELECT * FROM ip;
 #221127
@@ -16,7 +16,7 @@ CREATE TABLE `ip_unique` (
 INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     SELECT ip.source_ip,ip.dest_ip
     FROM ip;
-
+#SHOW PROCESSLIST;
 #python appends the fqdns to this table, select only one fqdn per src_ip
 SELECT COUNT(*) FROM src_dns WHERE dns IS NOT NULL;
 SELECT COUNT(*) FROM
@@ -31,7 +31,7 @@ SELECT iu.*,s.dns FROM (SELECT * FROM ip_unique) as iu LEFT JOIN
 (SELECT * FROM sysdb WHERE dns IS NOT NULL AND dns NOT LIKE '-') as s ON iu.src_ip=s.ip
 ;
 
- #251634
+ #253767
  SELECT COUNT(*) FROM ipunique_ljoin_sysdb_srcdns;
  DROP TABLE ipunique_ljoin_sysdb_srcdns;
  CREATE TABLE ipunique_ljoin_sysdb_srcdns
@@ -54,7 +54,7 @@ SET SESSION group_concat_max_len=1500000;
  
 #show processlist;
 #kill 55;
-#1363
+#1366
 SELECT COUNT(*) FROM ipunique_g_dns;
 DROP TABLE ipunique_g_dns;
 

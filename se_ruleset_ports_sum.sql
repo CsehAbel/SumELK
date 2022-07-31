@@ -38,7 +38,7 @@ END AS 'dns2'
 FROM (SELECT * FROM white_apps_se_ruleset) as wa 
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
-
+#SHOW PROCESSLIST;
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
 #choose either dns3 or FQDN (grep/sed of FQDNs)
