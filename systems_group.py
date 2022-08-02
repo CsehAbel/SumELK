@@ -18,8 +18,7 @@ def get_systems_ip_list(darwin_json):
     types = st_obj_df["type"].unique()
 
     of_type_group = st_obj_df[st_obj_df.type.isin(["group"])]
-    group_names = ['NAM_migrated_SNX_Systems', 'EMEA_migrated_SNX_Systems', 'LATAM_migrated_SNX_Systems',
-                   'AAE_migrated_SNX_Systems', 'CHINA_migrated_SNX_Systems']
+    group_names = ['all_red_system_networks']
     snx_systems = of_type_group[of_type_group.name.isin(group_names)]
     list_source_ranges = []
     for index, obj in snx_systems.iterrows():
