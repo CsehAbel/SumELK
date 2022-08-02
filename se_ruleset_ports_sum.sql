@@ -1,25 +1,13 @@
-USE CSV_DB;
+USE FOKUS_DB;
 
 SHOW TABLES;
 
-SELECT group_concat(COLUMN_NAME)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'white_apps_se_ruleset';
-
-SELECT group_concat(COLUMN_NAME)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
- 
 #16410
-SELECT COUNT(*) FROM white_apps_se_ruleset;
+SELECT COUNT(*) FROM fokus_ruleset;
 
-SELECT group_concat(COLUMN_NAME)
-  FROM INFORMATION_SCHEMA.COLUMNS
-  WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'se_ruleset_st_ports_qc';
-
-DROP TABLE white_apps_se_ruleset_merged;
+DROP TABLE ruleset_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
-CREATE TABLE white_apps_se_ruleset_merged
+CREATE TABLE ruleset_merged
 SELECT 
 CASE WHEN FQDN IS NOT NULL 
 	THEN FQDN ELSE
@@ -35,14 +23,14 @@ END AS 'dns2'
 ,ip
 #dns,ip,
 ,c,l,sys_type,corpflag,info_extra,info,hostname,domain,region,snic_comment,ip_cidr,vpn_name
-FROM (SELECT * FROM white_apps_se_ruleset) as wa 
+FROM (SELECT * FROM fokus_ruleset) as wa
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
 #SHOW PROCESSLIST;
 #Joining with white_apps_dns(index,IPs,dns)
-DROP TABLE white_apps_se_ruleset_merged_dns2;
+DROP TABLE ruleset_merged_dns2;
 #choose either dns3 or FQDN (grep/sed of FQDNs)
-CREATE TABLE white_apps_se_ruleset_merged_dns2
+CREATE TABLE ruleset_merged_dns2
 #dns2 -> from sysdb or (seruleset cleaned fqdn)
 SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
 ,wa.ips,change_type,tufin_id,app_id,source
@@ -53,14 +41,14 @@ SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
 ,snic_comment,ip_cidr,vpn_name
 ,wa_d.ips as wa_d_ips
 FROM 
-(SELECT * FROM white_apps_se_ruleset_merged) as wa
+(SELECT * FROM ruleset_merged) as wa
 LEFT JOIN (SELECT IPs,dns as dns3 FROM white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
 WHERE change_type NOT LIKE 'deleted';
 
 SET group_concat_max_len=15000;
 
-DROP TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-CREATE TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id
+DROP TABLE ruleset_merged_dns2_grouped_by_ip_app_id;
+CREATE TABLE ruleset_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
 GROUP_CONCAT(DISTINCT(c)) as g_s_c,
@@ -84,7 +72,7 @@ GROUP_CONCAT(DISTINCT(tsa_expiration_date)) as g_tsa_expiration_date,
 GROUP_CONCAT(DISTINCT(application_requestor)) as g_application_requestor,
 GROUP_CONCAT(DISTINCT(comment)) as g_comment,
 GROUP_CONCAT(DISTINCT(dns4)) as g_dns4 #dest fqdn
-FROM white_apps_se_ruleset_merged_dns2 
+FROM ruleset_merged_dns2
 #WHERE dns4 IS NOT NULL 
 GROUP BY ips,app_id
 ;
@@ -92,7 +80,7 @@ GROUP BY ips,app_id
 DROP TABLE se_ruleset_st_ports;
 #INNER JOIN
 CREATE TABLE se_ruleset_st_ports
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id) as wa INNER JOIN
+SELECT * FROM (SELECT * FROM ruleset_merged_dns2_grouped_by_ip_app_id) as wa INNER JOIN
 (SELECT st_dest_ip,GROUP_CONCAT(DISTINCT(rule_name)) as g_rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
 GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
 FROM st_ports GROUP BY st_dest_ip)
