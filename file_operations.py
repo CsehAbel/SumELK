@@ -109,9 +109,11 @@ def rename_darwin_transform_json():
         dtm=datetime.datetime.now()
         d_m=dtm.strftime("%d_%m")
         target_string=("%s_new_transform.json" %d_m)
-        target = Path(target_string)
+        target = Path("./transform_history") / target_string
         if not target.exists():
-            source.rename(target_string)
+            shutil.copy(src=source,
+                        dst=target)
+            unlink_file(source.resolve().__str__(),source.name,source)
             print(source.name+"\n renamed to \n"+target.name)
 
 def one_file_found_in_folder(filepath_list, project_dir, pttrn_snic):
