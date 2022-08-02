@@ -2,10 +2,10 @@ USE FOKUS_DB;
 
 SHOW TABLES;
 
-#16410
+#353
 SELECT COUNT(*) FROM fokus_ruleset;
 
-DROP TABLE ruleset_merged;
+DROP TABLE IF EXISTS ruleset_merged;
 #wa LEFT JOIN sysdb, removing wa.FQDN and sysdb.dns
 CREATE TABLE ruleset_merged
 SELECT 
@@ -28,26 +28,24 @@ LEFT JOIN (SELECT * FROM sysdb) as s
 ON wa.IPs=s.ip;
 #SHOW PROCESSLIST;
 #Joining with white_apps_dns(index,IPs,dns)
-DROP TABLE ruleset_merged_dns2;
+DROP TABLE IF EXISTS ruleset_merged_dns2;
 #choose either dns3 or FQDN (grep/sed of FQDNs)
 CREATE TABLE ruleset_merged_dns2
 #dns2 -> from sysdb or (seruleset cleaned fqdn)
-SELECT CASE WHEN dns3 IS NOT NULL THEN dns3 ELSE dns2 END AS 'dns4'
+SELECT dns2 as 'dns4'
 ,wa.ips,change_type,tufin_id,app_id,source
 ,dest_info,port
 ,tsa_expiration_date,application_requestor,comment
 
 ,ip,   c,l,sys_type,corpflag,info_extra,info,hostname,domain,region
 ,snic_comment,ip_cidr,vpn_name
-,wa_d.ips as wa_d_ips
 FROM 
 (SELECT * FROM ruleset_merged) as wa
-LEFT JOIN (SELECT IPs,dns as dns3 FROM white_apps_dns) as wa_d ON wa.ips=wa_d.IPs
 WHERE change_type NOT LIKE 'deleted';
 
 SET group_concat_max_len=15000;
 
-DROP TABLE ruleset_merged_dns2_grouped_by_ip_app_id;
+DROP TABLE IF EXISTS ruleset_merged_dns2_grouped_by_ip_app_id;
 CREATE TABLE ruleset_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,
@@ -77,7 +75,7 @@ FROM ruleset_merged_dns2
 GROUP BY ips,app_id
 ;
  
-DROP TABLE se_ruleset_st_ports;
+DROP TABLE IF EXISTS se_ruleset_st_ports;
 #INNER JOIN
 CREATE TABLE se_ruleset_st_ports
 SELECT * FROM (SELECT * FROM ruleset_merged_dns2_grouped_by_ip_app_id) as wa INNER JOIN
@@ -86,27 +84,12 @@ GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
 FROM st_ports GROUP BY st_dest_ip)
 as ports ON wa.IPs = ports.st_dest_ip;
 
-DROP TABLE se_ruleset_st_ports_qc;
-#getting Application Name from QualityCheck 
-#for each dest_ip, app id in se_ruleset_st_ports
-CREATE TABLE se_ruleset_st_ports_qc
-SELECT * FROM (
-SELECT * FROM 
-se_ruleset_st_ports)
-as wa_s LEFT JOIN 
-(SELECT IPs as qc_ip,`APP ID` as qc_app_id,group_concat(DISTINCT(`Application Name`)) as g_qc_app_name FROM white_apps 
- GROUP BY IPs,`APP ID` HAVING `APP ID` IS NOT NULL) as wa ON wa_s.ips=wa.qc_ip AND wa_s.app_id=wa.qc_app_id LIMIT 30000;
-
-DROP TABLE nice_se_ruleset_st_ports_qc;
-CREATE TABLE nice_se_ruleset_st_ports_qc
+DROP TABLE IF EXISTS nice_se_ruleset_st_ports;
+CREATE TABLE nice_se_ruleset_st_ports
 SELECT
-g_qc_app_name as d_g_qc_app_name,
-qc_app_id,
+g_dest_info,
 app_id,
 ips,
-qc_ip as d_qc_ip,
-#st_dest_ip,
-#g_s_ip,
 cardinality,
 g_dns4 as d_g_dns4,
 g_st_port as d_g_st_port,
@@ -129,6 +112,5 @@ g_application_requestor
 ,g_change_type
 ,g_tufin_id
 #,g_source
-#,g_dest_info
-#.g_port
-FROM se_ruleset_st_ports_qc;
+#,.g_port
+FROM se_ruleset_st_ports;

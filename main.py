@@ -39,7 +39,7 @@ def download_index(es,index,nth,sort,gte_date):
     seq = 0
     hits = resp['hits']['hits']
 
-    p = "hits"
+    p = "fokus_hits"
     path = Path(p).absolute()
     filepath = path / ('hit_00%d_%s_%d.json' % (nth, gte_date, seq))
     with filepath.open('w') as outfile:
@@ -59,7 +59,7 @@ def download_index(es,index,nth,sort,gte_date):
         if hits_len==0:
             print("Not creating hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
         else:
-            with open('hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
+            with open('fokus_hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
                 # json.dump(buckets)
                 for b in hits:
                     json.dump(flattenhit(b), outfile)

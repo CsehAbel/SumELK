@@ -242,10 +242,9 @@ def main(filepath_qc):
     print("df_qc.shape[0]=%d" %df_qc.shape[0])
     df_qc.insert(0,"FQDN", correct_fqdns,allow_duplicates=False)
 
-    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","CSV_DB"), pool_recycle=3600)
+    sqlEngine = create_engine('mysql+pymysql://%s:%s@%s/%s' %(secrets.mysql_u,secrets.mysql_pw,"127.0.0.1","FOKUS_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
-    #df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
+    df_qc.to_sql("fokus_ruleset", dbConnection,if_exists='replace', index=True)
     print("lel")
 
 if __name__=="__main__":

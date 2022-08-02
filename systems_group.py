@@ -104,7 +104,7 @@ def df_from_line(line):
     return df
 
 def main():
-    darwin_json = "Standard_objects.json"
+    darwin_json = "Fokus_AC_Standard_objects.json"
     get_systems_ip_list(darwin_json)
 
 if __name__=="__main__":

@@ -6,33 +6,6 @@ import pandas
 import ip_utils
 from sqlalchemy import create_engine
 
-# def get_dest_ports():
-#     device_name = "CST-P-SAG-Energy"
-#     rules=st_helper.get_rules_for_device(device_id)
-#     patternApp=re.compile("^a.*",re.IGNORECASE)
-#     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
-#     list_rules=[]
-#     for r in rules._list_data:
-#         if r.name=='atos_vuln_scans':#,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
-#             continue
-#         if r.name == "a_17042_CDC":
-#             print("129.73.226.0/24 should be added to return value list_rules")
-#         try:
-#             resultApp=patternApp.match(r.name)
-#         except BaseException:
-#             continue
-#         resultWuser=patternWuser.match(r.name)
-#
-#         if resultWuser or resultApp:
-#             try:
-#                 ld = []
-#                 get_dest_ports_ips(device_id, ld, r.dst_networks)
-#                 l_e=[]
-#                 get_dest_ports_ports(device_id, l_e, r.dst_services)
-#                 list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
-#             except BaseException as ex:
-#                 raise ex
-#     return list_rules
 import secrets
 
 
@@ -196,7 +169,7 @@ def main(path,standard_path):
     print("")
     dfx=pandas.DataFrame(list_exploded)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "FOKUS_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
     print("import_rules.py Done!")

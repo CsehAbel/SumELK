@@ -88,7 +88,7 @@ def systems_to_sql(systems):
 
     df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "FOKUS_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("systems", dbConnection, if_exists='replace', index=True)
 

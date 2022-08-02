@@ -1,8 +1,8 @@
 #1694->707
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 
+SELECT COUNT(*) FROM ruleset_merged_dns2 WHERE dns4 IS NULL;
+SELECT * FROM ruleset_merged_dns2
 LEFT JOIN (SELECT ip as dip FROM eagle) as e
-ON white_apps_se_ruleset_merged_dns2.ips=e.dip
+ON ruleset_merged_dns2.ips=e.dip
 WHERE dns4 AND (e.dip IS NULL) IS NULL LIMIT 10000;
 
 #requires 
@@ -14,7 +14,7 @@ WHERE dns4 AND (e.dip IS NULL) IS NULL LIMIT 10000;
 SET group_concat_max_len=15000;
 
 #wa left join st_ports
-SELECT * FROM (SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id) as wa 
+SELECT * FROM (SELECT * FROM ruleset_merged_dns2_grouped_by_ip_app_id) as wa
 LEFT JOIN
 (SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(st_port)) as g_st_port,
 GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
@@ -30,7 +30,7 @@ SELECT ports.*,wa.*,e.* FROM (SELECT st_dest_ip,rule_name,GROUP_CONCAT(DISTINCT(
 GROUP_CONCAT(DISTINCT(rule_number)) as g_rule_number
 FROM st_ports GROUP BY st_dest_ip,rule_name) as ports 
 LEFT JOIN
-(SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
+(SELECT * FROM ruleset_merged_dns2_grouped_by_ip_app_id
 ) as wa 
 ON wa.ips = ports.st_dest_ip
 LEFT JOIN (SELECT ip as dip FROM eagle) as e

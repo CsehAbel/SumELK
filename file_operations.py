@@ -17,9 +17,9 @@ def delete_hits(dir):
 
 def extract_policy_to_project_dir():
     #find index of standard_objects,network_objects
-    network="Network-CST-P-SAG-Energy.json"
+    network="Network-CST-V-SAG-Fokus-CO.json"
     # ToDo: use Standard_objects.json for query_wp branch
-    standard="Standard_objects.json"
+    standard="Fokus_AC_Standard_objects.json"
 
     network_file=(project_dir/network)
     standard_file=(project_dir/standard)
@@ -33,8 +33,8 @@ def extract_policy_to_project_dir():
     #find network,standard in tar and extract it to
     #target:
     #abs_network_string, abs_standard_darwin_string
-    darwin_policy_dir = Path('/mnt/z/se/se_cofw_policies/')
-    pttrn=re.compile("^Energy_policy.*\.tar\.gz")
+    darwin_policy_dir = Path('/mnt/z/fokus/fokus_cofw_policies/')
+    pttrn=re.compile("^FOKUS_policy.*\.tar\.gz")
     newest_tar_gz=search_newest_in_folder(darwin_policy_dir,pttrn)
     extract_tarinfo(newest_tar_gz,abs_network_string, abs_standard_string, network, standard)
     print("extraction done!")
@@ -134,7 +134,7 @@ def remove_files_in_project_dir(pttrn_ruleset):
 #def clear_darwin_hits():
 if __name__=="__main__":
     remove_files_in_project_dir(
-        pttrn_ruleset=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"))
+        pttrn_ruleset=re.compile("fokus_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"))
     extract_policy_to_project_dir()
     # remove snic.csv
     pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
@@ -145,7 +145,7 @@ if __name__=="__main__":
     shutil.copy(src=newest_snic,
                 dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
     # delete hits
-    delete_hits(dir="hits")
+    delete_hits(dir="fokus_hits")
     # renames new_transform.json
     rename_darwin_transform_json()
 

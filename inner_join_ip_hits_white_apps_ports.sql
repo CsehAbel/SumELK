@@ -8,11 +8,13 @@ SELECT * FROM ip;
 SELECT COUNT(*) FROM ip_unique;
 DROP TABLE ip_unique;
 CREATE TABLE `ip_unique` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `src_ip` VARCHAR(15) NOT NULL,
   `dst_ip` VARCHAR(15) NOT NULL,
-  PRIMARY KEY (`src_ip`,`dst_ip`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `my_uniq_id` (`src_ip`,`dst_ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
+SHOW KEYS FROM ip_unique;
 INSERT IGNORE INTO ip_unique (`src_ip`,`dst_ip`)
     SELECT ip.source_ip,ip.dest_ip
     FROM ip;
