@@ -27,6 +27,10 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
                     for ra in range(ip_utils.ip2int(df_obj["ipv4-address-first"].values[0]), ip_utils.ip2int(df_obj["ipv4-address-last"].values[0]) + 1):
                         r_ip = ip_utils.int2ip(ra)
                         ld.append(r_ip)
+                elif df_obj.type.values[0] == 'CpmiAnyObject':
+                    pass
+                elif df_obj.type.values[0] == 'service-icmp':
+                    pass
                 else:
                     raise ValueError("type is not host,netw,group,range")
                 #     patternPrefix = re.compile(
@@ -57,6 +61,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                     res_type3 = pttrn_type3.match(service_type_)
                     pttrn_type4 = re.compile("service-other", re.IGNORECASE)
                     res_type4 = pttrn_type4.match(service_type_)
+                    pttrn_type5 = re.compile("CpmiAnyObject", re.IGNORECASE)
+                    res_type5 = pttrn_type5.match(service_type_)
+                    pttrn_type6 = re.compile("service-icmp", re.IGNORECASE)
+                    res_type6 = pttrn_type6.match(service_type_)
                     if res_type1 or res_type2:
                         tcp_udp=res_type1.group(1) if res_type1 else res_type2.group(1)
 
@@ -79,6 +87,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                         get_dest_ports_ports(l_e,[y["uid"] for y in service["members"]],st_obj_df)
                     elif res_type4:
                         l_e.append({"port": service["ip-protocol"], "tcp_udp": service["name"].lower})
+                    elif res_type5:
+                        pass
+                    elif res_type6:
+                        l_e.append({"port": service["name"]+"icmp", "tcp_udp": service["name"]+"icmp"})
                     else:
                         raise ValueError()
                 except BaseException as err:
