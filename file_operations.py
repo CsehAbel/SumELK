@@ -10,10 +10,13 @@ def delete_hits(dir):
     hits_folder=Path(project_dir/dir)
     b_exists = hits_folder.exists()
     b_is_dir = hits_folder.is_dir()
+    #keeping gitkeep in hits folder for git to be able to persist it across 'branch_switching'
+    pttrn=re.compile("^.*hit.*\.json$")
     if b_exists and b_is_dir:
         for child in hits_folder.iterdir():
-            unlink_file(child.resolve().__str__(),child.name,child)
-            print("%s unlinked" % child.resolve().__str__())
+            if pttrn.match(child.name):
+                unlink_file(child.resolve().__str__(),child.name,child)
+                print("%s unlinked" % child.resolve().__str__())
 
 
 def extract_policy_to_project_dir():
