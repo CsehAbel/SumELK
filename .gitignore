@@ -6,3 +6,6 @@ yellow
 yellow/**
 __pycache__
 __pycache__/**
+hits/**
+!hits/gitkeep
+darwin_hits/**

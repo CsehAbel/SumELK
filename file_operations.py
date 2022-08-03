@@ -10,10 +10,13 @@ def delete_hits(dir):
     hits_folder=Path(project_dir/dir)
     b_exists = hits_folder.exists()
     b_is_dir = hits_folder.is_dir()
+    # keeping gitkeep in hits folder for git to be able to persist it across 'branch_switching'
+    pttrn = re.compile("^.*hit.*\.json$")
     if b_exists and b_is_dir:
         for child in hits_folder.iterdir():
-            unlink_file(child.resolve().__str__(),child.name,child)
-            print("%s unlinked" %child.resolve().__str__())
+            if pttrn.match(child.name):
+                unlink_file(child.resolve().__str__(),child.name,child)
+                print("%s unlinked" %child.resolve().__str__())
 
 def extract_policy_to_project_dir():
     #find index of standard_objects,network_objects
@@ -109,9 +112,11 @@ def rename_darwin_transform_json():
         dtm=datetime.datetime.now()
         d_m=dtm.strftime("%d_%m")
         target_string=("%s_new_transform.json" %d_m)
-        target = Path(target_string)
+        target = Path("./transform_history") / target_string
         if not target.exists():
-            source.rename(target_string)
+            shutil.copy(src=source,
+                        dst=target)
+            unlink_file(source.resolve().__str__(), source.name, source)
             print(source.name+"\n renamed to \n"+target.name)
 
 def one_file_found_in_folder(filepath_list, project_dir, pttrn_snic):
