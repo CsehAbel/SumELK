@@ -4,5 +4,5 @@ secure_track/**
 /se_ruleset_unpacked?
 yellow
 yellow/**
-darwin_hits
 darwin_hits/**
+!darwin_hits/gitkeep
