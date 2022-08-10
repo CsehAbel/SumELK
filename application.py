@@ -52,8 +52,8 @@ def main():
     print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
 
     # fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    eagle_filter.main(filepath_list[0])
-    eagle_filter.snic_to_sql(filepath_list[0])
+    #eagle_filter.main(filepath_list[0])
+    #eagle_filter.snic_to_sql(filepath_list[0])
 
     # darwin_transform.json
     sag_systems = systems_group.get_systems_ip_list(darwin_path)
