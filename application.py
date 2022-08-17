@@ -1,8 +1,10 @@
+import datetime
 import json
 import re
 import shutil
 from pathlib import Path
 
+import create_table_old_ip
 import file_operations
 import generate_queries
 import import_rules
@@ -63,6 +65,8 @@ def main():
 
     # download hits to hits/...json
     hits.main()
+    # creating 'ip_%Y%m%d' table from 'ip'
+    create_table_old_ip.main("ip" + datetime.datetime.now().strftime("%d%m%y"))
     # .json to mysql table 'ip'
     path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
     regex = "^hit.*"
