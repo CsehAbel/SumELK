@@ -11,7 +11,7 @@ config = {
   'user': secrets.mysql_u,
   'password': secrets.mysql_pw,
   'host': '127.0.0.1',
-  'database': 'CSV_DB',
+  'database': 'FOKUS_DB',
   'raise_on_warnings': True,
   'allow_local_infile':True
 }
