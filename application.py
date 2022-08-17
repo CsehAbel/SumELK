@@ -62,6 +62,8 @@ def main():
 
     # download hits to darwin_hits/...json
     hits.main()
+    # creating 'ip_%Y%m%d' table from 'ip'
+    #create_table_old_ip.main("ip" + datetime.datetime.now().strftime("%d%m%y"))
     # .json to mysql table 'ip'
     path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/darwin_hits/"
     regex = "^hit.*"
