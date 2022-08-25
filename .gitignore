@@ -7,3 +7,6 @@ __pycache__/**
 darwin_hits/**
 fokus_hits/**
 !fokus_hits/gitkeep
+transform_history/**
+transform_history/gitkeep
+hits/**
