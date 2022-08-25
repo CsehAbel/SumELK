@@ -26,8 +26,8 @@ def main():
 
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
 
-    for i in range(4):
-        download_index(es=es,index="business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date)
+    for i in range(1):
+        download_index(es=es,index="fokus_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date)
     
     print("Done!")
 
@@ -38,6 +38,7 @@ def download_index(es,index,nth,sort,gte_date):
     print("Got %d Hits:" % hits_len)
     seq = 0
     hits = resp['hits']['hits']
+
 
     p = "fokus_hits"
     path = Path(p).absolute()
@@ -57,7 +58,7 @@ def download_index(es,index,nth,sort,gte_date):
         hits = resp['hits']['hits']
 
         if hits_len==0:
-            print("Not creating hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
+            print("Not creating darwin_hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
         else:
             with open('fokus_hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
                 # json.dump(buckets)

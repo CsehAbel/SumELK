@@ -1,23 +1,11 @@
-import json
 import re
-import shutil
 from pathlib import Path
 
 import file_operations
 import generate_queries
 import import_rules
-import resolveIpToName
 import systems_group
 import qc_to_sql
-from sqlalchemy import create_engine
-import secrets
-import main as hits
-import bulk_json_to_df
-import eagle_filter
-from sqlalchemy import create_engine
-
-import secrets
-import pandas
 import shlex
 import sys
 import argparse
@@ -35,6 +23,7 @@ def get_cli_args():
 def main():
     # first     run file_operations.py
     # second    run SGRE to unpack se_ruleset, copy here
+
     ptrn = re.compile("fokus_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
     newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
     print("Using " + newest_rlst.resolve().__str__())
@@ -50,6 +39,7 @@ def main():
     file_operations.one_file_found_in_folder(filepath_list=filepath_list,
                                              project_dir=Path("./"),
                                              pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+
     print("%s used to fill mysql tables eagle, snic_export" %filepath_list[0])
 
     #fill mysql tables eagle, snic_export, run eagle_comparison.sql
@@ -71,8 +61,8 @@ def main():
     #bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps
-    # each time the ip-fqdn pair will be appended to CSV_DB->src_dns
-    # resolveIpToName.resolve_white_apps()
+    # each time the ip-fqdn pair will be appended to DARWIN_DB->src_dns
+    #darwin_resolve.resolve_white_apps()
 
 if __name__ == "__main__":
     main()
