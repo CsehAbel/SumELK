@@ -142,13 +142,13 @@ if __name__=="__main__":
         pttrn_ruleset=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"))
     extract_policy_to_project_dir()
     # remove snic.csv
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-    remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
+    #pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
+    #remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
     # copy new snic.csv
-    newest_snic = search_newest_in_folder(dir=Path('/mnt/y/'),
-                                                          pttrn=pttrn_snic)
-    shutil.copy(src=newest_snic,
-                dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
+    #newest_snic = search_newest_in_folder(dir=Path('/mnt/y/'),
+    #                                                      pttrn=pttrn_snic)
+    #shutil.copy(src=newest_snic,
+    #            dst=Path("/home/akecse/PycharmProjectsSumELK") / newest_snic.name)
     # delete hits
     delete_hits(dir="hits")
     # renames new_transform.json
