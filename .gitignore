@@ -9,3 +9,5 @@ __pycache__/**
 hits/**
 !hits/gitkeep
 darwin_hits/**
+transform_history/*darwin_transform.json
+transform_history/*fokus_transform.json
