@@ -64,12 +64,13 @@ def main():
     generate_queries.systems_to_sql(sag_systems)
 
     # download hits to hits/...json
-    hits.main()
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    hits.main(path=path,hit_json='hit_energy_00%d_%s_%d.json')
     # creating 'ip_%Y%m%d' table from 'ip'
     create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    regex = "^hit.*"
+
+    regex = "^hit_energy.*\.json$"
     bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps
