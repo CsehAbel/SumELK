@@ -10,37 +10,8 @@ SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
   WHERE TABLE_SCHEMA = 'CSV_DB' AND TABLE_NAME = 'sysdb';
  
-#20653 
+#16410
 SELECT COUNT(*) FROM white_apps_se_ruleset;
-
-#TSA expiration date
-#filter deleted
-SELECT * FROM white_apps_se_ruleset_merged WHERE change_type NOT LIKE 'deleted' LIMIT 10000;
-#filter Where App ID is NULL -> no such incorrect record as of 25/02/2022
-SELECT * FROM white_apps_se_ruleset_merged WHERE app_id IS NULL AND change_type NOT LIKE 'deleted' LIMIT 20000;
-
-#6353 where sysdb.ip is null
-SELECT * FROM white_apps_se_ruleset_merged WHERE ip IS NULL LIMIT 10000;
-#19624 -> 20283
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged;
-
-#38162 -> 42043
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2;
-
-#222
-SELECT COUNT(*) FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL;
-SELECT * FROM white_apps_se_ruleset_merged_dns2 WHERE dns4 IS NULL LIMIT 10000;
-
-SELECT COUNT(*) FROM  white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-
-#t-1:409 t-0:9242 t+1: 90009
-SELECT * FROM white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id 
-WHERE cardinality!=1 LIMIT 20000;
-
-#Needed again because there is no APP ID field in SecureTrack
-#So the ports list cannot be yet determined, only a cross join
-SELECT * FROM 
-se_ruleset_st_ports GROUP BY ips,app_id LIMIT 20000;
 
 SELECT group_concat(COLUMN_NAME)
   FROM INFORMATION_SCHEMA.COLUMNS
@@ -67,7 +38,7 @@ END AS 'dns2'
 FROM (SELECT * FROM white_apps_se_ruleset) as wa 
 LEFT JOIN (SELECT * FROM sysdb) as s 
 ON wa.IPs=s.ip;
-
+#SHOW PROCESSLIST;
 #Joining with white_apps_dns(index,IPs,dns)
 DROP TABLE white_apps_se_ruleset_merged_dns2;
 #choose either dns3 or FQDN (grep/sed of FQDNs)
@@ -89,7 +60,6 @@ WHERE change_type NOT LIKE 'deleted';
 SET group_concat_max_len=15000;
 
 DROP TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id;
-#t-1:7447 t-0:17042 t+1:18195 t+2:18940
 CREATE TABLE white_apps_se_ruleset_merged_dns2_grouped_by_ip_app_id
 SELECT ips,app_id,COUNT(*) as cardinality,
 GROUP_CONCAT(DISTINCT(ip)) as g_s_ip,

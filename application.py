@@ -1,25 +1,19 @@
-import json
+import argparse
+import datetime
 import re
+import shlex
+import sys
 from pathlib import Path
 
+import bulk_json_to_df
+import create_table_old_ip
 import file_operations
 import generate_queries
 import import_rules
-import systems_group
-import qc_to_sql
-from sqlalchemy import create_engine
-import secrets
 import main as hits
-import bulk_json_to_df
-from sqlalchemy import create_engine
-import darwin_resolve
-import eagle_filter
+import qc_to_sql
+import systems_group
 
-import secrets
-import pandas
-import shlex
-import sys
-import argparse
 
 def get_cli_args():
     parser = argparse.ArgumentParser("Unpacking Quality Check xlsx")
@@ -37,10 +31,9 @@ def main():
     ptrn = re.compile("darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
     newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
     print("Using " + newest_rlst.resolve().__str__())
-
     filepath_qc = newest_rlst.resolve().__str__()
     qc_to_sql.main(filepath_qc)
-    #file_operations.extract_policy_to_project_dir()
+
     netw_path = "./Network-CST-P-SAG-Darwin.json"
     darwin_path = "Standard_objects.json"
     import_rules.main(netw_path,darwin_path)
@@ -49,6 +42,7 @@ def main():
     file_operations.one_file_found_in_folder(filepath_list=filepath_list,
                                              project_dir=Path("./"),
                                              pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+
     print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
 
     # fill mysql tables eagle, snic_export, run eagle_comparison.sql
@@ -60,13 +54,15 @@ def main():
     generate_queries.save_new_transform_json(onlyInNew=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
-    # download hits to darwin_hits/...json
-    hits.main()
+    # download hits to hits/...json
+    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
+    hits.main(path=path,hit_json='hit_darwin_00%d_%s_%d.json')
     # creating 'ip_%Y%m%d' table from 'ip'
-    #create_table_old_ip.main("ip" + datetime.datetime.now().strftime("%d%m%y"))
+    create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/darwin_hits/"
-    regex = "^hit.*"
+
+    regex = "^hit_darwin.*\.json$"
+
     bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps

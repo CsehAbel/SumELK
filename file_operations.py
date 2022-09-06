@@ -1,8 +1,9 @@
-import shutil
+
 import datetime
+import re
+import shutil
 from pathlib import Path
 from tarfile import TarFile
-import re
 
 project_dir=Path("/home/akecse/PycharmProjectsSumELK")
 
@@ -11,7 +12,7 @@ def delete_hits(dir):
     b_exists = hits_folder.exists()
     b_is_dir = hits_folder.is_dir()
     #keeping gitkeep in hits folder for git to be able to persist it across 'branch_switching'
-    pttrn=re.compile("^.*hit.*\.json$")
+    pttrn = re.compile("^.*hit.*\.json$")
     if b_exists and b_is_dir:
         for child in hits_folder.iterdir():
             if pttrn.match(child.name):
@@ -131,6 +132,6 @@ if __name__=="__main__":
     shutil.copy(src=newest_snic,
                 dst=Path("./") / newest_snic.name)
     # delete hits
-    delete_hits(dir="darwin_hits")
+    delete_hits(dir="hits")
     # renames new_transform.json
     rename_darwin_transform_json()

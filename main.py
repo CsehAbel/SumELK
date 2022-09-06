@@ -14,7 +14,7 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-def main():
+def main(path,hit_json):
     #print matched iterating: lista["i_f","vuser","wuser123","a_123","App_123"]
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True, max_retries=3)
@@ -27,11 +27,11 @@ def main():
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
 
     for i in range(1):
-        download_index(es=es,index="darwin_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date)
+        download_index(es=es,index="darwin_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date,path=path,hit_json=hit_json)
     
     print("Done!")
 
-def download_index(es,index,nth,sort,gte_date):
+def download_index(es, index, nth, sort, gte_date,path, hit_json):
     resp = es.search(index=index,sort=sort,size=10000)
     #hits_len = resp['hits']['total']['value']
     hits_len = len(resp['hits']['hits'])
@@ -39,9 +39,7 @@ def download_index(es,index,nth,sort,gte_date):
     seq = 0
     hits = resp['hits']['hits']
 
-    p = "darwin_hits"
-    path = Path(p).absolute()
-    filepath = path / ('hit_00%d_%s_%d.json' % (nth, gte_date, seq))
+    filepath = path / (hit_json % (nth, gte_date, seq))
     with filepath.open('w') as outfile:
         for b in hits:
             json.dump(flattenhit(b), outfile)
@@ -57,9 +55,9 @@ def download_index(es,index,nth,sort,gte_date):
         hits = resp['hits']['hits']
 
         if hits_len==0:
-            print("Not creating darwin_hits/hit_00%d_%s_%d.json" % (nth,gte_date,seq))
+            print("Not creating "+filepath.name)
         else:
-            with open('darwin_hits/hit_00%d_%s_%d.json' % (nth,gte_date,seq), 'w') as outfile:
+            with filepath.open('w') as outfile:
                 # json.dump(buckets)
                 for b in hits:
                     json.dump(flattenhit(b), outfile)
@@ -72,5 +70,6 @@ def flattenhit(h):
     return {"source_ip":s,"dest_ip":d}
 
 if __name__ == '__main__':
-    main()
+    hit_json='hit_energy_00%d_%s_%d.json'
+    main(path="hits/",hit_json=hit_json)
 

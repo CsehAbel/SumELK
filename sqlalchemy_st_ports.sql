@@ -1,5 +1,5 @@
 USE CSV_DB;
-#106984
+#116348 -> 116370
 SELECT COUNT(*) FROM st_ports LIMIT 30000;
 
 SELECT rule_name FROM st_ports GROUP BY rule_name;
