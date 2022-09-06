@@ -1,13 +1,10 @@
 /secrets.py
-secure_track/**
-!secure_track/gitkeep
 /se_ruleset_unpacked?
-yellow
-yellow/**
+/darwin_ruleset_unpacked?
 __pycache__
 __pycache__/**
-hits/**
+hits/hit_darwin*json
+hits/hit_fokus*json
 !hits/gitkeep
-darwin_hits/**
 transform_history/*darwin_transform.json
 transform_history/*fokus_transform.json
