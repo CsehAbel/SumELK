@@ -1,6 +1,5 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
 import datetime
-import logging
 from pathlib import Path
 
 from elasticsearch import Elasticsearch
@@ -14,7 +13,9 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-def main(path,hit_json):
+hit_json='hit_darwin_00%d_%s_%d.json'
+
+def main(path):
     #print matched iterating: lista["i_f","vuser","wuser123","a_123","App_123"]
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True, max_retries=3)
@@ -54,6 +55,7 @@ def download_index(es, index, nth, sort, gte_date,path, hit_json):
         print("Got %d Hits:" % hits_len)
         hits = resp['hits']['hits']
 
+        filepath = path / (hit_json % (nth, gte_date, seq))
         if hits_len==0:
             print("Not creating "+filepath.name)
         else:
@@ -70,6 +72,5 @@ def flattenhit(h):
     return {"source_ip":s,"dest_ip":d}
 
 if __name__ == '__main__':
-    hit_json='hit_energy_00%d_%s_%d.json'
-    main(path="hits/",hit_json=hit_json)
+    main(path=Path("hits/"),hit_json=hit_json)
 

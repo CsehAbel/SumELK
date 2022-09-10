@@ -7,6 +7,7 @@ from pathlib import Path
 
 import bulk_json_to_df
 import create_table_old_ip
+import eagle_filter
 import file_operations
 import generate_queries
 import import_rules
@@ -46,8 +47,8 @@ def main():
     print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
 
     # fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    #eagle_filter.main(filepath_list[0])
-    #eagle_filter.snic_to_sql(filepath_list[0])
+    eagle_filter.main(filepath_list[0])
+    eagle_filter.snic_to_sql(filepath_list[0])
 
     # darwin_transform.json
     sag_systems = systems_group.get_systems_ip_list(darwin_path)
@@ -55,14 +56,13 @@ def main():
     generate_queries.systems_to_sql(sag_systems)
 
     # download hits to hits/...json
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    hits.main(path=path,hit_json='hit_darwin_00%d_%s_%d.json')
+    path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
+    hits.main(path=path)
     # creating 'ip_%Y%m%d' table from 'ip'
     create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
 
     regex = "^hit_darwin.*\.json$"
-
     bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps
