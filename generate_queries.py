@@ -64,13 +64,13 @@ def read_query1to4():
 #moved from systems_group.py
 #onlyinold_to_sql() not needed anymore, table should be deleted
 #onlyInNew needs to be exploded to use as left join filter for the table hits
-def save_new_transform_json(onlyInNew):
+def save_new_transform_json(sag_systems):
 
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
     #275
-    transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
+    transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
 
     with open('darwin_transform.json', 'w') as outfile:
         transform2 = json.dumps(transform, indent=4)  # ,sort_keys=True)

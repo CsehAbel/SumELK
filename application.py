@@ -52,12 +52,12 @@ def main():
 
     # darwin_transform.json
     sag_systems = systems_group.get_systems_ip_list(darwin_path)
-    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
+    generate_queries.save_new_transform_json(sag_systems=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
     # download hits to hits/...json
     path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-    hits.main(path=path)
+    hits.main(path=path,sag_systems=sag_systems)
     # creating 'ip_%Y%m%d' table from 'ip'
     create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
