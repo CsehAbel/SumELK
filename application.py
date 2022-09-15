@@ -1,25 +1,16 @@
 import datetime
-import json
 import re
-import shutil
 from pathlib import Path
 
 import create_table_old_ip
 import file_operations
 import generate_queries
 import import_rules
-import resolveIpToName
 import systems_group
 import qc_to_sql
-from sqlalchemy import create_engine
-import secrets
 import main as hits
 import bulk_json_to_df
 import eagle_filter
-from sqlalchemy import create_engine
-
-import secrets
-import pandas
 import shlex
 import sys
 import argparse
@@ -35,8 +26,8 @@ def get_cli_args():
     return args
 
 def main():
-    # first     run file_operations.py
-    # second    run SGRE to unpack se_ruleset, copy here
+    # first run file_operations.py
+    # second run SGRE to unpack se_ruleset, copy here
     ptrn = re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
     newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
     print("Using " + newest_rlst.resolve().__str__())
@@ -60,12 +51,12 @@ def main():
 
     # new_transform.json
     sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
-    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
+    generate_queries.save_new_transform_json(sag_systems=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
     # download hits to hits/...json
     path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-    hits.main(path=path)
+    hits.main(path=path,sag_systems=sag_systems)
     # creating 'ip_%Y%m%d' table from 'ip'
     create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
