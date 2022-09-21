@@ -2,6 +2,7 @@ import math
 import re
 import socket
 import struct
+from pathlib import Path
 
 import pandas
 from sqlalchemy import create_engine
@@ -98,53 +99,57 @@ def snic_to_sql(filepath_qc):
     dbConnection = sqlEngine.connect()
     attachment_qc.to_sql("snic_export", dbConnection, if_exists='replace', index=True)
 
-def main(filepath_qc):
+def get_unpacked_list(attachment_qc, lines):
+    pre_list_unpacked_ips = []
+    for index, row in attachment_qc.iterrows():
+        sp = row["SNX Service Point ID"]
+        if not pandas.isna(sp) and type(sp) is str:
+            sp = sp.strip()
+        if sp in lines:
+            b = row["IP-net-base"]
+            cidr = row["CIDR"]
+            pre_list_unpacked_ips.append({"b":b,"cidr":cidr,"sp":sp})
+    return pre_list_unpacked_ips
 
-    attachment_qc = pandas.read_csv(filepath_qc, index_col=None, dtype=str, sep=";")
 
-    list_unpacked_ips=[]
-    for index,row in attachment_qc.iterrows():
-        ussm=row["USSM"]
-        vpn=row["VPN name"]
-        if ussm.strip()=="Milbradt, Thomas (Z000F1XC)" and vpn.strip()=="Siemens VPN":
-            b=row["IP-net-base"]
-            cidr=row["CIDR"]
-            prefix2 = b
-            cidr2 = correctAndCheckMatchedMask(cidr)
-            base = integerToDecimalDottedQuad(
-                decimalDottedQuadToInteger(prefix2) & makeIntegerMask(
-                    cidr2))
-            if base != prefix2:
-                print("Not a network Adresse (possible ip base %s)" % base)
+def unpack_ips(pre_list_unpacked_ips):
+    list_unpacked_ips = []
+    for d in pre_list_unpacked_ips:
+        prefix2 = d["b"]
+        cidr2 = correctAndCheckMatchedMask(d["cidr"])
+        base = integerToDecimalDottedQuad(
+            decimalDottedQuadToInteger(prefix2) & makeIntegerMask(
+                cidr2))
+        if base != prefix2:
+            print("Not a network Adresse (possible ip base %s)" % base)
 
-            int_prefix_top = (~makeIntegerMask(
-                cidr2)) | decimalDottedQuadToInteger(prefix2)
-            if int_prefix_top - 2 * 32 == -4117887025:
-                print("Test singed to unsigned conversion")
-                # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
-                # Modified
-                #    decimalDottedQuadToInteger()
-                # to convert signed integers to unsigned.
-                # Das Folgende ist redundant, überreichlich, ersetzt:
-                #   int_prefix_top == -4117887025:
-                #   if int_prefix_top < 0:
-                #      int_prefix_top = int_prefix_top + (2**32)
+        int_prefix_top = (~makeIntegerMask(
+            cidr2)) | decimalDottedQuadToInteger(prefix2)
+        if int_prefix_top - 2 * 32 == -4117887025:
+            print("Test singed to unsigned conversion")
 
-            prefix_top = integerToDecimalDottedQuad(int_prefix_top)
-            # print("netw.adrr.:{}".format(base))
-            for j in range(decimalDottedQuadToInteger(base) + 1,
-                           decimalDottedQuadToInteger(
-                               integerToDecimalDottedQuad(int_prefix_top)) + 1):
-                list_unpacked_ips.append({"ip":integerToDecimalDottedQuad(j),"base":b,"cidr":cidr,"ussm":ussm,"vpn":vpn})
+        prefix_top = integerToDecimalDottedQuad(int_prefix_top)
+        # print("netw.adrr.:{}".format(base))
+        for j in range(decimalDottedQuadToInteger(base) + 1,
+                       decimalDottedQuadToInteger(
+                           integerToDecimalDottedQuad(int_prefix_top)) + 1):
+            list_unpacked_ips.append({"ip": integerToDecimalDottedQuad(j), "base": base, "cidr": cidr2, "sp": d["sp"]})
+    return list_unpacked_ips
 
-    df=pandas.DataFrame(list_unpacked_ips)
+
+def read_sp_list(service_points_path):
+    path = Path(service_points_path);
+    # trim the the beginning and end of each line
+    # create a list from the lines in the file
+    with path.open() as f:
+        lines = [line.strip() for line in f]
+    return lines
+
+
+def df_to_sql(list_unpacked_ips):
+    df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
     df.to_sql("eagle", dbConnection, if_exists='replace', index=True)
     print("Done!")
-
-if __name__=="__main__":
-    filepath_qc = "20220614-snic_ip_network_assignments.csv"
-    snic_to_sql(filepath_qc)
-    #main(filepath_qc)
