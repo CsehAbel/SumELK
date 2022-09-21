@@ -1,26 +1,5 @@
 {
     "bool":{
-      "should" : [
-        {"regexp": {
-          "rule.name": {
-            "value": "a.*",
-            "flags": "ALL",
-            "case_insensitive": true,
-            "max_determinized_states": 10000
-          }
-        }},
-        {
-          "regexp": {
-            "rule.name": {
-              "value": "wuser.*",
-              "flags": "ALL",
-              "case_insensitive": true,
-              "max_determinized_states": 10000
-            }
-          }
-        }
-        ],
-      "minimum_should_match" : 1,
       "filter": [
        {
         "terms" :

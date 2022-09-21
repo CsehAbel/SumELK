@@ -8,3 +8,5 @@ hits/hit_fokus*json
 !hits/gitkeep
 transform_history/*new_transform.json
 transform_history/*fokus_transform.json
+policy/*policy*tar.gz
+!policy/gitkeep
