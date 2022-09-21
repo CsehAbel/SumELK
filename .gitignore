@@ -1,7 +1,7 @@
-/secrets.py
-/se_ruleset_unpacked?
-/darwin_ruleset_unpacked?
-__pycache__
+secrets.py
+se_ruleset_unpacked*
+darwin_ruleset_unpacked*
+fokus_ruleset_unpacked*
 __pycache__/**
 hits/hit_energy*json
 hits/hit_fokus*json
