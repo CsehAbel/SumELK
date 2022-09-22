@@ -19,7 +19,6 @@ def get_systems_ip_list(darwin_json):
 
     group_names = ['all_red_system_networks']
     snx_systems = of_type_group[of_type_group.name.isin(group_names)]
-    #snx_systems = of_type_group[of_type_group.name.isin(["EMEA_migrated_SNX_Systems", "NAM_migrated_SNX_Systems"])]
 
     list_source_ranges = []
     for index, obj in snx_systems.iterrows():
@@ -108,6 +107,7 @@ def df_from_line(line):
 
 def main():
     darwin_json = "Fokus_AC_Standard_objects.json"
+    get_systems_ip_list(darwin_json)
 
 if __name__=="__main__":
     main()

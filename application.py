@@ -1,14 +1,19 @@
+import argparse
+import datetime
 import re
+import shlex
+import sys
 from pathlib import Path
 
+import bulk_json_to_df
+import create_table_old_ip
+import eagle_filter
 import file_operations
 import generate_queries
 import import_rules
-import systems_group
+import main as hits
 import qc_to_sql
-import shlex
-import sys
-import argparse
+import systems_group
 
 def get_cli_args():
     parser = argparse.ArgumentParser("Unpacking Quality Check xlsx")
@@ -43,22 +48,23 @@ def main():
     print("%s used to fill mysql tables eagle, snic_export" %filepath_list[0])
 
     #fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    #eagle_filter.main(filepath_list[0])
-    #eagle_filter.snic_to_sql(filepath_list[0])
+    eagle_filter.main(filepath_list[0])
+    eagle_filter.snic_to_sql(filepath_list[0])
 
     # new_transform.json
     sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
-    generate_queries.save_new_transform_json(onlyInNew=sag_systems)
+    generate_queries.save_new_transform_json(sag_systems=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
     # download hits to hits/...json
-    #hits.main()
+    path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
+    hits.main(path=path,sag_systems=sag_systems)
+
     # creating 'ip_%Y%m%d' table from 'ip'
-    #create_table_old_ip.main("ip" + datetime.datetime.now().strftime("%d%m%y"))
+    create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
     # .json to mysql table 'ip'
-    #path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/fokus_hits/"
-    #regex = "^hit.*"
-    #bulk_json_to_df.main(path,regex)
+    regex = "^hit_fokus.*\.json$"
+    bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to DARWIN_DB->src_dns

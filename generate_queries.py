@@ -16,13 +16,7 @@ import pandas
 from sqlalchemy import create_engine
 
 import ip_utils
-from pathlib import Path
-
-from elasticsearch import Elasticsearch
 import json
-from ssl import create_default_context
-from elasticsearch import RequestsHttpConnection
-
 import secrets
 import systems_group
 
@@ -31,23 +25,20 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-#moved from systems_group.py
-#onlyinold_to_sql() not needed anymore, table should be deleted
-#onlyInNew needs to be exploded to use as left join filter for the table hits
-def save_new_transform_json(onlyInNew):
+#sagsystems needs to be exploded to use as left join filter for the table hits
+def save_new_transform_json(sag_systems):
 
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
-    #393
-    transform['bool']['filter']['terms']['source.ip'] = list(onlyInNew)
 
-    with open('new_transform.json', 'w') as outfile:
-        transform2=json.dumps(transform, indent=4) #,sort_keys=True)
+    transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
+
+    with open('fokus_transform.json', 'w') as outfile:
+        transform2 = json.dumps(transform, indent=4)  # ,sort_keys=True)
         outfile.write(transform2)
-    print("Done writing new_transform.json!")
+    print("Done writing fokus_transform.json!")
 
-#systems_group.py onlyinold_to_sql() repurposed
 def systems_to_sql(systems):
     list_unpacked_ips = []
     for line in systems:
@@ -93,7 +84,11 @@ def systems_to_sql(systems):
     df.to_sql("systems", dbConnection, if_exists='replace', index=True)
 
 def main():
-  return
+    standard_path = "Fokus_AC_Standard_objects.json"
+    sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
+    save_new_transform_json(sag_systems=sag_systems)
+    systems_to_sql(systems=sag_systems)
+
 
 if __name__=="__main__":
     main()
