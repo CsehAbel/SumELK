@@ -69,7 +69,6 @@ def save_new_transform_json(sag_systems):
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
-    #275
     transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
 
     with open('darwin_transform.json', 'w') as outfile:

@@ -33,7 +33,7 @@ def main(history_table):
   cnx = mysql.connector.connect(**config)
   cursor = cnx.cursor()
 
-  DB_NAME = "CSV_DB"
+  DB_NAME = "DARWIN_DB"
   usedb(cursor,DB_NAME)
 
   LOADS = {}

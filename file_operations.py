@@ -7,6 +7,8 @@ from tarfile import TarFile
 
 import ssh_download
 
+import ssh_download
+
 project_dir=Path("/home/akecse/PycharmProjectsSumELK")
 
 def delete_hits(dir):
@@ -21,24 +23,14 @@ def delete_hits(dir):
                 unlink_file(child)
                 print("%s unlinked" % child.resolve().__str__())
 
-
-def extract_policy_to_project_dir():
-    #find index of standard_objects,network_objects
-    network="Network-CST-P-SAG-Darwin.json"
-    # ToDo: use Standard_objects.json for query_wp branch
-    standard="Standard_objects.json"
-
-    network_file=(project_dir/network)
-    standard_file=(project_dir/standard)
+def extract_policy_to_project_dir(pttrn,network_file,standard_file):
+    network_file=(project_dir/network_file)
+    standard_file=(project_dir/standard_file)
 
     unlink_file(network_file)
     unlink_file(standard_file)
 
-    #find network,standard in tar and extract it to
-    #abs_network_string, abs_standard_darwin_string
     policies = '/D:/projects/darwin/darwin_cofw_policies'
-    pttrn = re.compile("^DARWIN_policy.*\.tar\.gz")
-    #dowwload tar_gz to localdir, returns localdir + (filename matching pttr)
     localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
     newest_tar_gz = ssh_download.search_newest_in_folder(pttrn,policies,localdir=localdir)
 
@@ -63,15 +55,11 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     abs_standard_string=standard_file.resolve().__str__()
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
+
     network_tarinfo = list(filter(lambda x: (x.name in [network_file.name]), tar_members))
     if network_tarinfo.__len__() != 1:
         raise ValueError("network_tarinfo file not found")
-    network_tarinfo=network_tarinfo[0]
-
-    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
-    if standard_tarinfo.__len__() != 1:
-        raise ValueError("standard_tarinfo file not found")
-    standard_tarinfo=standard_tarinfo[0]
+    network_tarinfo = network_tarinfo[0]
     # Extract a member from the archive to the current working directory, using its full name
     # You can specify a different directory using path
     # member may be a filename or TarInfo object
@@ -79,10 +67,23 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     exists1 = network_file.exists()
     if not exists1:
         raise RuntimeError("file %s wasnt extracted to %s" % (network_file.name, project_dir.name))
+    else:
+        print("file %s extracted to %s" % (network_file.name, project_dir.name))
+    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
+    if standard_tarinfo.__len__() != 1:
+        raise ValueError("standard_tarinfo file not found")
+    standard_tarinfo = standard_tarinfo[0]
+    # Extract a member from the archive to the current working directory, using its full name
+    # You can specify a different directory using path
+    # member may be a filename or TarInfo object
     tar_gz.extract(member=standard_tarinfo.name, path=extract_to, set_attrs=True, numeric_owner=False)
     exists2 = standard_file.exists()
     if not exists2:
         raise RuntimeError("file %s wasnt extracted to %s" % (standard_file.name, project_dir.name))
+    else:
+        print("file %s extracted to %s" % (standard_file.name, project_dir.name))
+
+
 
 
 def unlink_file(to_be_unlinked_file):
@@ -93,7 +94,7 @@ def unlink_file(to_be_unlinked_file):
         print("%s not found" % to_be_unlinked_file.name)
     exists_still = to_be_unlinked_file.is_file()
     if exists_still:
-        raise RuntimeError("files %s to be deleted form %s still exists" % (to_be_unlinked_file.name, project_dir.name))
+        raise RuntimeError("files %s to be deleted still exists" % to_be_unlinked_file.name)
 
 def rename_darwin_transform_json():
     source=Path("darwin_transform.json")
@@ -106,7 +107,8 @@ def rename_darwin_transform_json():
         target = Path("./transform_history") / target_string
         if not target.exists():
             shutil.copy(src=source,
-                        dst = target)
+                        dst=target)
+
             unlink_file(source)
             print(source.name+"\n renamed to \n"+target.name)
 
@@ -125,20 +127,3 @@ def remove_files_in_dir(pttrn,dir):
         if pttrn.match(x.name):
             unlink_file(x)
             print("%s unlinked" %x.resolve().__str__())
-
-if __name__=="__main__":
-    remove_files_in_dir(
-        pttrn=re.compile("darwin_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"),dir=Path(project_dir))
-    remove_files_in_dir(
-        pttrn=re.compile("^DARWIN_policy.*\.tar\.gz"),dir=Path(project_dir)/"policy")
-    extract_policy_to_project_dir()
-    # remove snic.csv
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-    remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
-    # copy new snic.csv
-    localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
-    newest_snic = ssh_download.search_newest_in_folder(pttrn=pttrn_snic, policies="/D:/snic/", localdir=localdir)
-    # delete hits
-    delete_hits(dir="hits")
-    # renames new_transform.json
-    rename_darwin_transform_json()

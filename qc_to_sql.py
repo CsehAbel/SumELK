@@ -19,7 +19,6 @@ def test_matches(attachment):
 
 
         dict_raw_field = {"app_id": [], "ips_field": row["IPs"]}
-        # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
         field = dict_raw_field["ips_field"]
         field_list=[]
         if (not pandas.isnull(field)) and field.find(";") != -1:
@@ -246,7 +245,7 @@ def main(filepath_qc):
     dbConnection = sqlEngine.connect()
     df_qc.to_sql("darwin_white_apps", dbConnection,if_exists='replace', index=True)
     #df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
-    print("lel")
+    print("se_ruleset_unpacked uploaded to white_apps_se_ruleset")
 
 if __name__=="__main__":
     filepath_qc = "darwin_ruleset_unpacked13Jun2022.xlsx"
