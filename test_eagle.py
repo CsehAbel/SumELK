@@ -7,26 +7,71 @@ import pandas
 import application
 import eagle_filter
 import file_operations
+import qc_to_sql
+import systems_group
 
 
 class TestRegexpMatchRuleName(TestCase):
 
-    #test_eagle_filter
-    def test_eagle_filter(self):
-        filepath_list = []
-        file_operations.one_file_found_in_folder(filepath_list=filepath_list,
+    def test_file_operations(self):
+        file_operations.remove_files_in_dir(
+            pttrn=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"), dir=Path(file_operations.project_dir))
+
+
+        pttrn = re.compile("^Energy_policy.*\.tar\.gz")
+        file_operations.remove_files_in_dir(
+            pttrn=pttrn, dir=Path(file_operations.project_dir) / "policy")
+        file_operations.extract_policy_to_project_dir(pttrn=pttrn)
+
+        #remove snic.csv
+        pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
+        file_operations.remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
+
+        # copy new snic.csv
+        localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
+        newest_snic = file_operations.ssh_download.search_newest_in_folder(pttrn=pttrn_snic, policies="/D:/snic/", localdir=localdir)
+
+        snics_found = []
+        file_operations.one_file_found_in_folder(filepath_list=snics_found,
                                                  project_dir=Path("./"),
                                                  pttrn_snic=re.compile(
                                                      "\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
-        print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
-        # fill mysql tables eagle, snic_export, run eagle_comparison.sql
-        service_points_path = "service_points.csv"
-        lines = eagle_filter.read_sp_list(service_points_path)
-        self.assertTrue(lines.__len__() > 0)
-        attachment_qc = pandas.read_csv(filepath_list[0], index_col=None, dtype=str, sep=";")
-        pre_list_unpacked_ips = eagle_filter.get_unpacked_list(attachment_qc, lines)
-        self.assertTrue(0<pre_list_unpacked_ips.__len__())
-        list_unpacked_ips = eagle_filter.unpack_ips(pre_list_unpacked_ips)
-        self.assertTrue(0<list_unpacked_ips.__len__())
-        eagle_filter.df_to_sql(list_unpacked_ips)
-        eagle_filter.snic_to_sql(filepath_list[0])
+        self.assertTrue(snics_found.__len__() == 1)
+        # delete hits
+        file_operations.delete_hits(dir="hits")
+        self.assertTrue([x for x in Path("hits").iterdir()].__len__() == 1)
+        # renames new_transform.json
+        file_operations.rename_darwin_transform_json()
+
+    #test_eagle_filter
+    def test_eagle_filter(self):
+        application.use_eagle_filter()
+
+    def test_gen_queries(self):
+        standard_path = "Standard_objects.json"
+        sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
+        application.use_generate_queries(sag_systems)
+
+    def test_import_rules(self):
+        standard_path = "Standard_objects.json"
+        application.use_import_rules(standard_path)
+
+    def test_hits(self):
+        standard_path = "Standard_objects.json"
+        sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
+        # download hits to hits/...json
+        path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
+        application.hits.main(path=path, sag_systems=sag_systems)
+        # creating 'ip_%Y%m%d' table from 'ip'
+        application.create_table_old_ip.main("ip_" + application.datetime.datetime.now().strftime("%Y%m%d"))
+        # .json to mysql table 'ip'
+
+    def test_bulk_json_to(self):
+        path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
+        regex = "^hit_energy.*\.json$"
+        application.bulk_json_to_df.main(path, regex)
+
+    def test_fill_white_apps_se_ruleset(self):
+        filepath_qc = application.use_file_operations()
+        qc_to_sql.main(filepath_qc)
+

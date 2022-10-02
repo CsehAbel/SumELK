@@ -121,26 +121,3 @@ def remove_files_in_dir(pttrn,dir):
         if pttrn.match(x.name):
             unlink_file(x)
             print("%s unlinked" %x.resolve().__str__())
-
-
-#[child.unlink() for child in Path("darwin_hits).listdir()]
-#def clear_darwin_hits():
-if __name__=="__main__":
-    remove_files_in_dir(
-        pttrn=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"), dir=Path(project_dir))
-    pttrn = re.compile("^Energy_policy.*\.tar\.gz")
-    remove_files_in_dir(
-        pttrn=pttrn, dir=Path(project_dir) / "policy")
-    extract_policy_to_project_dir(pttrn=pttrn)
-    # remove snic.csv
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-    remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
-    # copy new snic.csv
-    localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
-    newest_snic = ssh_download.search_newest_in_folder(pttrn=pttrn_snic, policies="/D:/snic/", localdir=localdir)
-    # delete hits
-    delete_hits(dir="hits")
-    # renames new_transform.json
-    rename_darwin_transform_json()
-
-

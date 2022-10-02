@@ -18,8 +18,7 @@ def test_matches(attachment):
     for index, row in attachment.iterrows():
 
 
-        dict_raw_field = {"app_id": [], "tufin_id": row["Tufin ID"], "ips_field": row["IPs"]}
-        # dict_raw_field["app_id"],dict_raw_field["tufin_id"],dict_raw_field["ips_field"]
+        dict_raw_field = {"app_id": [], "ips_field": row["IPs"]}
         field = dict_raw_field["ips_field"]
         field_list=[]
         if (not pandas.isnull(field)) and field.find(";") != -1:
@@ -246,7 +245,7 @@ def main(filepath_qc):
     dbConnection = sqlEngine.connect()
     df_qc.to_sql("white_apps_se_ruleset", dbConnection,if_exists='replace', index=True)
     #df_qc_null.to_sql("se_ruleset_fqdn_error", dbConnection, if_exists='replace', index=True)
-    print("lel")
+    print("se_ruleset_unpacked uploaded to white_apps_se_ruleset")
 
 if __name__=="__main__":
     filepath_qc = "se_ruleset_unpacked19Apr2022.xlsx"

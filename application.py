@@ -27,6 +27,53 @@ def get_cli_args():
     args = parser.parse_args(shlex.split(" ".join(sys.argv[1:])))
     return args
 
+def use_file_operations():
+    ptrn = re.compile("se_ruleset_unpacked.\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
+    newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
+    print("Using " + newest_rlst.resolve().__str__())
+    filepath_qc = newest_rlst.resolve().__str__()
+    return filepath_qc
+
+
+def use_generate_queries(sag_systems):
+    generate_queries.save_new_transform_json(sag_systems=sag_systems)
+    generate_queries.systems_to_sql(sag_systems)
+
+
+def use_import_rules(standard_path):
+    path = "./Network-CST-P-SAG-Energy.json"
+    import_rules.main(path, standard_path)
+
+
+def use_eagle_filter():
+    service_points_path = "service_points.csv"
+    lines = eagle_filter.read_sp_list(service_points_path)
+    #create subset of to be unpacked ips
+    snics_found = []
+    file_operations.one_file_found_in_folder(filepath_list=snics_found,
+                                             project_dir=Path("./"),
+                                             pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+    print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
+    attachment_snic = pandas.read_csv(snics_found[0], index_col=None, dtype=str, sep=";")
+    pre_list_unpacked_ips1 = eagle_filter.to_unpack_ips_1(attachment_snic, lines)
+    list_unpacked_ips1 = eagle_filter.unpack_ips(pre_list_unpacked_ips1)
+
+    # create subset of to be unpacked ips
+    network_cont = []
+    file_operations.one_file_found_in_folder(filepath_list=network_cont,
+                                             project_dir=Path("./"),
+                                             pttrn_snic=re.compile("\d{4}\d{2}\d{2}-network_container.csv"))
+    print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
+    attachment_network_container = pandas.read_csv(network_cont[0], index_col=None, dtype=str, sep=";")
+    pre_list_unpacked_ips2 = eagle_filter.to_unpack_ips_2(attachment_network_container)
+    list_unpacked_ips2 = eagle_filter.unpack_ips(pre_list_unpacked_ips2)
+
+    #merge the two list of dictionaries
+    list_unpacked_ips = list_unpacked_ips1 + list_unpacked_ips2
+    eagle_filter.dict_to_sql(list_unpacked_ips)
+    eagle_filter.snic_to_sql(snics_found[0])
+
+
 def main():
     # first run file_operations.py
     # second run SGRE to unpack se_ruleset, copy here
@@ -58,39 +105,6 @@ def main():
     # each time the ip-fqdn pair will be appended to CSV_DB->src_dns
     # resolveIpToName.resolve_white_apps()
 
-
-def use_file_operations():
-    ptrn = re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
-    newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
-    print("Using " + newest_rlst.resolve().__str__())
-    filepath_qc = newest_rlst.resolve().__str__()
-    return filepath_qc
-
-
-def use_generate_queries(sag_systems):
-    generate_queries.save_new_transform_json(sag_systems=sag_systems)
-    generate_queries.systems_to_sql(sag_systems)
-
-
-def use_import_rules(standard_path):
-    path = "./Network-CST-P-SAG-Energy.json"
-    import_rules.main(path, standard_path)
-
-
-def use_eagle_filter():
-    filepath_list = []
-    file_operations.one_file_found_in_folder(filepath_list=filepath_list,
-                                             project_dir=Path("./"),
-                                             pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
-    print("%s used to fill mysql tables eagle, snic_export" % filepath_list[0])
-    # fill mysql tables eagle, snic_export, run eagle_comparison.sql
-    service_points_path = "service_points.csv"
-    lines = eagle_filter.read_sp_list(service_points_path)
-    attachment_qc = pandas.read_csv(filepath_list[0], index_col=None, dtype=str, sep=";")
-    pre_list_unpacked_ips = eagle_filter.get_unpacked_list(attachment_qc, lines)
-    list_unpacked_ips = eagle_filter.unpack_ips(pre_list_unpacked_ips)
-    eagle_filter.df_to_sql(list_unpacked_ips)
-    eagle_filter.snic_to_sql(filepath_list[0])
 
 
 if __name__ == "__main__":
