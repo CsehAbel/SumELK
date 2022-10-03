@@ -39,20 +39,48 @@ def main(history_table):
   LOADS = {}
 
   table="ip"
-  LOADS["create_a_table_from_another"]="CREATE TABLE "+history_table+" SELECT * FROM "+table+";"
+  #create a new table with the name of the current date
+  create_table="CREATE TABLE "+history_table+" SELECT * FROM "+table+";"
 
-  for l in LOADS:
-    table_description = LOADS[l]
-    try:
-      cursor.execute(table_description)
-    except mysql.connector.Error as err:
-      print(err.msg)
-    else:
-      print("OK")
+  #try to execute the query, create a new table with the name of the current date
+  try:
+        cursor.execute(create_table)
+  except mysql.connector.Error as err:
+        print(err.msg)
+  else:
+        print("Table {} created.".format(history_table))
 
   cnx.commit()
   cursor.close()
   cnx.close()
+
+#function similar to main() but instead of creating a new table, return the number of rows in darwin_white_apps table
+def get_row_count(table):
+    cnx = mysql.connector.connect(**config)
+    cursor = cnx.cursor()
+
+    DB_NAME = "CSV_DB"
+    usedb(cursor,DB_NAME)
+
+    #store "count_rows" in a variable
+    count_rows = "SELECT COUNT(*) FROM "+table+";"
+    #try to execute the query, return the number of rows in darwin_white_apps table
+    try:
+        cursor.execute(count_rows)
+        #store the result in a variable containing an integer
+        rows = cursor.fetchone()[0]
+    except mysql.connector.Error as err:
+        print(err.msg)
+    else:
+        #print the number of rows in table
+        print("Table {} has {} rows.".format(table,rows))
+
+
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+
+    return rows
 
 if __name__=="__main__":
   history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d")

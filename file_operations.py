@@ -20,26 +20,19 @@ def delete_hits(dir):
                 unlink_file(child)
                 print("%s unlinked" % child.resolve().__str__())
 
-def extract_policy_to_project_dir(pttrn):
-    #find index of standard_objects,network_objects
-    network="Network-CST-P-SAG-Energy.json"
-    # ToDo: use Standard_objects.json for query_wp branch
-    standard="Standard_objects.json"
-
-    network_file=(project_dir/network)
-    standard_file=(project_dir/standard)
+def extract_policy_to_project_dir(pttrn,network_file,standard_file):
+    network_file=(project_dir/network_file)
+    standard_file=(project_dir/standard_file)
 
     unlink_file(network_file)
     unlink_file(standard_file)
 
-    #find network,standard in tar and extract it to
-    #abs_network_string, abs_standard_darwin_string
     policies = '/D:/projects/se/se_cofw_policies/'
     localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
-    newest_tar_gz = ssh_download.search_newest_in_folder(pttrn, policies, localdir=localdir)
+    newest_tar_gz = ssh_download.search_newest_in_folder(pttrn,policies,localdir=localdir)
 
     extract_to = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/")
-    extract_tarinfo(Path(newest_tar_gz), network_file, standard_file, extract_to)
+    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file,extract_to)
     print("extraction done!")
 
 def search_newest_in_folder(dir, pttrn):
@@ -54,20 +47,16 @@ def search_newest_in_folder(dir, pttrn):
     newest_tar_gz = max(stats, key=lambda x: x.stat().st_mtime)
     return newest_tar_gz
 
-def extract_tarinfo(newest_tar_gz,network_file, standard_file,extract_to):
+def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     abs_network_string = network_file.resolve().__str__()
     abs_standard_string = standard_file.resolve().__str__()
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
+
     network_tarinfo = list(filter(lambda x: (x.name in [network_file.name]), tar_members))
     if network_tarinfo.__len__() != 1:
         raise ValueError("network_tarinfo file not found")
     network_tarinfo = network_tarinfo[0]
-
-    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
-    if standard_tarinfo.__len__() != 1:
-        raise ValueError("standard_tarinfo file not found")
-    standard_tarinfo = standard_tarinfo[0]
     # Extract a member from the archive to the current working directory, using its full name
     # You can specify a different directory using path
     # member may be a filename or TarInfo object
@@ -75,10 +64,21 @@ def extract_tarinfo(newest_tar_gz,network_file, standard_file,extract_to):
     exists1 = network_file.exists()
     if not exists1:
         raise RuntimeError("file %s wasnt extracted to %s" % (network_file.name, project_dir.name))
+    else:
+        print("%s extracted to %s" % (network_file.name, project_dir.name))
+    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
+    if standard_tarinfo.__len__() != 1:
+        raise ValueError("standard_tarinfo file not found")
+    standard_tarinfo = standard_tarinfo[0]
+    # Extract a member from the archive to the current working directory, using its full name
+    # You can specify a different directory using path
+    # member may be a filename or TarInfo object
     tar_gz.extract(member=standard_tarinfo.name, path=extract_to, set_attrs=True, numeric_owner=False)
     exists2 = standard_file.exists()
     if not exists2:
         raise RuntimeError("file %s wasnt extracted to %s" % (standard_file.name, project_dir.name))
+    else:
+        print("%s extracted to %s" % (standard_file.name, project_dir.name))
 
 
 def unlink_file(to_be_unlinked_file):

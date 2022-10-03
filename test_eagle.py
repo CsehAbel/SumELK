@@ -17,11 +17,12 @@ class TestRegexpMatchRuleName(TestCase):
         file_operations.remove_files_in_dir(
             pttrn=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"), dir=Path(file_operations.project_dir))
 
-
+        network = "Network-CST-P-SAG-Energy.json"
+        standard = "Standard_objects.json"
         pttrn = re.compile("^Energy_policy.*\.tar\.gz")
         file_operations.remove_files_in_dir(
             pttrn=pttrn, dir=Path(file_operations.project_dir) / "policy")
-        file_operations.extract_policy_to_project_dir(pttrn=pttrn)
+        file_operations.extract_policy_to_project_dir(pttrn=pttrn,network_file=network,standard_file=standard)
 
         #remove snic.csv
         pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
@@ -53,8 +54,11 @@ class TestRegexpMatchRuleName(TestCase):
         application.use_generate_queries(sag_systems)
 
     def test_import_rules(self):
+        row = application.create_table_old_ip.get_row_count(table="st_ports")
         standard_path = "Standard_objects.json"
         application.use_import_rules(standard_path)
+        row2 = application.create_table_old_ip.get_row_count(table="st_ports")
+        self.assertTrue(row2 != row)
 
     def test_hits(self):
         standard_path = "Standard_objects.json"
@@ -64,14 +68,21 @@ class TestRegexpMatchRuleName(TestCase):
         application.hits.main(path=path, sag_systems=sag_systems)
         # creating 'ip_%Y%m%d' table from 'ip'
         application.create_table_old_ip.main("ip_" + application.datetime.datetime.now().strftime("%Y%m%d"))
-        # .json to mysql table 'ip'
 
+    # .json to mysql table 'ip'
     def test_bulk_json_to(self):
+        row = application.create_table_old_ip.get_row_count(table="ip")
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_energy.*\.json$"
         application.bulk_json_to_df.main(path, regex)
+        row2 = application.create_table_old_ip.get_row_count(table="ip")
+        self.assertTrue(row2 != row)
+
 
     def test_fill_white_apps_se_ruleset(self):
-        filepath_qc = application.use_file_operations()
+        row = application.create_table_old_ip.get_row_count(table="white_apps_se_ruleset")
+        filepath_qc = application.search_newest_rlst_unpacked()
         qc_to_sql.main(filepath_qc)
+        row2 = application.create_table_old_ip.get_row_count(table="white_apps_se_ruleset")
+        self.assertTrue(row2 != row)
 
