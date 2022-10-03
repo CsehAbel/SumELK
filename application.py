@@ -24,7 +24,7 @@ def get_cli_args():
     args = parser.parse_args(shlex.split(" ".join(sys.argv[1:])))
     return args
 
-def use_file_operations():
+def search_newest_rlst_unpacked():
     ptrn = re.compile("darwin_ruleset_unpacked.\d{2}[A-Za-z]{3}\d{4}\.xlsx$")
     newest_rlst = file_operations.search_newest_in_folder(Path("./"), ptrn)
     print("Using " + newest_rlst.resolve().__str__())
@@ -43,7 +43,7 @@ def use_import_rules(standard_path):
 def main():
     # first run file_operations.py
     # second run SGRE to unpack se_ruleset, copy here
-    filepath_qc = use_file_operations()
+    filepath_qc = search_newest_rlst_unpacked()
     qc_to_sql.main(filepath_qc)
 
     standard_path = "Standard_objects.json"
