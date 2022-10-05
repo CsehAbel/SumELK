@@ -16,7 +16,6 @@ class TestRegexpMatchRuleName(TestCase):
     def test_file_operations(self):
         file_operations.remove_files_in_dir(
             pttrn=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"), dir=Path(file_operations.project_dir))
-
         network = "Network-CST-P-SAG-Energy.json"
         standard = "Standard_objects.json"
         pttrn = re.compile("^Energy_policy.*\.tar\.gz")

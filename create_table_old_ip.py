@@ -82,6 +82,7 @@ def get_row_count(table):
 
     return rows
 
+
 if __name__=="__main__":
   history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d")
   main(history_table)
