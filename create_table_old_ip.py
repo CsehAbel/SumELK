@@ -7,14 +7,6 @@ from os.path import isfile, join
 from mysql.connector.constants import ClientFlag
 import secrets
 
-config = {
-  'user': secrets.mysql_u,
-  'password': secrets.mysql_pw,
-  'host': '127.0.0.1',
-  'database': 'CSV_DB',
-  'raise_on_warnings': True,
-  'allow_local_infile':True
-}
 
 
 def usedb(cursor,DB_NAME):
@@ -29,12 +21,21 @@ def usedb(cursor,DB_NAME):
       print(err)
       exit(1)
 
-def main(history_table):
+def main(history_table, db_name):
+  config = {
+        'user': secrets.mysql_u,
+        'password': secrets.mysql_pw,
+        'host': '127.0.0.1',
+        'database': db_name,
+        'raise_on_warnings': True,
+        'allow_local_infile': True
+    }
+
+
   cnx = mysql.connector.connect(**config)
   cursor = cnx.cursor()
 
-  DB_NAME = "CSV_DB"
-  usedb(cursor,DB_NAME)
+  usedb(cursor,db_name)
 
   LOADS = {}
 
@@ -55,12 +56,20 @@ def main(history_table):
   cnx.close()
 
 #function similar to main() but instead of creating a new table, return the number of rows in darwin_white_apps table
-def get_row_count(table):
+def get_row_count(table,db_name):
+    config = {
+        'user': secrets.mysql_u,
+        'password': secrets.mysql_pw,
+        'host': '127.0.0.1',
+        'database': db_name,
+        'raise_on_warnings': True,
+        'allow_local_infile': True
+    }
+
     cnx = mysql.connector.connect(**config)
     cursor = cnx.cursor()
 
-    DB_NAME = "CSV_DB"
-    usedb(cursor,DB_NAME)
+    usedb(cursor,db_name)
 
     #store "count_rows" in a variable
     count_rows = "SELECT COUNT(*) FROM "+table+";"
@@ -81,11 +90,6 @@ def get_row_count(table):
     cnx.close()
 
     return rows
-
-
-if __name__=="__main__":
-  history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d")
-  main(history_table)
 
 
 

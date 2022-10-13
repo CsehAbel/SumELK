@@ -9,7 +9,6 @@ import file_operations
 import generate_queries
 import import_rules
 import systems_group
-import qc_to_sql
 import main as hits
 import bulk_json_to_df
 import eagle_filter
@@ -76,9 +75,6 @@ def use_eagle_filter():
 
 def main():
     # first run file_operations.py
-    # second run SGRE to unpack se_ruleset, copy here
-    filepath_qc = search_newest_rlst_unpacked()
-    qc_to_sql.main(filepath_qc)
 
     standard_path = "Standard_objects.json"
     #mysql db:CSV_DB mysql table:st_ports
@@ -95,7 +91,7 @@ def main():
     path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
     hits.main(path=path,sag_systems=sag_systems)
     # creating 'ip_%Y%m%d' table from 'ip'
-    create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
+    create_table_old_ip.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name="CSV_DB")
     # .json to mysql table 'ip'
 
     regex = "^hit_energy.*\.json$"
@@ -104,8 +100,6 @@ def main():
     # resolving ip to fqdn for white_apps
     # each time the ip-fqdn pair will be appended to CSV_DB->src_dns
     # resolveIpToName.resolve_white_apps()
-
-
 
 if __name__ == "__main__":
     main()

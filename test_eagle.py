@@ -1,21 +1,16 @@
 import re
 from pathlib import Path
 from unittest import TestCase
-
-import pandas
-
 import application
-import eagle_filter
 import file_operations
-import qc_to_sql
 import systems_group
 
 
 class TestRegexpMatchRuleName(TestCase):
 
+    db_name = "CSV_DB"
+
     def test_file_operations(self):
-        file_operations.remove_files_in_dir(
-            pttrn=re.compile("se_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"), dir=Path(file_operations.project_dir))
         network = "Network-CST-P-SAG-Energy.json"
         standard = "Standard_objects.json"
         pttrn = re.compile("^Energy_policy.*\.tar\.gz")
@@ -43,45 +38,40 @@ class TestRegexpMatchRuleName(TestCase):
         # renames new_transform.json
         file_operations.rename_darwin_transform_json()
 
-    #test_eagle_filter
+    # test_eagle_filter
     def test_eagle_filter(self):
         application.use_eagle_filter()
 
     def test_gen_queries(self):
         standard_path = "Standard_objects.json"
+        # fills systems table with sag_systems exploded into single ips,
+        # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
         application.use_generate_queries(sag_systems)
 
     def test_import_rules(self):
-        row = application.create_table_old_ip.get_row_count(table="st_ports")
+        row = application.create_table_old_ip.get_row_count(table="st_ports", db_name=self.__class__.db_name)
         standard_path = "Standard_objects.json"
         application.use_import_rules(standard_path)
-        row2 = application.create_table_old_ip.get_row_count(table="st_ports")
+        row2 = application.create_table_old_ip.get_row_count(table="st_ports", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
 
     def test_hits(self):
         standard_path = "Standard_objects.json"
+        # gets the systems ip ranges from darwin_json
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
         # download hits to hits/...json
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         application.hits.main(path=path, sag_systems=sag_systems)
         # creating 'ip_%Y%m%d' table from 'ip'
-        application.create_table_old_ip.main("ip_" + application.datetime.datetime.now().strftime("%Y%m%d"))
+        application.create_table_old_ip.main(history_table="ip_" + application.datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 
     # .json to mysql table 'ip'
     def test_bulk_json_to(self):
-        row = application.create_table_old_ip.get_row_count(table="ip")
+        row = application.create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_energy.*\.json$"
         application.bulk_json_to_df.main(path, regex)
-        row2 = application.create_table_old_ip.get_row_count(table="ip")
-        self.assertTrue(row2 != row)
-
-
-    def test_fill_white_apps_se_ruleset(self):
-        row = application.create_table_old_ip.get_row_count(table="white_apps_se_ruleset")
-        filepath_qc = application.search_newest_rlst_unpacked()
-        qc_to_sql.main(filepath_qc)
-        row2 = application.create_table_old_ip.get_row_count(table="white_apps_se_ruleset")
+        row2 = application.create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
 
