@@ -35,25 +35,32 @@ from sqlalchemy import create_engine
 #     return list_rules
 import secrets
 
-
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
         for id in ids:
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-                    ld.append(df_obj["ipv4-address"].values[0])
-                #replace else with elif isinstance(not_g_no,?)
+                    ip_value=df_obj["ipv4-address"].values[0]
+                    #create a dictionary with start,end,cidr,type,start_int,end_int
+                    ld.append({"start":ip_value,"end":ip_value,"cidr":32,"type":"host","start_int":ip_utils.ip2int(ip_value),"end_int":ip_utils.ip2int(ip_value)})
                 elif df_obj.type.values[0]=="network":
                     subnet=df_obj["subnet4"].values[0]
-                    netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
-                    [ld.append(sipa) for sipa in ip_utils.ip_range_explode(subnet, netmask)]
+                    netmask=df_obj["mask-length4"].values[0]
+                    netmask=int(netmask)
+                    # create a dictionary with start,end
+                    base,prefix_top=ip_utils.base_cidr_to_range(subnet,netmask)
+                    ld.append({"start":base,"end":prefix_top,"cidr":netmask,"type":"network","start_int":ip_utils.ip2int(base),"end_int":ip_utils.ip2int(prefix_top)})
                 elif df_obj.type.values[0]=="group":
                     get_dest_ports_ips(ld,[x["uid"] for x in df_obj["members"].values[0]],st_obj_df)
                 elif df_obj.type.values[0] == "address-range":
-                    for ra in range(ip_utils.ip2int(df_obj["ipv4-address-first"].values[0]), ip_utils.ip2int(df_obj["ipv4-address-last"].values[0]) + 1):
-                        r_ip = ip_utils.int2ip(ra)
-                        ld.append(r_ip)
+                    start=df_obj["ipv4-address-first"].values[0]
+                    end=df_obj["ipv4-address-last"].values[0]
+                    cidr=ip_utils.iprange_to_cidr(start,end)
+                    res1=ip_utils.is_network_address(start,cidr)
+                    res2=ip_utils.is_prefix_top(start,end,cidr)
+                    cidr=cidr if (res1 and res2) else -1
+                    ld.append({"start":start, "end":end,"cidr":cidr,"type":"range","start_int":ip_utils.ip2int(start),"end_int":ip_utils.ip2int(end)})
                 else:
                     raise ValueError("type is not host,netw,group,range")
                 #     patternPrefix = re.compile(
