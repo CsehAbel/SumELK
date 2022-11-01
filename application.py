@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from pathlib import Path
 
@@ -15,6 +16,19 @@ import eagle_filter
 import shlex
 import sys
 import argparse
+
+#setup two loggers with different file handlers
+def setup_logger(name, log_file, level=logging.INFO):
+    """Function setup as many loggers as you want"""
+
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    return logger
 
 def get_cli_args():
     parser = argparse.ArgumentParser("Unpacking Quality Check xlsx")
@@ -41,7 +55,7 @@ def use_generate_queries(sag_systems):
 
 def use_import_rules(standard_path):
     path = "./Network-CST-P-SAG-Energy.json"
-    import_rules.main(path, standard_path)
+    return import_rules.main(path, standard_path)
 
 
 def use_eagle_filter():

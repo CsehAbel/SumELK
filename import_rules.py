@@ -1,10 +1,10 @@
 import json
-import pathlib
+import logging
 import re
 from pathlib import Path
 import pandas
 import ip_utils
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Date
 
 # def get_dest_ports():
 #     device_name = "CST-P-SAG-Energy"
@@ -128,11 +128,15 @@ def proc_dest_port_tuples(list_rules):
     list_exploded=[]
     for i in range(len(list_rules)):
         for ip in list_rules[i]["destinations"]:
+            #concatenate the services, create a new dictionary and set the value for "port" to the concatenated string
+            list_services = []
             for t in list_rules[i]["services"]:
                 port=t["port"]
                 tcp_udp=t["tcp_udp"]
                 complete_port="%s/%s" %(port,tcp_udp)
-                list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"rule_name":list_rules[i]["name"],"rule_number":"%d" %list_rules[i]["number"]})
+                list_services.append(complete_port)
+            concat_services=":".join(list_services)
+            list_exploded.append({"dest_ip":ip,"concat_services":concat_services,"rule_name":list_rules[i]["name"],"rule_number":"%d" %list_rules[i]["number"]})
     return list_exploded
 
 def get_network_object_by_id(id,st_obj_df):
@@ -190,27 +194,81 @@ def main(path,standard_path):
         resultApp=patternApp.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
+            #fills ld with a list of dictionaries, each dictionary containnig start,end,cidr,type,start_int,end_int
             ld = []
             get_dest_ports_ips(ld,rule["destination"],st_obj_df)
+            #fills l_e with a list of dictionaries, each dictionary containnig port,tcp_udp
             l_e=[]
             get_dest_ports_ports(l_e,rule["service"],st_obj_df)
             # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
             sources=rule["source"]
             list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":sources, "destinations":ld, "services":l_e})
 
-
+    # ToDo: create json from list_rules, currently using mysql instead of json
+    # list_exploded is a list of dictionaries, each dictionary containing dest_ip,concat_services,rule_name,rule_number
     list_exploded=proc_dest_port_tuples(list_rules)
-    print("")
-    dfx=pandas.DataFrame(list_exploded)
+    return list_exploded
+
+def dict_to_sql(list_unpacked_ips):
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
-    print("import_rules.py Done!")
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"),
+        pool_recycle=3600)
+    metadata_obj = MetaData()
+    fw_policy_table = drop_and_create_fw_policy_table(metadata_obj, sqlEngine)
+
+    conn = sqlEngine.connect()
+
+    insert_to_fw_policy(conn, fw_policy_table, list_unpacked_ips)
+    print("fw_policy insert done!")
 
 
-if __name__ == '__main__':
-    path = "./Network-CST-P-SAG-Energy.json"
-    main(path)
-    #test access section a_white
-    #get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
+def drop_and_create_fw_policy_table(metadata_obj, sql_engine):
+    # eagle_table = Table('eagle', metadata_obj,
+    #                     Column('id', Integer, primary_key=True),
+    #                     Column('ip', String(15), nullable=False),
+    #                     Column('base', String(15), nullable=False),
+    #                     Column('cidr', Integer, nullable=False)
+    #                     )
+    # create similar table for main()'s list_exploded
+    fw_policy_table = Table('fw policy', metadata_obj,
+                            Column('id', Integer, primary_key=True),
+                            Column('dest_ip', String(15), nullable=False),
+                            Column('concat_services', String(255), nullable=False),
+                            Column('rule_name', String(15), nullable=False),
+                            Column('rule_number', Integer, nullable=False)
+                            )
+
+    fw_policy_table.drop(sql_engine, checkfirst=True)
+    fw_policy_table.create(sql_engine, checkfirst=False)
+    return fw_policy_table
+
+def insert_to_fw_policy(conn, table, list_unpacked_ips):
+    slices = to_slices(1000, list_unpacked_ips)
+    # for each slice of 1000 rows insert into the eagle table
+    for s in slices:
+        # try to insert the slice into the eagle table
+        try:
+            # check if the dictionaries in the slice have values where pandas.isnull() is True
+            # if so, replace with None
+            for d in s:
+                for k, v in d.items():
+                    if pandas.isnull(v):
+                        d[k] = None
+            conn.execute(table.insert().values(s))
+        except Exception as e:
+            #insert_fw_policy logger set to level=ERROR in test_eagle.py test_import_rules() so this will not print
+            logging.getLogger("insert_fw_policy").log(level=logging.WARNING,msg=e)
+
+def to_slices(divisor, systems_ips):
+    length = len(systems_ips)
+    quotient, rest = divmod(length, divisor)
+    slices = []  # [[list[0],...list[999]],]
+    lower_bound = 0
+    for i in range(quotient + 1):
+        upper_bound = (i + 1) * divisor
+        if upper_bound < length:
+            slices.append(systems_ips[slice(lower_bound, upper_bound, 1)])
+        else:
+            slices.append(systems_ips[slice(lower_bound, length, 1)])
+        lower_bound = upper_bound
+    return slices

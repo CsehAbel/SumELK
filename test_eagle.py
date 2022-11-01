@@ -1,8 +1,10 @@
+import logging
 import re
 from pathlib import Path
 from unittest import TestCase
 import application
 import file_operations
+import import_rules
 import systems_group
 
 
@@ -50,10 +52,13 @@ class TestRegexpMatchRuleName(TestCase):
         application.use_generate_queries(sag_systems)
 
     def test_import_rules(self):
-        row = application.create_table_old_ip.get_row_count(table="st_ports", db_name=self.__class__.db_name)
+        logger_insert_fw_policy= application.setup_logger("insert_fw_policy", "logs/insert_fw_policy")
+        logger_ip_utils = application.setup_logger("ip_utils", "logs/ip_utils.log",logging.ERROR)
+        row = application.create_table_old_ip.get_row_count(table="fw_policy", db_name=self.__class__.db_name)
         standard_path = "Standard_objects.json"
-        application.use_import_rules(standard_path)
-        row2 = application.create_table_old_ip.get_row_count(table="st_ports", db_name=self.__class__.db_name)
+        list_exploded=application.use_import_rules(standard_path)
+        import_rules.dict_to_sql(list_unpacked_ips=list_exploded)
+        row2 = application.create_table_old_ip.get_row_count(table="fw_policy", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
 
     def test_hits(self):
@@ -74,4 +79,3 @@ class TestRegexpMatchRuleName(TestCase):
         application.bulk_json_to_df.main(path, regex)
         row2 = application.create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
-
