@@ -15,3 +15,5 @@ logs/**
 Network-CST-P-SAG-Darwin.json
 Network-CST-V-SAG-Fokus-CO.json
 Fokus_AC_Standard_objects.json
+policy_dump/**
+!policy_dump/gitkeep

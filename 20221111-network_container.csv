@@ -1,0 +1,369 @@
+inet_start;inet_stop;supported_by;type;comment
+10.0.0.0;10.0.255.255;"Atos, Siemens";RFC;"Atos, PLM"
+10.1.0.0;10.1.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.10.0.0;10.11.255.255;"SIEMENS AG";RFC;MO
+10.100.0.0;10.100.0.255;"Siemens AG";RFC;"Cloud Optimized Internet Access (COIA)"
+10.100.4.0;10.100.5.255;ATOS;RFC;"Atos SFA Tooling DMZ NAM"
+10.101.0.0;10.101.0.255;"Siemens AG";RFC;"SAP HEC-DC Anbindung in St.Leonrod - Walter Reinhard"
+10.101.1.0;10.101.1.255;ATOS;RFC;"Atos SFA Tooling DMZ LATAM"
+10.102.0.0;10.103.255.255;PLM;RFC;"PLM_EDA-NA-DC & PLM_EDA-EMEA-DC"
+10.104.0.0;10.105.255.255;PLM;RFC;"PLM_DISW-URA-BROWN & PLM_EDA-Various"
+10.108.0.0;10.108.255.255;"SIEMENS AG";"SNX Carrier";"Orange backbone / CE-PE meshing"
+10.110.11.0;10.110.11.255;ATOS;RFC;"ATOS Erlangen"
+10.112.0.0;10.112.15.255;ATOS;RFC;"ATOS versch. Standorte"
+10.113.0.0;10.113.63.255;ATOS;RFC;"ATOS Erlangen"
+10.116.22.0;10.116.22.255;ATOS;RFC;"ATOS Karlsruhe"
+10.116.255.0;10.116.255.255;ATOS;RFC;"ATOS Karlsruhe"
+10.116.42.0;10.116.42.255;"SIEMENS AG";RFC;"SI BP Cedric Weber Z000EODG"
+10.117.0.0;10.117.255.255;"ATOS ";RFC;"Atos Amberg"
+10.119.0.0;10.119.127.255;ATOS;RFC;"ATOS Erlangen"
+10.12.0.0;10.12.255.255;"SIEMENS AG";RFC;MO
+10.120.0.0;10.120.255.255;"SIEMENS AG";RFC;"Siemens Healthineers R&D Network"
+10.121.6.0;10.121.6.255;ATOS;RFC;"ATOS Renningen"
+10.121.70.0;10.121.71.255;ATOS;RFC;"ATOS Renningen"
+10.121.72.0;10.121.72.255;ATOS;RFC;"ATOS Renningen"
+10.122.0.0;10.122.15.255;ATOS;RFC;"ATOS Nuernberg"
+10.123.12.0;10.123.12.255;ATOS;RFC;"ATOS Nuernberg"
+10.123.14.0;10.123.14.255;ATOS;RFC;"ATOS Nuernberg"
+10.125.2.0;10.125.2.255;ATOS;RFC;"ATOS Leipzig"
+10.128.0.0;10.128.255.255;"ATOS ";RFC;"NBG H - SOLNET support by Dimitar Chakarov"
+10.129.0.0;10.129.255.255;ATOS;RFC;"NBG H - SOLNET support by Dimitar Chakarov"
+10.13.0.0;10.13.255.255;"SIEMENS AG";RFC;"MO-TEMP-SAG ONES"
+10.130.0.0;10.130.255.255;"Siemens AG";RFC;"For Cloud Services only!!!"
+10.131.0.0;10.131.255.255;"Siemens AG";RFC;"Cloud usage only - Matthias Hauzeneder"
+10.132.0.0;10.132.255.255;"Siemens AG";RFC;"Siemens Manage Services O2 APN - Neil Newman"
+10.133.0.0;10.133.255.255;"Siemens AG";RFC;"Cloud usage only - Matthias Hauzeneder"
+10.134.0.0;10.134.255.255;PLM;RFC;PLM_DISW-PLCLOUD
+10.135.0.0;10.135.255.255;"Siemens AG";RFC;"Cloud services - Matthias Hauzeneder"
+10.136.0.0;10.136.255.255;"Siemens AG";RFC;"Siemens Energy Cloud customers - Hemant Kalra"
+10.137.0.0;10.137.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.138.0.0;10.138.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.139.0.0;10.139.255.255;"Siemens AG";RFC;"Public Cloud Projects - Kumar Ramesh"
+10.140.0.0;10.140.255.255;"Siemens AG";RFC;"For Cloud Services only!!!"
+10.141.0.0;10.141.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.142.0.0;10.142.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.143.0.0;10.143.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.144.0.0;10.144.255.255;SiemensAG;RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.145.0.0;10.145.255.255;"Siemens AG";RFC;"**ONLY AWS & Azure ** Hauzeneder / Hansmair / Kumar"
+10.146.0.0;10.146.255.255;PLM;RFC;"PLM_DISW-WAN & DISW-VARIOUS"
+10.147.0.0;10.147.255.255;PLM;RFC;PLM_DISW-AWS
+10.148.0.0;10.148.255.255;PLM;RFC;"protected for DF PL"
+10.149.0.0;10.149.255.255;PLM;RFC;PLM_DISW-AWS
+10.15.0.0;10.15.255.255;"SIEMENS AG";RFC;RESERVED
+10.150.0.0;10.150.255.255;"Siemens AG";RFC;"Evosoft managed cloud solutions"
+10.151.0.0;10.151.255.255;"Siemens AG";RFC;"MO Maybe"
+10.152.0.0;10.153.255.255;"Siemens AG";RFC;"MO Maybe"
+10.154.0.0;10.154.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.157.0.0;10.157.15.255;ATOS;RFC;"ATOS versch. Standorte"
+10.16.0.0;10.16.255.255;PLM;RFC;"PLM_DISW-NA-DC & CLOUD"
+10.160.0.0;10.160.255.255;SIEMENS;RFC;"ANNA RED VPN for GB"
+10.161.0.0;10.161.255.255;SIEMENS;RFC;"ANNA RED VPN for AU"
+10.163.0.0;10.163.255.255;SIEMENS;RFC;"ANNA RED VPN for US"
+10.164.0.0;10.164.255.255;"Siemens AG";RFC;"ACI Milford - Frank Dillinger"
+10.165.0.0;10.165.255.255;"Siemens AG";RFC;"ACI Milford - Frank Dillinger"
+10.166.0.0;10.166.255.255;Siemens;RFC;"ACI Milford - Frank Dillinger"
+10.169.0.0;10.169.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.17.0.0;10.17.255.255;PLM;RFC;"PLM_DISW-APAC-DC & CLOUD"
+10.170.0.0;10.170.255.255;Siemens;RFC;"SHS ULTRASOUND/ASPEN"
+10.171.0.0;10.171.255.255;Siemens;RFC;"SHS AMERICAS"
+10.172.0.0;10.172.255.255;Siemens;RFC;"SHS AMERICAS"
+10.173.0.0;10.173.255.255;Siemens;RFC;"SHS AMERICAS"
+10.174.0.0;10.174.255.255;Siemens;RFC;"SHS EMEA"
+10.175.0.0;10.175.255.255;Siemens;RFC;"SHS EMEA"
+10.176.0.0;10.176.255.255;Siemens;RFC;"SHS EMEA - Germany Only"
+10.177.0.0;10.177.255.255;Siemens;RFC;"SHS AP"
+10.178.0.0;10.178.255.255;Siemens;RFC;"SHS AP"
+10.179.0.0;10.179.255.255;Siemens;RFC;"SHS Cloud"
+10.18.0.0;10.18.255.255;PLM;RFC;PLM
+10.180.0.0;10.180.255.255;EAGLE;RFC;"EAGLE: IDA Frankfurt  (17* /24 Netze)"
+10.185.0.0;10.185.1.255;Siemens;RFC;"Cisco Nexus Dashboard - Frank Dillinger"
+10.186.0.0;10.186.255.255;Siemens;RFC;"Cisco Nexus Dashboard - Frank Dillinger"
+10.187.0.0;10.187.255.255;Siemens;RFC;"Cisco Nexus Dashboard - Frank Dillinger"
+10.188.0.0;10.188.7.255;Siemens;RFC;"""ACI"" Project - Frank Dillinger"
+10.189.0.0;10.189.255.255;Siemens;RFC;"Flender WG Carve-Out Project"
+10.19.0.0;10.19.255.255;PLM;RFC;"PLM_DISW-EMEA-DC & CLOUD"
+10.190.0.0;10.190.255.255;"Siemens AG";RFC;"Evosoft - evoHSZ "
+10.191.0.0;10.191.255.255;Reserved;RFC;
+10.192.0.0;10.192.255.255;EAGLE;RFC;"EAGLE; 10.192.248.0 - 10.192.255.255 reserved Smart Storage for Healthineers"
+10.193.0.0;10.193.255.255;EAGLE;RFC;EAGLE
+10.194.0.0;10.194.255.255;EAGLE;RFC;EAGLE
+10.195.0.0;10.195.255.255;EAGLE;RFC;EAGLE
+10.2.0.0;10.2.255.255;PLM;RFC;PLM
+10.20.0.0;10.20.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.200.0.0;10.201.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.206.198.0;10.206.198.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.210.0.0;10.210.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX / SD WAN Backbone"
+10.212.0.0;10.215.255.255;"SIEMENS AG";RFC;"Eagle DC Project ACI"
+10.216.0.0;10.216.255.255;"SIEMENS AG";RFC;"Eagle DC Project ACI"
+10.217.0.0;10.217.255.255;"Siemens AG";RFC;"Project SSL-VPN Solutions"
+10.22.0.0;10.22.255.255;PLM;RFC;PLM
+10.220.0.0;10.221.255.255;"SIEMENS AG";RFC;"Siemens Energy - DE"
+10.222.0.0;10.223.255.255;"SIEMENS AG";RFC;"Siemens Energy - EMEA"
+10.224.0.0;10.224.127.255;"SIEMENS AG";RFC;"Siemens Energy - NAM"
+10.224.128.0;10.224.255.255;"SIEMENS AG";RFC;"Siemens Energy - LATAM"
+10.225.0.0;10.225.127.255;"SIEMENS AG";RFC;"Siemens Energy - AAE"
+10.225.128.0;10.225.191.255;"SIEMENS AG";RFC;"Siemens Energy - China"
+10.225.192.0;10.225.255.255;"Siemens AG";RFC;"Siemens Energy - Spare"
+10.226.0.0;10.226.255.255;Siemens;RFC;"Mobility, rVLAN, developer network"
+10.227.0.0;10.227.15.255;Siemens;RFC;"BWG A, local restricted VLAN, developer network"
+10.227.16.0;10.227.16.255;ATOS;RFC;"ATOS Erlangen"
+10.227.17.0;10.227.17.255;Siemens;RFC;"BWG A, restricted VLAN, developer network"
+10.23.0.0;10.23.255.255;PLM;RFC;PLM
+10.230.0.0;10.230.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX / SD WAN Backbone"
+10.232.0.0;10.232.255.255;SIEMENS;RFC;"ANNA RED VPN for US"
+10.236.0.0;10.236.255.255;"SIEMENS AG";"SNX Carrier";"Orange backbone / CE-PE meshing"
+10.237.32.0;10.237.63.255;ATOS;RFC;"ATOS versch. Standorte"
+10.238.0.0;10.238.255.255;Siemens;RFC;"project AWS for managed Server and others"
+10.239.0.0;10.239.255.255;Siemens;RFC;"project Openshift HCA"
+10.240.0.0;10.240.255.255;"SIEMENS AG";"SNX Carrier";"Orange for Vendor Managed Service"
+10.241.0.0;10.241.3.255;"Siemens AG";RFC;"Orange Zero Trust POC for Siemens Internet Zone"
+10.244.0.0;10.247.255.255;"SIEMENS AG";RFC;"Siemens Energy - NAM and reserved space for future use"
+10.248.0.0;10.248.255.255;PLM;RFC;PLM_EDA-EMEA-DC
+10.249.0.0;10.249.255.255;PLM;RFC;PLM_EDA-EMEA-DC
+10.25.0.0;10.25.255.255;EAGLE;RFC;EAGLE
+10.250.0.0;10.250.127.255;"Siemens AG";RFC;"Darwin Project"
+10.250.128.0;10.250.255.255;"Siemens AG";RFC;"Darwin VPN special use"
+10.251.0.0;10.251.255.255;"Siemens AG";RFC;"SHS IT Wurmloch"
+10.252.0.0;10.253.255.255;PLM;RFC;PLM_EDA-NA-DC
+10.254.0.0;10.255.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.26.0.0;10.26.255.255;PLM;RFC;PLM_DISW-Office
+10.28.0.0;10.28.255.255;PLM;RFC;PLM
+10.29.0.0;10.29.127.255;RFC;RFC;"Projekt Secure Workplace (Sina WS)"
+10.3.0.0;10.3.255.255;PLM;RFC;PLM
+10.30.0.0;10.30.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.31.0.0;10.31.255.255;"Siemens AG";RFC;"Reserved for Peter Bluschke until end of 22"
+10.32.0.0;10.32.255.255;"Siemens AG";RFC;"Reserved for Peter Bluschke until end of 22"
+10.33.0.0;10.33.255.255;"Siemens AG";RFC;"Reserved for Peter Bluschke until end of 22"
+10.34.0.0;10.34.255.255;"SIEMENS AG";RFC;"ANNA red VPN for ES"
+10.35.0.0;10.35.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.36.0.0;10.36.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.38.0.0;10.38.255.255;"SIEMENS AG";RFC;"Siemens Client Zone pre-authenticated"
+10.39.0.0;10.39.255.255;"SIEMENS AG";RFC;"Siemens Client Zone pre-authenticated"
+10.4.0.0;10.4.255.255;ATOS;RFC;"Atos / SE cloud services"
+10.40.0.0;10.40.255.255;"SIEMENS AG";"SNX Carrier";"DTBS service provider for SNX maintaining"
+10.41.0.0;10.41.255.255;"SIEMENS AG";RFC;"TSI COIA Internal "
+10.42.0.0;10.42.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.43.0.0;10.43.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.44.0.0;10.44.255.255;"SIEMENS AG";RFC;"ANNA Red VPN for GB"
+10.45.0.0;10.45.255.255;EAGLE;RFC;"Projekt - aDWP"
+10.46.0.0;10.46.255.255;Siemens;RFC;"Project XO DevOps Enablement for DI CTO XO"
+10.5.0.0;10.5.255.255;PLM;RFC;PLM
+10.50.0.0;10.50.255.255;"SIEMENS AG";RFC;"CVC (stand-alone)"
+10.55.0.0;10.55.255.255;"Siemens AG";RFC;"Siemens Education Network (EDU-NET)"
+10.57.0.0;10.57.7.255;"Siemens AG";RFC;"Valeo-Siemens Joint Venture"
+10.57.16.0;10.57.16.255;"Siemens AG";RFC;"ARI REMOTE PROJEKT P2P connection between FW and SRV"
+10.57.8.0;10.57.15.255;"Siemens AG";RFC;"Valeo-Siemens Joint venture"
+10.58.0.0;10.58.255.255;"Siemens AG";RFC;"reserved for SHS"
+10.59.0.0;10.59.255.255;"Siemens AG";RFC;"reserved for SHS"
+10.60.0.0;10.60.255.255;OBS;RFC;"Orange SD-WAN test"
+10.61.0.0;10.61.255.255;"SIEMENS AG";RFC;"Siemens Logistics"
+10.63.0.0;10.63.255.255;"Siemens AG";RFC;"Siemens Logistics - FOKUS"
+10.64.0.0;10.64.255.255;"Siemens AG";RFC;"Project MINT (Large Drive Applications)"
+10.65.0.0;10.65.255.255;"Siemens AG";RFC;"Project VENTO"
+10.66.0.0;10.66.255.255;"Siemens AGE";RFC;"SmartAutomation (SmA) demo, DF TI, Z00343CR, not routed in SNX"
+10.67.0.0;10.67.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.68.0.0;10.68.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.69.0.0;10.69.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.7.0.0;10.7.255.255;ATOS;RFC;"ATOS "
+10.70.0.0;10.70.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.71.0.0;10.71.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.72.0.0;10.72.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.73.0.0;10.73.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.74.0.0;10.74.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.75.0.0;10.75.255.255;"Siemens AG";RFC;"Siemens Client Zone"
+10.76.0.0;10.76.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.77.0.0;10.77.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.78.0.0;10.78.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.79.0.0;10.79.255.255;"Siemens AG";RFC;"Siemens Client Zone pre-authenticated"
+10.8.80.0;10.8.81.255;ATOS;RFC;"ATOS Forchheim"
+10.80.0.0;10.80.255.255;Siemens;RFC;"Siemens Healthineers NAM/LAM"
+10.81.0.0;10.81.255.255;Siemens;RFC;"Siemens Healthineers DE"
+10.82.0.0;10.82.255.255;Siemens;RFC;"Siemens Healthineers CEMEA, APC and Row"
+10.83.0.0;10.83.127.255;Siemens;RFC;"Siemens Healthineers APAC and RoW"
+10.83.128.0;10.83.255.255;Siemens;RFC;"Siemens Healthineers Public Cloud networks"
+10.84.0.0;10.84.255.255;Siemens;RFC;"SHS - QLP infrastructure"
+10.85.0.0;10.85.255.255;Siemens;RFC;"SHS - Azure URA infrastructure"
+10.86.0.0;10.86.127.255;ATOS;RFC;"ATOS versch. Standorte"
+10.86.128.0;10.86.255.255;ATOS;RFC;"DHC – Digital Hybrid Cloud"
+10.87.0.0;10.87.255.255;ATOS;RFC;"potentially reserved for SHS"
+10.88.0.0;10.89.255.255;ATOS;RFC;"ATOS Erlangen"
+10.9.0.0;10.9.255.255;"SIEMENS AG";RFC;MO
+10.90.0.0;10.90.255.255;PLM;RFC;PLM
+10.92.0.0;10.93.255.255;ATOS;RFC;"ATOS versch. Standorte"
+10.95.18.0;10.95.18.255;ATOS;RFC;"ATOS Karlsruhe"
+10.98.0.0;10.98.255.255;Siemens;RFC;"BWG A, local restricted VLAN, developer network"
+10.99.0.0;10.99.3.255;ATOS;RFC;"ATOS versch. Standorte"
+10.99.152.0;10.99.159.255;ATOS;RFC;"Siemens Energy - Atos SaaCon"
+10.99.16.0;10.99.31.255;ATOS;RFC;"ATOS versch. Standorte"
+10.99.168.0;10.99.175.255;ATOS;RFC;"Siemens Energy - Atos SaaCon"
+10.99.200.0;10.99.203.255;ATOS;RFC;"Atos SFA Tooling DMZ EMEA"
+10.99.32.0;10.99.63.255;ATOS;RFC;"ATOS versch. Standorte"
+10.99.64.0;10.99.127.255;ATOS;RFC;"ATOS versch. Standorte"
+10.99.7.0;10.99.7.255;SIEMENS;RFC;"Ari Project"
+10.99.8.0;10.99.15.255;ATOS;RFC;"ATOS versch.Standorte"
+104.151.248.173;104.151.248.173;CYS;"SNX Carrier";"CYS Sinkhole"
+106.184.3.154;106.184.3.154;CYS;"SNX Carrier";"CYS Sinkhole"
+118.217.4.162;118.217.4.162;CYS;"SNX Carrier";"CYS Sinkhole"
+119.254.30.32;119.254.30.32;CYS;"SNX Carrier";"CYS Sinkhole"
+12.17.36.60;12.17.36.60;CYS;"SNX Carrier";"CYS Sinkhole"
+12.183.0.2;12.183.0.2;CYS;"SNX Carrier";"CYS Sinkhole"
+12.229.71.10;12.229.71.10;CYS;"SNX Carrier";"CYS Sinkhole"
+12.38.236.21;12.38.236.21;CYS;"SNX Carrier";"CYS Sinkhole"
+12.41.244.216;12.41.244.216;CYS;"SNX Carrier";"CYS Sinkhole"
+121.65.56.214;121.65.56.214;CYS;"SNX Carrier";"CYS Sinkhole"
+122.49.215.108;122.49.215.108;CYS;"SNX Carrier";"CYS Sinkhole"
+123.220.249.4;123.220.249.4;CYS;"SNX Carrier";"CYS Sinkhole"
+123.30.208.92;123.30.208.92;CYS;"SNX Carrier";"CYS Sinkhole"
+129.103.0.0;129.103.255.255;RIPE;PA;"SIEMENS SNX, Eagle Next Gen AD"
+129.214.0.0;129.214.255.255;RIPE;PA;"SIEMENS SNX"
+129.73.0.0;129.73.255.255;RIPE;PA;"SIEMENS SNX, Eagle"
+13.107.64.0;13.107.127.255;Siemens;"SNX Carrier";"CN Teams temporary workaround "
+13.108.0.0;13.109.255.255;Salesforce;"SNX Carrier";
+13.110.0.0;13.110.255.255;Salesforce;"SNX Carrier";
+132.186.0.0;132.186.255.255;RIPE;PA;"SIEMENS SNX"
+134.244.0.0;134.244.255.255;PLM;PI;PLM_DISW-Global
+134.86.0.0;134.86.255.255;PLM;PI;PLM_EDA-Global
+136.157.0.0;136.157.255.255;RIPE;PA;"SIEMENS SNX"
+137.202.0.0;137.202.255.255;PLM;PI;PLM_EDA-EMEA
+137.223.0.0;137.223.255.255;RIPE;PA;"SIEMENS SNX"
+139.10.0.0;139.10.255.255;RIPE;PA;"SIEMENS SNX"
+139.16.0.0;139.16.255.255;RIPE;PA;"SIEMENS SNX"
+139.181.0.0;139.181.255.255;PLM;PI;PLM_EDA-Various
+139.21.0.0;139.21.255.255;RIPE;PA;"Siemens SNX"
+139.22.0.0;139.22.255.255;RIPE;PA;"Siemens SNX"
+139.23.0.0;139.23.255.255;RIPE;PA;"Siemens SNX, Eagle"
+139.24.0.0;139.24.255.255;RIPE;PA;"Siemens SNX"
+139.25.0.0;139.25.255.255;RIPE;PA;"Siemens SNX, Eagle"
+14.140.128.98;14.140.128.98;CYS;"SNX Carrier";"CYS Sinkhole"
+140.231.0.0;140.231.255.255;RIPE;PA;"SIEMENS SNX"
+141.29.0.0;141.29.255.255;RIPE;PA;"SIEMENS SNX"
+141.73.0.0;141.73.255.255;RIPE;PA;"SIEMENS SNX"
+143.99.0.0;143.99.127.255;RIPE;PA;"SIEMENS SNX"
+143.99.128.0;143.99.191.255;RIPE;PA;"SIEMENS SNX"
+143.99.192.0;143.99.255.255;"Siemens Energy";PA;"Siemens-Energy (Special Networks + BPA)"
+144.145.0.0;144.145.255.255;RIPE;PA;"SIEMENS SNX"
+146.122.0.0;146.122.255.255;PLM;PI;PLM_DISW-Global
+146.253.0.0;146.253.255.255;RIPE;PA;"Siemens SNX"
+146.254.0.0;146.254.255.255;RIPE;PA;"Siemens SNX"
+147.34.0.0;147.34.255.255;PLM;PI;PLM_EDA-NA
+147.54.0.0;147.54.255.255;RIPE;PA;"SIEMENS SNX"
+149.212.0.0;149.212.255.255;RIPE;PA;"SIEMENS SNX"
+149.246.0.0;149.246.255.255;RIPE;PA;"SIEMENS SNX"
+155.45.0.0;155.45.255.255;RIPE;Legacy;"SAaCon - ATOS"
+156.150.228.0;156.150.228.255;ATOS;Legacy;"HitRefresh DDO - Siemens Connectivity - ADH"
+157.163.0.0;157.163.255.255;RIPE;PA;"SIEMENS SNX"
+157.226.0.0;157.226.255.255;ARIN;PI;"Siemens Corporation, former Acuson merger to Healthcare"
+158.226.0.0;158.226.255.255;RIPE;PA;"SIEMENS SNX"
+158.92.0.0;158.92.255.255;RIPE;PA;"SIEMENS SNX"
+161.134.0.0;161.134.255.255;RIPE;PA;"SIEMENS SNX"
+161.218.0.0;161.218.255.255;RIPE;PA;"SIEMENS SNX"
+163.242.0.0;163.242.255.255;RIPE;PA;"SIEMENS SNX"
+164.34.250.0;164.34.250.255;RIPE;"SNX Carrier";DTBS
+165.218.0.0;165.218.255.255;RIPE;PA;"SIEMENS SNX"
+165.226.0.0;165.226.255.255;ARIN;PI;"Siemens Corporation"
+167.87.0.0;167.87.255.255;RIPE;PA;"URAv2 Reserved"
+172.16.0.0;172.31.255.255;"Siemens AG";RFC;"Blue Variant Networks - Siemens Healthineers"
+173.231.39.44;173.231.39.44;CYS;"SNX Carrier";"CYS Sinkhole"
+173.231.55.51;173.231.55.51;CYS;"SNX Carrier";"CYS Sinkhole"
+174.139.203.21;174.139.203.21;CYS;"SNX Carrier";"CYS Sinkhole"
+174.139.203.22;174.139.203.22;CYS;"SNX Carrier";"CYS Sinkhole"
+174.139.62.58;174.139.62.58;CYS;"SNX Carrier";"CYS Sinkhole"
+174.139.62.59;174.139.62.59;CYS;"SNX Carrier";"CYS Sinkhole"
+174.139.62.60;174.139.62.60;CYS;"SNX Carrier";"CYS Sinkhole"
+182.74.240.86;182.74.240.86;CYS;"SNX Carrier";"CYS Sinkhole"
+184.105.203.6;184.105.203.6;CYS;"SNX Carrier";"CYS Sinkhole"
+184.154.150.66;184.154.150.66;CYS;"SNX Carrier";"CYS Sinkhole"
+185.181.24.0;185.181.27.255;RIPE;PA;"Reserved for Healthcare (company in company) Nantucket only !!! Range for Europe"
+185.75.228.0;185.75.231.255;RIPE;PA;"Reserved for Healthcare ( company in company) Nantucket only!!!"
+192.103.27.0;192.103.27.255;RIPE;PA;Reserve
+192.109.0.0;192.109.7.255;RIPE;PA;Reserve
+192.109.112.0;192.109.113.255;RIPE;PA;Reserve
+192.109.173.0;192.109.173.255;RIPE;PA;Siemens
+192.109.174.0;192.109.174.255;RIPE;PA;Siemens
+192.109.191.0;192.109.191.255;RIPE;PA;Siemens
+192.109.192.0;192.109.193.255;RIPE;PA;Siemens
+192.109.194.0;192.109.194.255;RIPE;PA;Siemens
+192.109.32.0;192.109.35.255;RIPE;PA;Reserve
+192.109.55.0;192.109.55.255;RIPE;PA;Reserve
+192.109.57.0;192.109.57.255;RIPE;PA;Reserve
+192.109.78.0;192.109.78.255;RIPE;PA;Reserve
+192.109.8.0;192.109.9.255;RIPE;PA;Reserve
+192.129.41.0;192.129.41.255;RIPE;PA;"Siemens SNX"
+192.168.0.0;192.168.255.255;RFC;RFC;"URA 2.0 Split tunnel for access to local resources"
+192.184.60.229;192.184.60.229;CYS;"SNX Carrier";"CYS Sinkhole"
+192.35.0.0;192.35.15.255;RIPE;PA;"Internet ONLY"
+192.35.16.0;192.35.19.255;RIPE;PA;"SIEMENS SNX"
+192.76.143.0;192.76.143.255;RIPE;Legacy;RESERVED
+193.111.35.0;193.111.35.255;RIPE;PI;"Reserved for WIPRO"
+193.16.212.0;193.16.212.255;RIPE;PA;Reserve
+193.16.214.0;193.16.215.255;RIPE;PA;Siemens
+193.16.222.0;193.16.223.255;RIPE;PA;Siemens
+193.16.228.0;193.16.228.255;RIPE;PA;Siemens
+193.16.230.0;193.16.231.255;RIPE;PA;Siemens
+193.16.248.0;193.16.251.255;RIPE;PA;Siemens
+193.16.252.0;193.16.253.255;RIPE;PA;Siemens
+193.16.254.0;193.16.254.255;RIPE;PA;Siemens
+193.17.60.0;193.17.61.255;RIPE;PI;"Siemens SNX - CERNER"
+193.176.188.0;193.176.189.255;RIPE;PA;"Ned. Electrolas Maatschappij b.v. aquisition"
+193.177.148.0;193.177.151.255;RIPE;PA;"Ned. Electrolas Maatschappij aquisition"
+193.210.160.0;193.210.191.255;RIPE;PA;"Siemens NV - TELIA"
+193.210.192.0;193.210.207.255;RIPE;PA;"Reserved - TELIA"
+193.228.240.0;193.228.255.255;RIPE;PA;"Internet ONLY"
+193.232.160.0;193.232.160.255;RIPE;PI;Reserve
+193.25.128.0;193.25.159.255;RIPE;PI;"GLOBAL ONLY "
+193.35.224.0;193.35.224.255;RIPE;PI;"Not registered, pls return!"
+193.8.214.0;193.8.214.255;RIPE;PA;"aquired from Staefa Control System AG"
+194.107.52.0;194.107.55.255;RIPE;PA;Reserve
+194.13.65.0;194.13.65.255;RIPE;PA;"Prior Delaval Stork v.o.f. / NL - Reserve"
+194.138.0.0;194.138.255.255;RIPE;PA;"Siemens SNX, Eagle"
+194.145.59.0;194.145.59.255;RIPE;PA;"SIEMENS SNX"
+194.145.60.0;194.145.61.255;RIPE;PA;"SIEMENS SNX - TSI COIA"
+194.145.62.0;194.145.62.255;RIPE;PA;"SIEMENS SNX"
+194.153.160.0;194.153.167.255;RIPE;PA;Reserve
+194.180.205.0;194.180.205.255;RIPE;PA;Reserve
+194.3.1.8;194.3.1.11;RIPE;"SNX Carrier";"Orange Infovista PoC"
+194.31.238.0;194.31.238.255;RIPE;PA;Reserve
+194.39.152.0;194.39.153.255;RIPE;PA;Reserve
+194.39.154.0;194.39.154.255;RIPE;PA;Reserve
+194.39.86.0;194.39.86.255;RIPE;PA;"acquired from DENIC"
+194.55.160.0;194.55.160.255;RIPE;PA;Reserve
+194.55.252.0;194.55.253.255;RIPE;PA;Reserve
+194.99.111.0;194.99.111.255;RIPE;PA;"undertaken from Frankendata"
+194.99.53.0;194.99.53.255;RIPE;PA;Reserve
+194.99.54.0;194.99.55.255;RIPE;PA;Reserve
+195.157.15.100;195.157.15.100;CYS;"SNX Carrier";"CYS Sinkhole"
+198.105.200.0;198.105.201.255;ATOS;"SNX Carrier";"ATOS Five9"
+198.105.202.0;198.105.203.255;ATOS;"SNX Carrier";"ATOS Five9"
+198.28.192.0;198.28.255.255;ARIN;PI;"Siemens ( former Osram Sylvana )"
+199.184.38.96;199.184.38.127;"SIEMENS AG";"SNX Carrier";"e-bonding connection between Siemens and Orange Trouble-Ticket-System"
+199.4.242.0;199.4.243.255;ARIN;PI;"Siemens Corporation"
+199.4.244.0;199.4.245.255;ARIN;PI;"Siemens Corporation"
+200.98.201.135;200.98.201.135;CYS;"SNX Carrier";"CYS Sinkhole"
+202.0.85.0;202.0.85.255;APNIC;PI;"NBIG Australia"
+202.0.86.0;202.0.87.255;APNIC;PI;"NBIG Australia"
+202.152.19.83;202.152.19.83;CYS;"SNX Carrier";"CYS Sinkhole"
+204.95.99.109;204.95.99.109;CYS;"SNX Carrier";"CYS Sinkhole"
+206.208.0.0;206.208.7.255;"Siemens AG";PA;"Nantucket only!!! - Internet facing IPs"
+208.109.223.231;208.109.223.231;CYS;"SNX Carrier";"CYS Sinkhole"
+209.243.192.0;209.243.255.255;ARIN;PI;"moved from Energy to Siemens Corp."
+212.84.80.151;212.84.80.151;CYS;"SNX Carrier";"CYS Sinkhole"
+212.84.80.99;212.84.80.99;CYS;"SNX Carrier";"CYS Sinkhole"
+217.167.191.64;217.167.191.127;RIPE;"SNX Carrier";"Orange Infovista PoC"
+31.210.75.202;31.210.75.202;CYS;"SNX Carrier";"CYS Sinkhole"
+38.107.71.0;38.107.71.255;ATOS;"SNX Carrier";"ATOS Five9"
+46.73.101.5;46.73.101.5;CYS;"SNX Carrier";"CYS Sinkhole"
+5.153.58.45;5.153.58.45;CYS;"SNX Carrier";"CYS Sinkhole"
+52.112.0.0;52.115.255.255;Siemens;"SNX Carrier";"CN teams temporary workaround"
+52.120.0.0;52.123.255.255;Siemens;"SNX Carrier";"CN teams temporary workaround"
+57.0.0.0;57.255.255.255;RIPE;"SNX Carrier";"IPINS scan disabled"
+67.198.161.244;67.198.161.244;CYS;"SNX Carrier";"CYS Sinkhole"
+67.198.161.245;67.198.161.245;CYS;"SNX Carrier";"CYS Sinkhole"
+72.52.82.219;72.52.82.219;CYS;"SNX Carrier";"CYS Sinkhole"
+74.50.27.30;74.50.27.30;CYS;"SNX Carrier";"CYS Sinkhole"
+81.7.192.0;81.7.192.255;RIPE;"SNX Carrier";DTBS
+81.7.198.0;81.7.198.255;RIPE;"SNX Carrier";DTBS
+81.7.200.0;81.7.201.255;RIPE;"SNX Carrier";DTBS
+82.210.201.0;82.210.201.255;RIPE;"SNX Carrier";DTBS
+82.210.204.0;82.210.204.255;RIPE;"SNX Carrier";DTBS
+82.210.212.0;82.210.212.255;RIPE;"SNX Carrier";DTBS
+87.106.149.145;87.106.149.145;CYS;"SNX Carrier";"CYS Sinkhole"

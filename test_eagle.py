@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 from pathlib import Path
@@ -52,13 +53,25 @@ class TestRegexpMatchRuleName(TestCase):
         application.use_generate_queries(sag_systems)
 
     def test_import_rules(self):
-        logger_insert_fw_policy= application.setup_logger("insert_fw_policy", "logs/insert_fw_policy")
-        logger_ip_utils = application.setup_logger("ip_utils", "logs/ip_utils.log",logging.ERROR)
-        row = application.create_table_old_ip.get_row_count(table="fw_policy", db_name=self.__class__.db_name)
+        logger_insert_fw_policy= application.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
+        logger_ip_utils = application.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
+        row = application.create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         standard_path = "Standard_objects.json"
-        list_exploded=application.use_import_rules(standard_path)
-        import_rules.dict_to_sql(list_unpacked_ips=list_exploded)
-        row2 = application.create_table_old_ip.get_row_count(table="fw_policy", db_name=self.__class__.db_name)
+
+        path = "./Network-CST-P-SAG-Energy.json"
+        list_rules = import_rules.main(path, standard_path)
+        list_exploded, max_services_length = import_rules.proc_dest_port_tuples(list_rules)
+
+        #write list of dictionaries to json
+        with open('policy_dump/fw_policy_nice.json', 'w') as outfile:
+            jsonfile = json.dumps(list_exploded, indent=4)  # ,sort_keys=True)
+            outfile.write(jsonfile)
+        print("fw_policy.json written")
+
+        import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length)
+        row2 = application.create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
+        # assert  that logs/insert_fw_policy.log is empty
+        self.assertTrue(Path("logs/insert_fw_policy.log").stat().st_size == 0)
         self.assertTrue(row2 != row)
 
     def test_hits(self):
