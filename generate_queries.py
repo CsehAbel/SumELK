@@ -88,15 +88,15 @@ def systems_to_sql(systems):
 
         prefix2 = resultPrefix.group(2)
         cidr = resultPrefix.group(3)
-        cidr2 = ip_utils.correctAndCheckMatchedMask(cidr)
-        base = ip_utils.integerToDecimalDottedQuad(
-            ip_utils.decimalDottedQuadToInteger(prefix2) & ip_utils.makeIntegerMask(
-                cidr2))
+        cidr = int(cidr)
+        base = ip_utils.int2ip(
+            ip_utils.ip2int(prefix2) & ip_utils.makeIntegerMask(
+                cidr))
         if base != prefix2:
             print("Not a network Adresse (possible ip base %s)" % base)
 
         int_prefix_top = (~ip_utils.makeIntegerMask(
-            cidr2)) | ip_utils.decimalDottedQuadToInteger(prefix2)
+            cidr)) | ip_utils.ip2int(prefix2)
         if int_prefix_top - 2 * 32 == -4117887025:
             print("Test singed to unsigned conversion")
             # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
@@ -108,12 +108,12 @@ def systems_to_sql(systems):
             #   if int_prefix_top < 0:
             #      int_prefix_top = int_prefix_top + (2**32)
 
-        prefix_top = ip_utils.integerToDecimalDottedQuad(int_prefix_top)
+        prefix_top = ip_utils.int2ip(int_prefix_top)
         # print("netw.adrr.:{}".format(base))
-        for j in range(ip_utils.decimalDottedQuadToInteger(base) + 1,
-                       ip_utils.decimalDottedQuadToInteger(
-                           ip_utils.integerToDecimalDottedQuad(int_prefix_top)) + 1):
-            list_unpacked_ips.append(ip_utils.integerToDecimalDottedQuad(j))
+        for j in range(ip_utils.ip2int(base) + 1,
+                       ip_utils.ip2int(
+                           ip_utils.int2ip(int_prefix_top)) + 1):
+            list_unpacked_ips.append(ip_utils.int2ip(j))
 
     df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(

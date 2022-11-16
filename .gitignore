@@ -10,7 +10,11 @@ transform_history/*new_transform.json
 transform_history/*fokus_transform.json
 policy/*policy*tar.gz
 !policy/gitkeep
+logs/**
+!logs/gitkeep
 Network-CST-P-SAG-Energy.json
 Network-CST-V-SAG-Fokus-CO.json
 Fokus_AC_Standard_objects.json
+policy_dump/**
+!policy_dump/gitkeep
 

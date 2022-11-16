@@ -35,7 +35,7 @@ def extract_policy_to_project_dir(pttrn,network_file,standard_file):
     newest_tar_gz = ssh_download.search_newest_in_folder(pttrn,policies,localdir=localdir)
 
     extract_to = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/")
-    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file, extract_to)
+    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file,extract_to)
     print("extraction done!")
 
 def search_newest_in_folder(dir, pttrn):
@@ -51,8 +51,8 @@ def search_newest_in_folder(dir, pttrn):
     return newest_tar_gz
 
 def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
-    abs_network_string=network_file.resolve().__str__()
-    abs_standard_string=standard_file.resolve().__str__()
+    abs_network_string = network_file.resolve().__str__()
+    abs_standard_string = standard_file.resolve().__str__()
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
 
@@ -68,7 +68,7 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     if not exists1:
         raise RuntimeError("file %s wasnt extracted to %s" % (network_file.name, project_dir.name))
     else:
-        print("file %s extracted to %s" % (network_file.name, project_dir.name))
+        print("%s extracted to %s" % (network_file.name, project_dir.name))
     standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
     if standard_tarinfo.__len__() != 1:
         raise ValueError("standard_tarinfo file not found")
@@ -81,9 +81,7 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     if not exists2:
         raise RuntimeError("file %s wasnt extracted to %s" % (standard_file.name, project_dir.name))
     else:
-        print("file %s extracted to %s" % (standard_file.name, project_dir.name))
-
-
+        print("%s extracted to %s" % (standard_file.name, project_dir.name))
 
 
 def unlink_file(to_be_unlinked_file):
