@@ -54,7 +54,7 @@ class TestRegexpMatchRuleName(TestCase):
         row = application.create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         standard_path = "Standard_objects.json"
 
-        path = "./Network-CST-P-SAG-Energy.json"
+        path = "Network-CST-P-SAG-Darwin.json"
         list_rules = import_rules.main(path, standard_path)
         list_exploded, max_services_length = import_rules.proc_dest_port_tuples(list_rules)
 
