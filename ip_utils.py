@@ -138,7 +138,7 @@ def is_network_address(prefix2,cidr2):
     res= (base == prefix2)
     if not res:
         logging.getLogger("ip_utils").log(level=logging.ERROR,
-                                      msg="Not a network address (possible ip base %s)" % base)
+                                      msg="{0} Not a network address (possible ip base {1})".format(prefix2,base))
     return res
 
 def is_prefix_top(start,end,cidr2):
@@ -152,7 +152,7 @@ def is_prefix_top(start,end,cidr2):
     res = (prefix_top == end)
     if not res:
         logging.getLogger("ip_utils").log(level=logging.ERROR,
-                                      msg="Not a prefix top (possible ip top %s)" % prefix_top)
+                                      msg="{0} Not a prefix top (possible ip top {1})".format(end,prefix_top))
     return res
 
 
