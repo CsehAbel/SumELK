@@ -56,7 +56,7 @@ def main(history_table, db_name):
   cnx.close()
 
 #function similar to main() but instead of creating a new table, return the number of rows in darwin_white_apps table
-def get_row_count(table,db_name):
+def get_row_count(db_name,table):
     config = {
         'user': secrets.mysql_u,
         'password': secrets.mysql_pw,
@@ -73,6 +73,7 @@ def get_row_count(table,db_name):
 
     #store "count_rows" in a variable
     count_rows = "SELECT COUNT(*) FROM "+table+";"
+    rows=0
     #try to execute the query, return the number of rows in darwin_white_apps table
     try:
         cursor.execute(count_rows)

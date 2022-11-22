@@ -14,18 +14,6 @@ import shlex
 import sys
 import argparse
 
-#setup two loggers with different file handlers
-def setup_logger(name, log_file, level=logging.INFO):
-    """Function setup as many loggers as you want"""
-
-    handler = logging.FileHandler(log_file)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-
-    return logger
 
 def get_cli_args():
     parser = argparse.ArgumentParser("Unpacking Quality Check xlsx")

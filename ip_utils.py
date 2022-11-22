@@ -133,7 +133,7 @@ def iprange_to_cidr(inet_start, inet_stop):
     cidr = 32 - bits
     return cidr
 
-def is_network_address(prefix2,cidr2):
+def is_network_address(prefix2:str,cidr2:int)->bool:
     base = int2ip(ip2int(prefix2) & makeIntegerMask(cidr2))
     res= (base == prefix2)
     if not res:
@@ -141,7 +141,7 @@ def is_network_address(prefix2,cidr2):
                                       msg="{0} Not a network address (possible ip base {1})".format(prefix2,base))
     return res
 
-def is_prefix_top(start,end,cidr2):
+def is_prefix_top(start:str,end:str,cidr2:int)->bool:
     mask = makeIntegerMask(cidr2)
     mask = ~mask
     if mask < 0:
