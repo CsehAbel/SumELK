@@ -3,13 +3,32 @@ import logging
 import re
 from pathlib import Path
 from unittest import TestCase
-import application
 import file_operations
 import import_rules
 import systems_group
+import main as hits
+import create_table_old_ip
+import bulk_json_to_df
+import datetime
+import generate_queries
+import eagle_filter
+import pandas
 
 
 class TestRegexpMatchRuleName(TestCase):
+
+    #setup two loggers with different file handlers
+    def setup_logger(name, log_file, level=logging.INFO):
+        """Function setup as many loggers as you want"""
+
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        logger.addHandler(handler)
+
+        return logger
 
     db_name = "CSV_DB"
 
@@ -43,19 +62,45 @@ class TestRegexpMatchRuleName(TestCase):
 
     # test_eagle_filter
     def test_eagle_filter(self):
-        application.use_eagle_filter()
+        service_points_path = "service_points.csv"
+        lines = eagle_filter.read_sp_list(service_points_path)
+        #create subset of to be unpacked ips
+        snics_found = []
+        file_operations.one_file_found_in_folder(filepath_list=snics_found,
+                                                project_dir=Path("./"),
+                                                pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+        print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
+        attachment_snic = pandas.read_csv(snics_found[0], index_col=None, dtype=str, sep=";")
+        pre_list_unpacked_ips1 = eagle_filter.to_unpack_ips_1(attachment_snic, lines)
+        list_unpacked_ips1 = eagle_filter.unpack_ips(pre_list_unpacked_ips1)
+
+        # create subset of to be unpacked ips
+        network_cont = []
+        file_operations.one_file_found_in_folder(filepath_list=network_cont,
+                                                project_dir=Path("./"),
+                                                pttrn_snic=re.compile("\d{4}\d{2}\d{2}-network_container.csv"))
+        print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
+        attachment_network_container = pandas.read_csv(network_cont[0], index_col=None, dtype=str, sep=";")
+        pre_list_unpacked_ips2 = eagle_filter.to_unpack_ips_2(attachment_network_container)
+        list_unpacked_ips2 = eagle_filter.unpack_ips(pre_list_unpacked_ips2)
+
+        #merge the two list of dictionaries
+        list_unpacked_ips = list_unpacked_ips1 + list_unpacked_ips2
+        eagle_filter.dict_to_sql(list_unpacked_ips)
+        eagle_filter.snic_to_sql(snics_found[0])
 
     def test_gen_queries(self):
         standard_path = "Standard_objects.json"
         # fills systems table with sag_systems exploded into single ips,
         # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
-        application.use_generate_queries(sag_systems)
+        generate_queries.save_new_transform_json(sag_systems)
+        generate_queries.systems_to_sql(sag_systems)
 
     def test_import_rules(self):
-        logger_insert_fw_policy= application.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
-        logger_ip_utils = application.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
-        row = application.create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
+        logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
+        logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
+        row = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         standard_path = "Standard_objects.json"
 
         path = "./Network-CST-P-SAG-Energy.json"
@@ -69,7 +114,7 @@ class TestRegexpMatchRuleName(TestCase):
         print("fw_policy.json written")
 
         import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length)
-        row2 = application.create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
+        row2 = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         # assert  that logs/insert_fw_policy.log is empty
         self.assertTrue(Path("logs/insert_fw_policy.log").stat().st_size == 0)
         self.assertTrue(row2 != row)
@@ -80,15 +125,15 @@ class TestRegexpMatchRuleName(TestCase):
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
         # download hits to hits/...json
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-        application.hits.main(path=path, sag_systems=sag_systems)
+        hits.main(path=path, sag_systems=sag_systems)
         # creating 'ip_%Y%m%d' table from 'ip'
-        application.create_table_old_ip.main(history_table="ip_" + application.datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
+        create_table_old_ip.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 
     # .json to mysql table 'ip'
     def test_bulk_json_to(self):
-        row = application.create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
+        row = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_energy.*\.json$"
-        application.bulk_json_to_df.main(path, regex)
-        row2 = application.create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
+        bulk_json_to_df.main(path, regex)
+        row2 = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
