@@ -3,62 +3,13 @@ import re
 import socket
 import struct
 from pathlib import Path
+import ip_utils
 
 import pandas
 import sqlalchemy
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
 
 import secrets
-
-def cidr_to_netmask(cidr):
-  mask=cidr_to_integer(cidr)
-  # wenn cidr=24, 32-cidr = 8
-  #0xffffffff >> 8 = int("0000 0000 1111 1111 1111 1111 1111 1111")
-  #0xffffff << 8 ->  int("0000 0000 1111 1111 1111 1111 1111 1111") << 8 = int("1111 1111 1111 1111 1111 1111 0000 0000")
-  #int("0000 0000 1111 1111 1111 1111 1111 1111") >> 8
-  #int("0000 0000 0000 0000 1111 1111 1111 1111")= ~int("1111 1111 1111 1111 0000 0000 0000 0000")
-  #~x
-  #Returns the complement of x = the number you get by switching each 1 for a 0 and each 0 for a 1
-  return integer_to_ipaddress(mask)
-
-def netmask_to_cidr(netmask):
-    '''
-    :param netmask: netmask ip addr (eg: 255.255.255.0)
-    :return: equivalent cidr number to given netmask ip (eg: 24)
-    '''
-    return sum([bin(int(x)).count('1') for x in netmask.split('.')])
-
-def integer_to_ipaddress(ip_int):
-  return (str( (0xff000000 & ip_int) >> 24)   + '.' +
-          str( (0x00ff0000 & ip_int) >> 16)   + '.' +
-          str( (0x0000ff00 & ip_int) >> 8)    + '.' +
-          str( (0x000000ff & ip_int)))
-
-def cidr_to_integer(cidr):
-    cidr=int(cidr)
-    #return a mask of n bits as a long integer
-    mask = (0xffffffff >> (32 - cidr)) << (32 - cidr)
-    return mask
-
-
-
-def ipaddress_to_integer(dottedquad):
-    #convert decimal dotted quad string to long integer"
-    #@ is native, ! is big-endian, native didnt work" \
-    #returned the octects reversed main.integerToDecimalDottedQuad(main.decimalDottedQuadToInteger('149.246.14.224'))"
-    ip_as_int = struct.unpack('!i', socket.inet_aton(dottedquad))[0]
-    if ip_as_int < 0:
-        ip_as_int=ip_as_int + 2**32
-    return ip_as_int
-
-# read a cidr candidate and check if it is a valid cidr
-# if it is valid, parse it to an integer and return it
-def parse_cidr(cidr_candidate):
-    patternMask = re.compile('[^\d]*(\d+)[^\d]*$')
-    resultMask = patternMask.match(cidr_candidate)
-    mask = resultMask.group(1)
-    mask = int(mask)
-    return mask
 
 def snic_to_sql(filepath_qc):
 
@@ -88,21 +39,6 @@ def to_unpack_ips_1(attachment_qc, lines):
             pre_list_unpacked_ips.append({"ip":b,"cidr":int(cidr)})
     return pre_list_unpacked_ips
 
-
-def iprange_to_cidr(inet_start, inet_stop):
-    #convert the first ip of the range to an integer
-    start = ipaddress_to_integer(inet_start)
-    #convert the last ip of the range to an integer
-    stop = ipaddress_to_integer(inet_stop)
-    #calculate the difference between the two integers
-    # the number of bits needed to represent the difference subtracted from 32 is the cidr
-    diff = stop - start
-    #calculate the number of bits needed to represent the difference
-    bits = math.ceil(math.log(diff, 2))
-    #calculate the cidr
-    cidr = 32 - bits
-    return inet_start, cidr
-
 #filepath_qc is downloaded from snic, contains fields inet-start, inet-stop, supported_by, comment
 def to_unpack_ips_2(attachment_qc):
     #regex pattern matching "cloud" case insensitive
@@ -127,10 +63,10 @@ def to_unpack_ips_2(attachment_qc):
         inet_start = row["inet_start"]
         inet_stop = row["inet_stop"]
         #convert inet_start and inet_stop to ip and cidr
-        ip,cidr = iprange_to_cidr(inet_start, inet_stop)
+        cidr = ip_utils.iprange_to_cidr(inet_start, inet_stop)
         sp = row["supported_by"]
         sp = row["comment"]
-        pre_list_unpacked_ips.append({"ip":ip,"cidr":cidr})
+        pre_list_unpacked_ips.append({"ip":inet_start,"cidr":cidr})
     return pre_list_unpacked_ips
 
 #ToDo propagate the sp from the snic report to the eagle mysql table
