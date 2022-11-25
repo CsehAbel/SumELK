@@ -7,14 +7,6 @@ from os.path import isfile, join
 from mysql.connector.constants import ClientFlag
 import secrets
 
-config = {
-  'user': secrets.mysql_u,
-  'password': secrets.mysql_pw,
-  'host': '127.0.0.1',
-  'database': 'FOKUS_DB',
-  'raise_on_warnings': True,
-  'allow_local_infile':True
-}
 
 
 def usedb(cursor,DB_NAME):
@@ -29,34 +21,76 @@ def usedb(cursor,DB_NAME):
       print(err)
       exit(1)
 
-def main(history_table):
+def main(history_table, db_name):
+  config = {
+        'user': secrets.mysql_u,
+        'password': secrets.mysql_pw,
+        'host': '127.0.0.1',
+        'database': db_name,
+        'raise_on_warnings': True,
+        'allow_local_infile': True
+    }
+
+
   cnx = mysql.connector.connect(**config)
   cursor = cnx.cursor()
 
-  DB_NAME = "FOKUS_DB"
-  usedb(cursor,DB_NAME)
+  usedb(cursor,db_name)
 
   LOADS = {}
 
   table="ip"
-  LOADS["create_a_table_from_another"]="CREATE TABLE "+history_table+" SELECT * FROM "+table+";"
+  #create a new table with the name of the current date
+  create_table="CREATE TABLE "+history_table+" SELECT * FROM "+table+";"
 
-  for l in LOADS:
-    table_description = LOADS[l]
-    try:
-      cursor.execute(table_description)
-    except mysql.connector.Error as err:
-      print(err.msg)
-    else:
-      print("OK")
+  #try to execute the query, create a new table with the name of the current date
+  try:
+        cursor.execute(create_table)
+  except mysql.connector.Error as err:
+        print(err.msg)
+  else:
+        print("Table {} created.".format(history_table))
 
   cnx.commit()
   cursor.close()
   cnx.close()
 
-if __name__=="__main__":
-  history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d")
-  main(history_table)
+#function similar to main() but instead of creating a new table, return the number of rows in darwin_white_apps table
+def get_row_count(table,db_name):
+    config = {
+        'user': secrets.mysql_u,
+        'password': secrets.mysql_pw,
+        'host': '127.0.0.1',
+        'database': db_name,
+        'raise_on_warnings': True,
+        'allow_local_infile': True
+    }
+
+    cnx = mysql.connector.connect(**config)
+    cursor = cnx.cursor()
+
+    usedb(cursor,db_name)
+
+    #store "count_rows" in a variable
+    count_rows = "SELECT COUNT(*) FROM "+table+";"
+    #try to execute the query, return the number of rows in darwin_white_apps table
+    rows=0
+    try:
+        cursor.execute(count_rows)
+        #store the result in a variable containing an integer
+        rows = cursor.fetchone()[0]
+    except mysql.connector.Error as err:
+        print(err.msg)
+    else:
+        #print the number of rows in table
+        print("Table {} has {} rows.".format(table,rows))
+
+
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+
+    return rows
 
 
 

@@ -28,20 +28,10 @@ def main(path,sag_systems):
     gte_date = gte_date.strftime("%Y-%m-%dT%H:%M:%S")
 
     systems_ips = sag_systems
-    length = len(systems_ips)
 
     divisor = 1000
-    quotient, rest = divmod(length, divisor)
 
-    slices = []  # [[list[0],...list[999]],]
-    lower_bound = 0
-    for i in range(quotient + 1):
-        upper_bound = (i + 1) * divisor
-        if upper_bound < length:
-            slices.append(systems_ips[slice(lower_bound, upper_bound, 1)])
-        else:
-            slices.append(systems_ips[slice(lower_bound, length, 1)])
-        lower_bound = upper_bound
+    slices = to_slices(divisor, systems_ips)
 
     with open('query.json') as json_file:
         query = json.load(json_file)
@@ -56,11 +46,25 @@ def main(path,sag_systems):
             query = json.load(json_file)
 
         for i in range(1):
-            download_index(es=es, query=query, index="fokus_business_partner", nth=(i + 1), sort="_doc",
-                           gte_date=gte_date, asd=asd, path=path)
-        asd = asd + 1
-    
+            download_index(es=es,query=query,index="fokus_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date,asd=asd,path=path)
+        asd=asd+1
     print("Done!")
+
+
+def to_slices(divisor, systems_ips):
+    length = len(systems_ips)
+    quotient, rest = divmod(length, divisor)
+    slices = []  # [[list[0],...list[999]],]
+    lower_bound = 0
+    for i in range(quotient + 1):
+        upper_bound = (i + 1) * divisor
+        if upper_bound < length:
+            slices.append(systems_ips[slice(lower_bound, upper_bound, 1)])
+        else:
+            slices.append(systems_ips[slice(lower_bound, length, 1)])
+        lower_bound = upper_bound
+    return slices
+
 
 def download_index(es,query, index, nth, sort, gte_date,asd,path):
     resp = es.search(query=query,index=index,sort=sort,size=10000)
@@ -102,5 +106,5 @@ def flattenhit(h):
     return {"source_ip":s,"dest_ip":d}
 
 if __name__ == '__main__':
-    main(path=Path("hits/"),hit_json=hit_json)
+    main(Path("hits/"))
 

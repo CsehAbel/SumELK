@@ -5,13 +5,14 @@ from pathlib import Path
 from tarfile import TarFile
 import ssh_download
 
+import ssh_download
+
 project_dir=Path("/home/akecse/PycharmProjectsSumELK")
 
 def delete_hits(dir):
     hits_folder=Path(project_dir/dir)
     b_exists = hits_folder.exists()
     b_is_dir = hits_folder.is_dir()
-
     #keeping gitkeep in hits folder for git to be able to persist it across 'branch_switching'
     pttrn = re.compile("^.*hit.*\.json$")
     if b_exists and b_is_dir:
@@ -20,28 +21,17 @@ def delete_hits(dir):
                 unlink_file(child)
                 print("%s unlinked" % child.resolve().__str__())
 
-def extract_policy_to_project_dir():
-    #find index of standard_objects,network_objects
-    network="Network-CST-V-SAG-Fokus-CO.json"
-
-    # ToDo: use Standard_objects.json for query_wp branch
-    standard="Fokus_AC_Standard_objects.json"
-
-    network_file=(project_dir/network)
-    standard_file=(project_dir/standard)
+def extract_policy_to_project_dir(pttrn,network_file,standard_file,fromHere,toHere):
+    network_file=(project_dir/network_file)
+    standard_file=(project_dir/standard_file)
 
     unlink_file(network_file)
     unlink_file(standard_file)
 
-    #find network,standard in tar and extract it to
-    #abs_network_string, abs_standard_darwin_string
-    policies = '/D:/projects/fokus/fokus_cofw_policies/'
-    pttrn=re.compile("^FOKUS_policy.*\.tar\.gz")
-    localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
-    newest_tar_gz = ssh_download.search_newest_in_folder(pttrn,policies,localdir=localdir)
+    newest_tar_gz = ssh_download.download_file(pttrn,fromHere=fromHere,toHere=toHere)
 
     extract_to = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/")
-    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file, extract_to)
+    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file,extract_to)
     print("extraction done!")
 
 def search_newest_in_folder(dir, pttrn):
@@ -57,19 +47,15 @@ def search_newest_in_folder(dir, pttrn):
     return newest_tar_gz
 
 def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
-    abs_network_string=network_file.resolve().__str__()
-    abs_standard_string=standard_file.resolve().__str__()
+    abs_network_string = network_file.resolve().__str__()
+    abs_standard_string = standard_file.resolve().__str__()
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
+
     network_tarinfo = list(filter(lambda x: (x.name in [network_file.name]), tar_members))
     if network_tarinfo.__len__() != 1:
         raise ValueError("network_tarinfo file not found")
-    network_tarinfo=network_tarinfo[0]
-
-    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
-    if standard_tarinfo.__len__() != 1:
-        raise ValueError("standard_tarinfo file not found")
-    standard_tarinfo=standard_tarinfo[0]
+    network_tarinfo = network_tarinfo[0]
     # Extract a member from the archive to the current working directory, using its full name
     # You can specify a different directory using path
     # member may be a filename or TarInfo object
@@ -77,10 +63,21 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     exists1 = network_file.exists()
     if not exists1:
         raise RuntimeError("file %s wasnt extracted to %s" % (network_file.name, project_dir.name))
+    else:
+        print("%s extracted to %s" % (network_file.name, project_dir.name))
+    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
+    if standard_tarinfo.__len__() != 1:
+        raise ValueError("standard_tarinfo file not found")
+    standard_tarinfo = standard_tarinfo[0]
+    # Extract a member from the archive to the current working directory, using its full name
+    # You can specify a different directory using path
+    # member may be a filename or TarInfo object
     tar_gz.extract(member=standard_tarinfo.name, path=extract_to, set_attrs=True, numeric_owner=False)
     exists2 = standard_file.exists()
     if not exists2:
         raise RuntimeError("file %s wasnt extracted to %s" % (standard_file.name, project_dir.name))
+    else:
+        print("%s extracted to %s" % (standard_file.name, project_dir.name))
 
 
 def unlink_file(to_be_unlinked_file):
@@ -91,7 +88,7 @@ def unlink_file(to_be_unlinked_file):
         print("%s not found" % to_be_unlinked_file.name)
     exists_still = to_be_unlinked_file.is_file()
     if exists_still:
-        raise RuntimeError("files %s to be deleted form %s still exists" % (to_be_unlinked_file.name, project_dir.name))
+        raise RuntimeError("files %s to be deleted still exists" % to_be_unlinked_file.name)
 
 def rename_darwin_transform_json():
     source=Path("fokus_transform.json")
@@ -104,7 +101,7 @@ def rename_darwin_transform_json():
         target = Path("./transform_history") / target_string
         if not target.exists():
             shutil.copy(src=source,
-                        dst = target)
+                        dst=target)
             unlink_file(source)
             print(source.name+"\n renamed to \n"+target.name)
 
@@ -124,19 +121,3 @@ def remove_files_in_dir(pttrn,dir):
             unlink_file(x)
             print("%s unlinked" %x.resolve().__str__())
 
-if __name__=="__main__":
-    remove_files_in_dir(
-        pttrn=re.compile("fokus_ruleset_unpacked\d{2}[A-Za-z]{3}\d{4}\.xlsx$"),dir=Path(project_dir))
-    remove_files_in_dir(
-        pttrn=re.compile("^FOKUS_policy.*\.tar\.gz"),dir=Path(project_dir)/"policy")
-    extract_policy_to_project_dir()
-    # remove snic.csv
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-    remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
-    # copy new snic.csv
-    localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
-    newest_snic = ssh_download.search_newest_in_folder(pttrn=pttrn_snic, policies="/D:/snic/", localdir=localdir)
-    # delete hits
-    delete_hits(dir="fokus_hits")
-    # renames new_transform.json
-    rename_darwin_transform_json()

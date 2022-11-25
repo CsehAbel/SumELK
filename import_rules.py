@@ -1,13 +1,14 @@
 import json
-import pathlib
+import logging
 import re
 from pathlib import Path
 import pandas
+from sqlalchemy.dialects.mysql import INTEGER
+
 import ip_utils
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Date, VARCHAR
 
 import secrets
-
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
@@ -15,21 +16,27 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-                    ld.append(df_obj["ipv4-address"].values[0])
-                #replace else with elif isinstance(not_g_no,?)
+                    ip_value=df_obj["ipv4-address"].values[0]
+                    #create a dictionary with start,end,cidr,type,start_int,end_int
+                    ld.append({"start":ip_value,"end":ip_value,"cidr":32,"type":"host","start_int":ip_utils.ip2int(ip_value),"end_int":ip_utils.ip2int(ip_value)})
                 elif df_obj.type.values[0]=="network":
                     subnet=df_obj["subnet4"].values[0]
-                    netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
-                    [ld.append(sipa) for sipa in ip_utils.ip_range_explode(subnet, netmask)]
+                    netmask=df_obj["mask-length4"].values[0]
+                    netmask=int(netmask)
+                    # create a dictionary with start,end
+                    base,prefix_top=ip_utils.base_cidr_to_range(subnet,netmask)
+                    ld.append({"start":base,"end":prefix_top,"cidr":netmask,"type":"network","start_int":ip_utils.ip2int(base),"end_int":ip_utils.ip2int(prefix_top)})
                 elif df_obj.type.values[0]=="group":
                     get_dest_ports_ips(ld,[x["uid"] for x in df_obj["members"].values[0]],st_obj_df)
                 elif df_obj.type.values[0] == "address-range":
-                    for ra in range(ip_utils.ip2int(df_obj["ipv4-address-first"].values[0]), ip_utils.ip2int(df_obj["ipv4-address-last"].values[0]) + 1):
-                        r_ip = ip_utils.int2ip(ra)
-                        ld.append(r_ip)
-                elif df_obj.type.values[0] == 'CpmiAnyObject':
-                    pass
-                elif df_obj.type.values[0] == 'service-icmp':
+                    start=df_obj["ipv4-address-first"].values[0]
+                    end=df_obj["ipv4-address-last"].values[0]
+                    cidr=ip_utils.iprange_to_cidr(start,end)
+                    res1=ip_utils.is_network_address(start,cidr)
+                    res2=ip_utils.is_prefix_top(start,end,cidr)
+                    cidr=cidr if (res1 and res2) else -1
+                    ld.append({"start":start, "end":end,"cidr":cidr,"type":"range","start_int":ip_utils.ip2int(start),"end_int":ip_utils.ip2int(end)})
+                elif df_obj.type.values[0] == "CpmiAnyObject":
                     pass
                 else:
                     raise ValueError("type is not host,netw,group,range")
@@ -98,20 +105,36 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
     except BaseException as be:
         raise be
 
-#from_rule: 1, port: 415-450/tcp, ip: 10.2.
-#from_rule: 1, port: 600/udp, ip: 10.2.
-#from_rule: 1, port: 415-450/tcp, ip: 149.1.
-#from_rule: 1, port: 415-450/tcp, ip: 149.1.
 def proc_dest_port_tuples(list_rules):
-    list_exploded=[]
+    max_services_length = 0
+    list_exploded = []
     for i in range(len(list_rules)):
         for ip in list_rules[i]["destinations"]:
+            #for evcery dictionary in list_rules[i]["services"] create a new dictionary with the keys "port" and "tcp_udp"
+            #if "tcp_udp" is a built in function, then that built in function returns a string, which will be the value for "tcp_udp"
+            #if "tcp_udp" is not a built in function, then the value for "tcp_udp" will be the value of the key "tcp_udp" in the dictionary
+            list_services = []
             for t in list_rules[i]["services"]:
                 port=t["port"]
                 tcp_udp=t["tcp_udp"]
-                complete_port="%s/%s" %(port,tcp_udp)
-                list_exploded.append({"st_dest_ip":ip,"st_port":complete_port,"rule_name":list_rules[i]["name"],"rule_number":"%d" %list_rules[i]["number"]})
-    return list_exploded
+                if callable(tcp_udp):
+                    tcp_udp=tcp_udp()
+                complete_port = "%s/%s" % (port, tcp_udp)
+                list_services.append(complete_port)
+            # issue with having services left as is, json.dumps() didnt work for list_exploded_with_concatenated_services,
+            # only worked when services was concatenated into a string
+            json_services = json.dumps(list_services)
+            #set max_services_length to the length json_services if it is greater than max_services_length
+            max_services_length = len(json_services) if len(json_services) > max_services_length else max_services_length
+
+            list_exploded.append(
+                {"dest_ip_start": ip["start"], "dest_ip_end": ip["end"], "dest_ip_cidr": ip["cidr"],
+                 "dest_ip_type": ip["type"],
+                 "dest_ip_start_int": ip["start_int"], "dest_ip_end_int": ip["end_int"],
+                 "json_services": json_services,  # concat_services,
+                 "rule_name": list_rules[i]["name"],
+                 "rule_number": "%d" % list_rules[i]["number"]})
+    return list_exploded, max_services_length
 
 def get_network_object_by_id(id,st_obj_df):
     #DataFrame->Series contaning index, and a field True or False
@@ -168,27 +191,94 @@ def main(path,standard_path):
         resultApp=patternApp.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
         if resultWuser or resultApp:
+            #fills ld with a list of dictionaries, each dictionary containnig start,end,cidr,type,start_int,end_int
             ld = []
             get_dest_ports_ips(ld,rule["destination"],st_obj_df)
+            #fills l_e with a list of dictionaries, each dictionary containnig port,tcp_udp
             l_e=[]
             get_dest_ports_ports(l_e,rule["service"],st_obj_df)
             # list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
             sources=rule["source"]
             list_rules.append({"name":rule_name, "number":rule["rule-number"], "sources":sources, "destinations":ld, "services":l_e})
 
+    # ToDo: create json from list_rules, currently using mysql instead of json
+    # list_exploded is a list of dictionaries, each dictionary containing dest_ip,concat_services,rule_name,rule_number
+    return list_rules
 
-    list_exploded=proc_dest_port_tuples(list_rules)
-    print("")
-    dfx=pandas.DataFrame(list_exploded)
+def dict_to_sql(list_unpacked_ips,max_services_length, db_name):
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "FOKUS_DB"), pool_recycle=3600)
-    dbConnection = sqlEngine.connect()
-    dfx.to_sql("st_ports", dbConnection, if_exists='replace', index=True)
-    print("import_rules.py Done!")
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name),
+        pool_recycle=3600)
+    metadata_obj = MetaData()
+    fw_policy_table = drop_and_create_fw_policy_table(metadata_obj, sqlEngine, max_services_length)
+
+    conn = sqlEngine.connect()
+
+    insert_to_fw_policy(conn, fw_policy_table, list_unpacked_ips)
+    print("fw_policy insert done!")
 
 
-if __name__ == '__main__':
-    path = "./Network-CST-P-SAG-Energy.json"
-    main(path)
-    #test access section a_white
-    #get_network_object_by_id('40eaa8ff-8e99-4edd-a1ce-6281b9818171')
+def drop_and_create_fw_policy_table(metadata_obj, sql_engine, max_services_length):
+    # eagle_table = Table('eagle', metadata_obj,
+    #                     Column('id', Integer, primary_key=True),
+    #                     Column('ip', String(15), nullable=False),
+    #                     Column('base', String(15), nullable=False),
+    #                     Column('cidr', Integer, nullable=False)
+    #                     )
+    # create similar table for proc_list_rules_for_sql()'s list_exploded_with_concatenated_services
+    fw_policy_table = Table('fwpolicy', metadata_obj,
+                            Column('id', Integer, primary_key=True),
+                            Column('dest_ip_start', String(15), nullable=False),
+                            Column('dest_ip_end', String(15), nullable=False),
+                            #can be -1 if dest_ip_type is range, it needs to be signed
+                            Column('dest_ip_cidr', Integer, nullable=False),
+                            Column('dest_ip_type', String(15), nullable=False),
+                            Column('dest_ip_start_int', INTEGER(unsigned=True), nullable=False),
+                            Column('dest_ip_end_int', INTEGER(unsigned=True), nullable=False),
+                            Column('json_services', VARCHAR(length=max_services_length), nullable=False),
+                            #What the fuck ist this rule name? Can it be that the APP_ID's are appended to the end of the rule name?
+                            #only if every rule could be correleted to an APP_ID, but this is not the case
+                            #if it would be the case, then the APP_ID in the  ruleset could be used as a foreign key to find the
+                            #fw policy rule, but now we are using the dest_ip instead
+                            #app_id is only relevant from tsa expiration perspective
+                            #if the tsa expires for a app id but there is another app id for the same dest_ip then keep the rule in the fw policy
+                            #connection wont be refused for the app id that has its tsa expired
+                            #'wuser_2168;2166;2176;2198;2220;2526;3622;3744;4303;4818;5154;5155;6144;4791;6069'.__len__()==80
+                            Column('rule_name', String(80), nullable=False),
+                            Column('rule_number', String(15), nullable=False)
+                            )
+
+    fw_policy_table.drop(sql_engine, checkfirst=True)
+    fw_policy_table.create(sql_engine, checkfirst=False)
+    return fw_policy_table
+
+def insert_to_fw_policy(conn, table, list_unpacked_ips):
+    slices = to_slices(1000, list_unpacked_ips)
+    # for each slice of 1000 rows insert into the eagle table
+    for s in slices:
+        # try to insert the slice into the eagle table
+        try:
+            # check if the dictionaries in the slice have values where pandas.isnull() is True
+            # if so, replace with None
+            for d in s:
+                for k, v in d.items():
+                    if pandas.isnull(v):
+                        d[k] = None
+            conn.execute(table.insert().values(s))
+        except Exception as e:
+            #insert_fw_policy logger set to level=ERROR in test_eagle.py test_import_rules() so this will not print
+            logging.getLogger("insert_fw_policy").log(level=logging.WARNING,msg=e)
+
+def to_slices(divisor, systems_ips):
+    length = len(systems_ips)
+    quotient, rest = divmod(length, divisor)
+    slices = []  # [[list[0],...list[999]],]
+    lower_bound = 0
+    for i in range(quotient + 1):
+        upper_bound = (i + 1) * divisor
+        if upper_bound < length:
+            slices.append(systems_ips[slice(lower_bound, upper_bound, 1)])
+        else:
+            slices.append(systems_ips[slice(lower_bound, length, 1)])
+        lower_bound = upper_bound
+    return slices

@@ -61,9 +61,9 @@ def create_dataframe(full_path, func):
     return df
 
 
-def main(path, regex):
+def main(path, regex,db_name):
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "FOKUS_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name), pool_recycle=3600)
     metadata_obj = MetaData()
     ip_table = drop_and_create_ip_table(metadata_obj, sqlEngine)
 
@@ -110,9 +110,3 @@ def drop_and_create_ip_table(metadata_obj, sqlEngine):
     ip_table.drop(sqlEngine, checkfirst=False)
     ip_table.create(sqlEngine)
     return ip_table
-
-
-if __name__ == '__main__':
-    path = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/"
-    regex = "^hit.*"
-    main(path, regex)
