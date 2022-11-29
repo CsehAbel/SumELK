@@ -22,20 +22,14 @@ def get_newest(pttrn, policies,sftp):
     return newest_tar_gz
 
 
-def search_newest_in_folder(pttrn, policies,localdir):
+def download_file(pttrn, fromHere,toHere):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(AllowAnythingPolicy())
     hostname = 'sn1fwj00.ad001.siemens.net'
     client.connect(hostname, username=secrets.gid, password=secrets.sc_pw)
     sftp = client.open_sftp()
-    newest_tar_gz = get_newest(pttrn=pttrn, policies=policies, sftp=sftp)
-    localpath=localdir + newest_tar_gz
+    newest_tar_gz = get_newest(pttrn=pttrn, policies=fromHere, sftp=sftp)
+    localpath=toHere + newest_tar_gz
     sftp.get(remotepath=newest_tar_gz,localpath=localpath,callback=lambda a,b: print(localpath + " downloaded") if a==b else None)
     client.close()
     return localpath
-
-if __name__=="__main__":
-    pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-    policies = "/D:/snic/"
-    localdir="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
-    search_newest_in_folder(pttrn=pttrn_snic,policies=policies,localdir=localdir)

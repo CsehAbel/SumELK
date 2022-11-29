@@ -103,9 +103,9 @@ def read_sp_list(service_points_path):
         lines = [line.strip() for line in f]
     return lines
 
-def dict_to_sql(list_unpacked_ips):
+def dict_to_sql(list_unpacked_ips,db_name):
         sqlEngine = create_engine(
-            'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"),
+            'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name),
             pool_recycle=3600)
         metadata_obj = MetaData()
         eagle_table = drop_and_create_eagle_table(metadata_obj, sqlEngine)

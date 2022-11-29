@@ -16,13 +16,7 @@ import pandas
 from sqlalchemy import create_engine
 
 import ip_utils
-from pathlib import Path
-
-from elasticsearch import Elasticsearch
 import json
-from ssl import create_default_context
-from elasticsearch import RequestsHttpConnection
-
 import secrets
 import systems_group
 
@@ -34,7 +28,7 @@ port='9200'
 #moved from systems_group.py
 #onlyinold_to_sql() not needed anymore, table should be deleted
 #onlyInNew needs to be exploded to use as left join filter for the table hits
-def save_new_transform_json(sag_systems):
+def save_new_transform_json(sag_systems,new_name):
 
     with open('transform.json') as json_file:
         transform = json.load(json_file)
@@ -42,13 +36,12 @@ def save_new_transform_json(sag_systems):
     #393
     transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
 
-    with open('new_transform.json', 'w') as outfile:
-        transform2=json.dumps(transform, indent=4) #,sort_keys=True)
+    with open(new_name, 'w') as outfile:
+        transform2 = json.dumps(transform, indent=4)  # ,sort_keys=True)
         outfile.write(transform2)
-    print("Done writing new_transform.json!")
+    print("Done writing %s!" % new_name)
 
-#systems_group.py onlyinold_to_sql() repurposed
-def systems_to_sql(systems):
+def systems_to_sql(systems,table_name, db_name):
     list_unpacked_ips = []
     for line in systems:
         patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
@@ -88,12 +81,6 @@ def systems_to_sql(systems):
 
     df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df.to_sql("systems", dbConnection, if_exists='replace', index=True)
-
-def main():
-  return
-
-if __name__=="__main__":
-    main()
+    df.to_sql(table_name, dbConnection, if_exists='replace', index=True)

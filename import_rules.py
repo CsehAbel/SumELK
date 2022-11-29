@@ -8,33 +8,6 @@ from sqlalchemy.dialects.mysql import INTEGER
 import ip_utils
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Date, VARCHAR
 
-# def get_dest_ports():
-#     device_name = "CST-P-SAG-Energy"
-#     rules=st_helper.get_rules_for_device(device_id)
-#     patternApp=re.compile("^a.*",re.IGNORECASE)
-#     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
-#     list_rules=[]
-#     for r in rules._list_data:
-#         if r.name=='atos_vuln_scans':#,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
-#             continue
-#         if r.name == "a_17042_CDC":
-#             print("129.73.226.0/24 should be added to return value list_rules")
-#         try:
-#             resultApp=patternApp.match(r.name)
-#         except BaseException:
-#             continue
-#         resultWuser=patternWuser.match(r.name)
-#
-#         if resultWuser or resultApp:
-#             try:
-#                 ld = []
-#                 get_dest_ports_ips(device_id, ld, r.dst_networks)
-#                 l_e=[]
-#                 get_dest_ports_ports(device_id, l_e, r.dst_services)
-#                 list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
-#             except BaseException as ex:
-#                 raise ex
-#     return list_rules
 import secrets
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
@@ -63,6 +36,8 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
                     res2=ip_utils.is_prefix_top(start,end,cidr)
                     cidr=cidr if (res1 and res2) else -1
                     ld.append({"start":start, "end":end,"cidr":cidr,"type":"range","start_int":ip_utils.ip2int(start),"end_int":ip_utils.ip2int(end)})
+                elif df_obj.type.values[0] == "CpmiAnyObject":
+                    pass
                 else:
                     raise ValueError("type is not host,netw,group,range")
                 #     patternPrefix = re.compile(
@@ -93,6 +68,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                     res_type3 = pttrn_type3.match(service_type_)
                     pttrn_type4 = re.compile("service-other", re.IGNORECASE)
                     res_type4 = pttrn_type4.match(service_type_)
+                    pttrn_type5 = re.compile("CpmiAnyObject", re.IGNORECASE)
+                    res_type5 = pttrn_type5.match(service_type_)
+                    pttrn_type6 = re.compile("service-icmp", re.IGNORECASE)
+                    res_type6 = pttrn_type6.match(service_type_)
                     if res_type1 or res_type2:
                         tcp_udp=res_type1.group(1) if res_type1 else res_type2.group(1)
 
@@ -115,6 +94,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                         get_dest_ports_ports(l_e,[y["uid"] for y in service["members"]],st_obj_df)
                     elif res_type4:
                         l_e.append({"port": service["ip-protocol"], "tcp_udp": service["name"].lower})
+                    elif res_type5:
+                        pass
+                    elif res_type6:
+                        l_e.append({"port": service["name"]+"icmp", "tcp_udp": service["name"]+"icmp"})
                     else:
                         raise ValueError()
                 except BaseException as err:
@@ -222,9 +205,9 @@ def main(path,standard_path):
     # list_exploded is a list of dictionaries, each dictionary containing dest_ip,concat_services,rule_name,rule_number
     return list_rules
 
-def dict_to_sql(list_unpacked_ips,max_services_length):
+def dict_to_sql(list_unpacked_ips,max_services_length, db_name):
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "CSV_DB"),
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name),
         pool_recycle=3600)
     metadata_obj = MetaData()
     fw_policy_table = drop_and_create_fw_policy_table(metadata_obj, sqlEngine, max_services_length)

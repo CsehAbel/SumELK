@@ -3,6 +3,18 @@ se_ruleset_unpacked*
 darwin_ruleset_unpacked*
 fokus_ruleset_unpacked*
 __pycache__/**
+<<<<<<< HEAD
+hits/hit_energy*json
+hits/hit_darwin*json
+!hits/gitkeep
+transform_history/*new_transform.json
+transform_history/*darwin_transform.json
+policy/*policy*tar.gz
+!policy/gitkeep
+Network-CST-P-SAG-Energy.json
+Network-CST-V-SAG-Darwin.json
+Standard_objects.json
+=======
 hits/hit_darwin*json
 hits/hit_fokus*json
 !hits/gitkeep
@@ -17,3 +29,4 @@ Network-CST-V-SAG-Fokus-CO.json
 Fokus_AC_Standard_objects.json
 policy_dump/**
 !policy_dump/gitkeep
+>>>>>>> main

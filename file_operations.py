@@ -1,8 +1,9 @@
 import datetime
-from pathlib import Path
-from tarfile import TarFile
 import re
 import shutil
+from pathlib import Path
+from tarfile import TarFile
+import ssh_download
 
 import ssh_download
 
@@ -20,16 +21,14 @@ def delete_hits(dir):
                 unlink_file(child)
                 print("%s unlinked" % child.resolve().__str__())
 
-def extract_policy_to_project_dir(pttrn,network_file,standard_file):
+def extract_policy_to_project_dir(pttrn,network_file,standard_file,fromHere,toHere):
     network_file=(project_dir/network_file)
     standard_file=(project_dir/standard_file)
 
     unlink_file(network_file)
     unlink_file(standard_file)
 
-    policies = '/D:/projects/se/se_cofw_policies/'
-    localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
-    newest_tar_gz = ssh_download.search_newest_in_folder(pttrn,policies,localdir=localdir)
+    newest_tar_gz = ssh_download.download_file(pttrn,fromHere=fromHere,toHere=toHere)
 
     extract_to = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/")
     extract_tarinfo(Path(newest_tar_gz),network_file,standard_file,extract_to)
@@ -91,15 +90,14 @@ def unlink_file(to_be_unlinked_file):
     if exists_still:
         raise RuntimeError("files %s to be deleted still exists" % to_be_unlinked_file.name)
 
-def rename_darwin_transform_json():
-    source=Path("new_transform.json")
+def rename_darwin_transform_json(source,target_string):
     if not source.exists():
         print(source.name + " not in dir, nothing to be rename\n")
     else:
         dtm=datetime.datetime.now()
         d_m=dtm.strftime("%d_%m")
-        target_string=("%s_new_transform.json" %d_m)
-        target = Path("./transform_history") / target_string
+        target_string=(target_string %d_m)
+        target=Path(target_string)
         if not target.exists():
             shutil.copy(src=source,
                         dst=target)
