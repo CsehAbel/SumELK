@@ -184,7 +184,7 @@ def main(path,standard_path):
 
     for index,rule in df_rules.iterrows():
         rule_name = rule["name"]
-        if rule_name == 'atos_vuln_scans':  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
+        if rule_name.find('atos_vuln_scans')!=-1:  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
         if rule_name == "a_17042_CDC":
             print("129.73.226.0/24 should be added to return value list_rules")
