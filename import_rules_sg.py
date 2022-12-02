@@ -7,34 +7,6 @@ from sqlalchemy.dialects.mysql import INTEGER
 
 import ip_utils
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Date, VARCHAR
-
-# def get_dest_ports():
-#     device_name = "CST-P-SAG-Energy"
-#     rules=st_helper.get_rules_for_device(device_id)
-#     patternApp=re.compile("^a.*",re.IGNORECASE)
-#     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
-#     list_rules=[]
-#     for r in rules._list_data:
-#         if r.name=='atos_vuln_scans':#,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
-#             continue
-#         if r.name == "a_17042_CDC":
-#             print("129.73.226.0/24 should be added to return value list_rules")
-#         try:
-#             resultApp=patternApp.match(r.name)
-#         except BaseException:
-#             continue
-#         resultWuser=patternWuser.match(r.name)
-#
-#         if resultWuser or resultApp:
-#             try:
-#                 ld = []
-#                 get_dest_ports_ips(device_id, ld, r.dst_networks)
-#                 l_e=[]
-#                 get_dest_ports_ports(device_id, l_e, r.dst_services)
-#                 list_rules.append([[r.name, r.order, r.rule_number], ld, l_e])
-#             except BaseException as ex:
-#                 raise ex
-#     return list_rules
 import secrets
 
 def get_dest_ports_ips(ld,ids,st_obj_df):
@@ -173,7 +145,7 @@ def main(path,standard_path):
     st_obj_df = pandas.DataFrame(objects)
     types = st_obj_df["type"].unique()
     source_groups=st_obj_df[st_obj_df["type"].isin(["group"])]
-    number_of_groups=st_obj_df["type"].isin(["group"]).value_counts()
+    number_of_groups=st_obj_df["type"].isin(["host"]).value_counts()
 
     for index,group in source_groups.iterrows():
        
