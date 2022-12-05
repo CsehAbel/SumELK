@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import TestCase
 import file_operations
 import import_rules
+import import_hosts
 import systems_group
 import main as hits
 import create_table_old_ip
@@ -105,9 +106,8 @@ class TestRegexpMatchRuleName(TestCase):
         logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
         logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
         row = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
-        standard_path = "Standard_objects.json"
 
-        list_rules = import_rules.main(self.__class__.network_path, standard_path)
+        list_rules = import_rules.main(self.__class__.network_path, self.__class__.standard_path)
         list_exploded, max_services_length = import_rules.proc_dest_port_tuples(list_rules)
 
         #write list of dictionaries to json
@@ -121,6 +121,20 @@ class TestRegexpMatchRuleName(TestCase):
         # assert  that logs/insert_fw_policy.log is empty
         self.assertTrue(Path("logs/insert_fw_policy.log").stat().st_size == 0)
         self.assertTrue(row2 != row)
+
+    def test_import_hosts(self):
+        pttrn_logs = re.compile("^.*\.log$")
+        file_operations.remove_files_in_dir(pttrn_logs,Path("./logs"))
+        logger_insert_fw_policy= self.setup_logger("insert_hosts", "logs/insert_hosts.log",logging.INFO)
+        logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
+        row = create_table_old_ip.get_row_count(table="hosts", db_name=self.__class__.db_name)
+
+        list_rules = import_hosts.main(self.__class__.network_path, self.__class__.standard_path)
+        import_hosts.dict_to_sql(list_unpacked_ips=list_rules, db_name=self.__class__.db_name)
+        
+        row2 = create_table_old_ip.get_row_count(table="hosts", db_name=self.__class__.db_name)
+        self.assertTrue(row2 != row)
+
 
     def test_hits(self):
         # gets the systems ip ranges from darwin_json
@@ -136,6 +150,6 @@ class TestRegexpMatchRuleName(TestCase):
         row = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_energy.*\.json$"
-        bulk_json_to_df.main(path, regex, self.db_name)
+        bulk_json_to_df.main(path, regex, self.__class__.db_name)
         row2 = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
