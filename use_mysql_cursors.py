@@ -92,9 +92,14 @@ def get_row_count(table,db_name):
 
     return rows
 
-def load_csv_to_mysql(table,db_name,path='/path/to/my/file'):
+def load_csv_to_mysql(table,db_name,path_string='/path/to/my/file'):
   #query to load the csv file into the table will be stored in a variable
-  query = "LOAD DATA LOCAL INFILE '%s' IGNORE INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '' LINES TERMINATED BY '\\n'" % (path,table)
+  #query = "LOAD DATA LOCAL INFILE '%s' IGNORE INTO TABLE %s FIELDS TERMINATED BY ',' ENCLOSED BY '' LINES TERMINATED BY '\\n'" % (path_string,table)
+  #above string definition but in multiple lines
+  query = ("LOAD DATA LOCAL INFILE '%s' IGNORE INTO TABLE %s "
+            "FIELDS TERMINATED BY ',' ENCLOSED BY '' "
+            "LINES TERMINATED BY '\\n'" % (path_string,table))
+
   option_files_path = r"/mnt/c/ProgramData/MySQL/MySQL Server 8.0/Uploads/option_folder/option.cnf"
   config = {
         'user': secrets.mysql_u,
@@ -102,8 +107,8 @@ def load_csv_to_mysql(table,db_name,path='/path/to/my/file'):
         'host': '127.0.0.1',
         'database': db_name,
         'raise_on_warnings': True,
-        'allow_local_infile': True,
-        'option_files': option_files_path
+        'allow_local_infile': True
+        ,'option_files': option_files_path
     }
     #connect to the database
   cnx = mysql.connector.connect(**config)

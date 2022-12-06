@@ -1,22 +1,21 @@
 import datetime
 import json
-import socket
-import struct
 import re
 from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
 import pandas as pd
-
-import mysql.connector
 import sqlalchemy
-from mysql.connector import errorcode
 
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, UniqueConstraint
 import secrets
 import csv
 import use_mysql_cursors
+import ip_utils
+from sqlalchemy.dialects.mysql import INTEGER
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Date, VARCHAR
+#from sqlalchemy.dialects.postgresql import INTEGER
 
 lt_date = datetime.datetime(day=23, year=2022, month=1)
 duration = datetime.timedelta(days=10)
@@ -63,11 +62,13 @@ def create_dataframe(full_path, func):
     return df
 
 
-def main(path, regex,db_name):
+def main(path, regex,db_name,csv_path_string):
+
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name), pool_recycle=3600)
     metadata_obj = MetaData()
     ip_table = drop_and_create_ip_table(metadata_obj, sqlEngine)
+    print("ip table created by sqlalchemy")
 
     #conn = sqlEngine.connect()
     # list_files checks for regex ^hit.*
@@ -77,12 +78,12 @@ def main(path, regex,db_name):
     lf = list_files(path, regex)
     #C:\ProgramData\MySQL\MySQL Server 8.0\data\Uploads\
     #/mnt/c/ProgramData/MySQL/MySQL Server 8.0/data/Uploads/
-    csv_path = Path("/mnt/c/ProgramData/MySQL/MySQL Server 8.0/data/Uploads/ip_dump.csv")
+    csv_path = Path(csv_path_string)
     with csv_path.open('w', newline='') as csvfile:
         spamwriter = csv.writer(csvfile)
         #spamwriter.writerow(["src_ip","dst_ip"])
-        count=0
-        artificial_index=0
+        count=3
+        artificial_index=1
         for f in lf:
             count+=1
             if count==2:
@@ -101,12 +102,14 @@ def main(path, regex,db_name):
                     row = json.loads(line)
                     sip = row["source_ip"]
                     dip = row["dest_ip"]
-                    spamwriter.writerow([artificial_index,sip,dip])
+                    sip_int=ip_utils.ip2int(sip)
+                    dip_int=ip_utils.ip2int(dip)
+                    spamwriter.writerow([artificial_index,sip,dip,sip_int,dip_int])
                     artificial_index+=1
     print("csv done!")
     #path="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/ip_dump.csv"
-    path="C:\\\\ProgramData\\\\MySQL\\\\MySQL Server 8.0\\\\data\\\\Uploads\\\\ip_dump.csv"
-    use_mysql_cursors.load_csv_to_mysql(db_name="CSV_DB", path=path, table="ip")
+    #path_string=csv_path_string.replace("/mnt/c","C:")
+    #use_mysql_cursors.load_csv_to_mysql(db_name="CSV_DB", path_string="C:/ProgramData/MySQL/MySQL Server 8.0/data/Uploads/ip_dump.csv", table="ip")
     #table_name="ip"
     #engine_string = 'mysql+pymysql://%s:%s@%s/%s::%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name, table_name)
     #x=odo.odo('ip_dump.csv', engine_string)
@@ -143,8 +146,10 @@ def insert_to_ip_table(conn, f, ip_table, path):
 def drop_and_create_ip_table(metadata_obj, sqlEngine):
     ip_table = Table('ip', metadata_obj,
                      Column('id', Integer, primary_key=True),
-                     Column('src_ip', String(15), nullable=False),
-                     Column('dst_ip', String(15), nullable=False),
+                     Column('src_ip', String(20), nullable=False),
+                     Column('dst_ip', String(20), nullable=False),
+                     Column('src_ip_int', INTEGER(unsigned=True), nullable=False),
+                     Column('dst_ip_int', INTEGER(unsigned=True), nullable=False),
                      UniqueConstraint('src_ip', 'dst_ip', name='my_uniq_id')
                      )
     # check first for table existing
@@ -155,4 +160,5 @@ def drop_and_create_ip_table(metadata_obj, sqlEngine):
 if __name__ == '__main__':
     path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
     regex = "^hit_energy.*\.json$"
-    main(path, regex, "CSV_DB")
+    csv_path_string = "/mnt/c/ProgramData/MySQL/MySQL Server 8.0/Data/Uploads/ip_dump.csv"
+    main(path, regex, "CSV_DB",csv_path_string)
