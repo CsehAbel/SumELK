@@ -75,6 +75,7 @@ def get_row_count(db_name,table):
     count_rows = "SELECT COUNT(*) FROM "+table+";"
     rows=0
     #try to execute the query, return the number of rows in darwin_white_apps table
+    rows=0
     try:
         cursor.execute(count_rows)
         #store the result in a variable containing an integer

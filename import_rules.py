@@ -47,6 +47,8 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
                     res2=ip_utils.is_prefix_top(start,end,cidr)
                     cidr=cidr if (res1 and res2) else -1
                     ld.append({"start":start, "end":end,"cidr":cidr,"type":"range","start_int":ip_utils.ip2int(start),"end_int":ip_utils.ip2int(end)})
+                elif df_obj.type.values[0] == "CpmiAnyObject":
+                    pass
                 else:
                     raise ValueError("type is not host,netw,group,range")
                 #     patternPrefix = re.compile(
@@ -77,6 +79,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                     res_type3 = pttrn_type3.match(service_type_)
                     pttrn_type4 = re.compile("service-other", re.IGNORECASE)
                     res_type4 = pttrn_type4.match(service_type_)
+                    pttrn_type5 = re.compile("CpmiAnyObject", re.IGNORECASE)
+                    res_type5 = pttrn_type5.match(service_type_)
+                    pttrn_type6 = re.compile("service-icmp", re.IGNORECASE)
+                    res_type6 = pttrn_type6.match(service_type_)
                     if res_type1 or res_type2:
                         tcp_udp=res_type1.group(1) if res_type1 else res_type2.group(1)
 
@@ -99,6 +105,10 @@ def get_dest_ports_ports(l_e,lid,st_obj_df):
                         get_dest_ports_ports(l_e,[y["uid"] for y in service["members"]],st_obj_df)
                     elif res_type4:
                         l_e.append({"port": service["ip-protocol"], "tcp_udp": service["name"].lower})
+                    elif res_type5:
+                        pass
+                    elif res_type6:
+                        l_e.append({"port": service["name"]+"icmp", "tcp_udp": service["name"]+"icmp"})
                     else:
                         raise ValueError()
                 except BaseException as err:
@@ -137,7 +147,16 @@ def proc_dest_port_tuples(list_rules):
                  "rule_number": "%d" % list_rules[i]["number"]})
     return list_exploded, max_services_length
 
-
+def get_network_object_by_id(id,st_obj_df):
+    #DataFrame->Series contaning index, and a field True or False
+    matches=st_obj_df["uid"].isin([id])
+    if 1!=matches.value_counts().loc[True]:
+        error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" %(error,id))
+    #DataFrame containing single row
+    #df_obj=df_ngh.loc[matches]
+    df_obj=st_obj_df[matches]
+    return df_obj
 
 def get_white_rules(df_rules):
     #DataFrame->Series contaning index, and a field True or False
@@ -153,14 +172,18 @@ def get_white_rules(df_rules):
     return white_rules
 
 
-def main(network_path, standard_path):
+def main(path,standard_path):
     #list_files checks for regex ^hit.*
-    file=Path(network_path).absolute()
+    file=Path(path).absolute()
     if not file.is_file():
-        raise FileNotFoundError(network_path)
+        raise FileNotFoundError(path)
     with file.open() as f:
         rules=json.load(f)
 
+    patternApp=re.compile("^a_.*",re.IGNORECASE)
+    patternApp2=re.compile("^app_.*",re.IGNORECASE)
+    patternWuser=re.compile("^wuser.*",re.IGNORECASE)
+    patternEagle=re.compile("^e_.*",re.IGNORECASE)
     df_rules = pandas.DataFrame(rules)
     #access-section, access-rule
     types=df_rules.type.unique()
@@ -174,23 +197,32 @@ def main(network_path, standard_path):
     #there is no row which doesnt have a type
     notype = df_rules.type.isna().value_counts()
     #7 doesn't have name
-    noname = df_rules.name.notna().value_counts()
-    df_rules = df_rules[df_rules.name.notna()]
+    hasname = df_rules[df_rules.name.notna()]
+    noname = df_rules[df_rules.name.isna()]
+    df_rules=df_rules[df_rules.name.notna()]
+    list_rules=[]
 
     st_obj_file = Path(standard_path)
     with st_obj_file.open() as sof:
         objects = json.load(sof)
     st_obj_df = pandas.DataFrame(objects)
     types = st_obj_df["type"].unique()
+    # df_ngh keep rows where type=network, group, or host
+    # usage inside get_dest_ports_ips()
+    # df_ngh = st_obj_df[st_obj_df["type"].isin(["network", "group", "host","address-range"])]
+    # usage inside get_dest_ports_ports()
+    # df_ngh = st_obj_df[st_obj_df["type"].isin(["services"])]
 
-    patternApp = re.compile("^a.*", re.IGNORECASE)
-    patternWuser = re.compile("^wuser.*", re.IGNORECASE)
-    list_rules = []
+
     for index,rule in df_rules.iterrows():
         rule_name = rule["name"]
+        if rule_name.find('atos_vuln_scans')!=-1:  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
+            continue
         resultApp=patternApp.match(rule_name)
+        resultApp2=patternApp2.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
-        if resultWuser or resultApp:
+        resultEagle = patternEagle.match(rule_name)
+        if resultWuser or resultApp or resultApp2 or resultEagle:
             #fills ld with a list of dictionaries, each dictionary containnig start,end,cidr,type,start_int,end_int
             ld = []
             get_dest_ports_ips(ld,rule["destination"],st_obj_df)
@@ -205,9 +237,9 @@ def main(network_path, standard_path):
     # list_exploded is a list of dictionaries, each dictionary containing dest_ip,concat_services,rule_name,rule_number
     return list_rules
 
-def dict_to_sql(list_unpacked_ips,max_services_length):
+def dict_to_sql(list_unpacked_ips,max_services_length, db_name):
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"),
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name),
         pool_recycle=3600)
     metadata_obj = MetaData()
     fw_policy_table = drop_and_create_fw_policy_table(metadata_obj, sqlEngine, max_services_length)

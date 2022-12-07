@@ -10,13 +10,14 @@ import generate_queries
 import create_table_old_ip
 import main as hits
 import datetime
+import bulk_json_to_df
 
 
 
 class TestRegexpMatchRuleName(TestCase):
 
     #setup two loggers with different file handlers
-    def setup_logger(self,name, log_file, level=logging.INFO):
+    def setup_logger(self, name, log_file, level=logging.INFO):
         """Function setup as many loggers as you want"""
 
         handler = logging.FileHandler(log_file)
@@ -36,15 +37,16 @@ class TestRegexpMatchRuleName(TestCase):
         pttrn = re.compile("^DARWIN_policy.*\.tar\.gz")
         file_operations.remove_files_in_dir(
             pttrn=pttrn, dir=Path(file_operations.project_dir) / "policy")
-        file_operations.extract_policy_to_project_dir(pttrn=pttrn,network_file=network,standard_file=standard)
-
+        policies = '/D:/projects/darwin/darwin_cofw_policies'
+        localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
+        file_operations.extract_policy_to_project_dir(pttrn=pttrn,network_file=network,standard_file=standard,fromHere=policies,toHere=localdir)
         #remove snic.csv
         pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
         file_operations.remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
 
         # copy new snic.csv
         localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
-        newest_snic = file_operations.ssh_download.search_newest_in_folder(pttrn=pttrn_snic, policies="/D:/snic/", localdir=localdir)
+        newest_snic = file_operations.ssh_download.download_file(pttrn=pttrn_snic, fromHere="/D:/snic/", toHere=localdir)
 
         snics_found = []
         file_operations.one_file_found_in_folder(filepath_list=snics_found,
@@ -63,8 +65,8 @@ class TestRegexpMatchRuleName(TestCase):
         # fills systems table with sag_systems exploded into single ips,
         # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
-        generate_queries.save_new_transform_json(sag_systems)
-        generate_queries.systems_to_sql(sag_systems)
+        generate_queries.save_new_transform_json(sag_systems,new_name="darwin_transform.json")
+        generate_queries.systems_to_sql(sag_systems,table_name="systems",db_name=self.__class__.db_name)
 
     def test_import_rules(self):
         logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
@@ -82,7 +84,7 @@ class TestRegexpMatchRuleName(TestCase):
             outfile.write(jsonfile)
         print("fw_policy.json written")
 
-        import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length)
+        import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length,db_name=self.__class__.db_name)
         row2 = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         # assert  that logs/insert_fw_policy.log is empty
         self.assertTrue(Path("logs/insert_fw_policy.log").stat().st_size == 0)
@@ -103,6 +105,6 @@ class TestRegexpMatchRuleName(TestCase):
         row = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_darwin.*\.json$"
-        bulk_json_to_df.main(path, regex)
+        bulk_json_to_df.main(path, regex, self.__class__.db_name)
         row2 = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)

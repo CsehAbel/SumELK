@@ -16,13 +16,7 @@ import pandas
 from sqlalchemy import create_engine
 
 import ip_utils
-from pathlib import Path
-
-from elasticsearch import Elasticsearch
 import json
-from ssl import create_default_context
-from elasticsearch import RequestsHttpConnection
-
 import secrets
 import systems_group
 
@@ -31,53 +25,22 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-
-#system_groups.py all_red_networks_systems() rewritten
-def read_query1to4():
-    systems_ips = systems_group.get_systems_ip_list()
-    p1 = ["old_darwin_transform.json"]
-    trsfrm_path = lambda x: Path(x).absolute()
-    p2=[trsfrm_path(y) for y in p1]
-    #query1…4 altal lettek letoltve, a transform job 1-4 altal lettek letöltve
-    list_old = []
-    #q for query
-    for q in p2:
-        with q.open("r") as infile:
-            query=json.load(infile)
-            prefixlist=query['bool']['filter']['terms']['source.ip']
-            for line in prefixlist:
-                patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
-                # [\s"]* anstatt \s*
-                resultPrefix = patternPrefixCIDR.match(line)
-                if resultPrefix:
-                    list_old.append(line)
-                else:
-                    raise ValueError
-
-
-    # need to be added to new transform
-    #{ new all_red-networks systems } - { 4xtransform job business_partner_001-004 }
-    # save_new_transform_json() new_transform.json
-    onlyInNew = set(systems_ips) - set(list_old)
-    return onlyInNew
-
 #moved from systems_group.py
 #onlyinold_to_sql() not needed anymore, table should be deleted
 #onlyInNew needs to be exploded to use as left join filter for the table hits
-def save_new_transform_json(sag_systems):
+def save_new_transform_json(sag_systems,new_name):
 
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
     transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
 
-    with open('darwin_transform.json', 'w') as outfile:
+    with open(new_name, 'w') as outfile:
         transform2 = json.dumps(transform, indent=4)  # ,sort_keys=True)
         outfile.write(transform2)
-    print("Done writing darwin_transform.json!")
+    print("Done writing %s!" % new_name)
 
-
-def systems_to_sql(systems):
+def systems_to_sql(systems,table_name, db_name):
     list_unpacked_ips = []
     for line in systems:
         patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
@@ -105,15 +68,6 @@ def systems_to_sql(systems):
 
     df = pandas.DataFrame(list_unpacked_ips)
     sqlEngine = create_engine(
-        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", "DARWIN_DB"), pool_recycle=3600)
+        'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name), pool_recycle=3600)
     dbConnection = sqlEngine.connect()
-    df.to_sql("systems", dbConnection, if_exists='replace', index=True)
-
-def main():
-    #onlyinnew=read_query1to4()
-    #save_new_transform_json(onlyInNew=onlyinnew)
-    systems_to_sql(systems=systems_group.get_systems_ip_list())
-
-
-if __name__=="__main__":
-    main()
+    df.to_sql(table_name, dbConnection, if_exists='replace', index=True)

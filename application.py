@@ -29,6 +29,10 @@ def use_generate_queries(sag_systems):
     generate_queries.save_new_transform_json(sag_systems=sag_systems)
     generate_queries.systems_to_sql(sag_systems)
 
+    #mysql db:CSV_DB mysql table:st_ports
+    path = "Network-CST-V-SAG-Fokus-CO.json"
+    standard_path = "Fokus_AC_Standard_objects.json"
+    import_rules.main(path,standard_path)
 
 def use_import_rules(standard_path):
     path = "./Network-CST-P-SAG-Darwin.json"
@@ -49,11 +53,11 @@ def main():
     # download hits to hits/...json
     path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
     hits.main(path=path,sag_systems=sag_systems)
-    # creating 'ip_%Y%m%d' table from 'ip'
-    create_table_old_ip.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name="CSV_DB")
-    # .json to mysql table 'ip'
 
-    regex = "^hit_darwin.*\.json$"
+    # creating 'ip_%Y%m%d' table from 'ip'
+    create_table_old_ip.main("ip_" + datetime.datetime.now().strftime("%Y%m%d"))
+    # .json to mysql table 'ip'
+    regex = "^hit_fokus.*\.json$"
     bulk_json_to_df.main(path,regex)
 
     # resolving ip to fqdn for white_apps

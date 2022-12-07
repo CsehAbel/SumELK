@@ -106,7 +106,8 @@ def ip_range_explode(ip,netmask):
             ip2int(prefix2) & makeIntegerMask(
                 cidr2))
         if base != prefix2:
-            print("Not a network Adresse (possible ip base %s)" % base)
+            logging.getLogger("ip_utils").log(level=logging.ERROR,
+                                      msg="%s Not a network address (possible ip base %s)" % (ip,base))
 
         int_prefix_top = (~makeIntegerMask(
             cidr2)) | ip2int(prefix2)
