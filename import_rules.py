@@ -188,11 +188,11 @@ def main(path,standard_path):
     #access-section, access-rule
     types=df_rules.type.unique()
 
-    section=get_white_rules(df_rules)
-    _from=int(section["from"])
-    _to=int(section["to"])
+    #section=get_white_rules(df_rules)
+    #_from=int(section["from"])
+    #_to=int(section["to"])
     df_rules = df_rules[df_rules["type"].isin(["access-rule"])]
-    df_rules = df_rules[df_rules["rule-number"].isin(range(_from, _to+1))]
+    #df_rules = df_rules[df_rules["rule-number"].isin(range(_from, _to+1))]
 
     #there is no row which doesnt have a type
     notype = df_rules.type.isna().value_counts()
