@@ -69,6 +69,8 @@ class TestRegexpMatchRuleName(TestCase):
         generate_queries.systems_to_sql(sag_systems,table_name="systems",db_name=self.__class__.db_name)
 
     def test_import_rules(self):
+        pttrn_logs = re.compile("^.*\.log$")
+        file_operations.remove_files_in_dir(pttrn_logs,Path("./logs"))
         logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
         logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
         row = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
