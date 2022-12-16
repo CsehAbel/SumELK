@@ -1,11 +1,7 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
-import re
 import pandas
 import json
-import secrets
-import bulk_json_to_df
 from sqlalchemy import create_engine
-import ip_utils
 from pathlib import Path
 
 def get_systems_ip_list(darwin_json):
@@ -43,14 +39,15 @@ def get_network_object_by_id(id,st_obj_df):
     df_obj=st_obj_df[matches]
     return df_obj
 
+#ld list of destination ips to complete with ips found inside group network objects
+#members list of members either Host_Network_Obj or Group_Network_Obj
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
         for id in ids:
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-                    #ld.append(df_obj["ipv4-address"].values[0])
-                    raise ValueError("type is not netw,range")
+                    ld.append({"subnet":df_obj["ipv4-address"].values[0],"cidr":32})
                 elif df_obj.type.values[0]=="network":
                     subnet=df_obj["subnet4"].values[0]
                     #netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
@@ -69,7 +66,6 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
     except BaseException as err:
         print(f"Unexpected {err=}, {type(err)=}")
         raise
-
 
 #from_rule: 1, port: 415-450/tcp, ip: 10.2.
 #from_rule: 1, port: 600/udp, ip: 10.2.
@@ -103,12 +99,3 @@ def df_from_line(line):
     dict_line = json.loads(line)
     df = pandas.DataFrame(dict_line)
     return df
-
-
-def main():
-    darwin_json = "Standard_objects_darwin.json"
-    get_systems_ip_list(darwin_json)
-
-if __name__=="__main__":
-    main()
-    print("systems_group.py done!")

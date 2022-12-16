@@ -77,15 +77,14 @@ def unlink_file(to_be_unlinked_file):
     if exists_still:
         raise RuntimeError("files %s to be deleted still exists" % to_be_unlinked_file.name)
 
-def rename_darwin_transform_json():
-    source=Path("fokus_transform.json")
+def rename_darwin_transform_json(source,target_string):
     if not source.exists():
         print(source.name + " not in dir, nothing to be rename\n")
     else:
         dtm=datetime.datetime.now()
         d_m=dtm.strftime("%d_%m")
-        target_string=("%s_fokus_transform.json" %d_m)
-        target = Path("./transform_history") / target_string
+        target_string=(target_string %d_m)
+        target=Path(target_string)
         if not target.exists():
             shutil.copy(src=source,
                         dst=target)

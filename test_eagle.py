@@ -6,13 +6,13 @@ from unittest import TestCase
 import file_operations
 import ssh_download
 import import_rules
+import import_hosts
 import systems_group
-import generate_queries
-import create_table_old_ip
 import main as hits
-import datetime
+import use_mysql_cursors
 import bulk_json_to_df
-
+import datetime
+import generate_queries
 
 
 class TestRegexpMatchRuleName(TestCase):
@@ -31,6 +31,8 @@ class TestRegexpMatchRuleName(TestCase):
         return logger
 
     db_name = "DARWIN_DB"
+    standard_path = "temporary/Standard_objects.json"
+    network_path = "temporary/Network-CST-P-SAG-Darwin.json"
 
     def test_file_operations(self):
         n = "Network-CST-P-SAG-Darwin.json"
@@ -56,7 +58,9 @@ class TestRegexpMatchRuleName(TestCase):
                                                      "\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
         self.assertTrue(snics_found.__len__() == 1)
         # renames new_transform.json
-        file_operations.rename_darwin_transform_json()
+        source=Path("new_transform.json")
+        target_string ="./transform_history/%s_new_transform.json"
+        file_operations.rename_darwin_transform_json(source,target_string)
 
     def test_systems_to_sql(self):
         standard_path = "temporary/Standard_objects.json"
@@ -71,11 +75,8 @@ class TestRegexpMatchRuleName(TestCase):
         file_operations.remove_files_in_dir(pttrn_logs,Path("./logs"))
         logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
         logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
-        row = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
-
-        standard_path = "temporary/Standard_objects.json"
-        network_path = "temporary/Network-CST-P-SAG-Darwin.json"
-        list_rules = import_rules.main(network_path, standard_path)
+        row = use_mysql_cursors.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
+        list_rules = import_rules.main(self.__class__.network_path, self.__class__.standard_path)
         list_exploded, max_services_length = import_rules.proc_dest_port_tuples(list_rules)
 
         #write list of dictionaries to json
@@ -84,31 +85,45 @@ class TestRegexpMatchRuleName(TestCase):
             outfile.write(jsonfile)
         print("fw_policy.json written")
 
-        import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length,db_name=self.__class__.db_name)
-        row2 = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
+        import_rules.dict_to_sql(list_unpacked_ips=list_exploded , max_services_length=max_services_length, db_name=self.__class__.db_name)
+        row2 = use_mysql_cursors.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
         # assert  that logs/insert_fw_policy.log is empty
         self.assertTrue(Path("logs/insert_fw_policy.log").stat().st_size == 0)
         self.assertTrue(row2 != row)
+
+    def test_import_hosts(self):
+        pttrn_logs = re.compile("^.*\.log$")
+        file_operations.remove_files_in_dir(pttrn_logs,Path("./logs"))
+        logger_insert_fw_policy= self.setup_logger("insert_hosts", "logs/insert_hosts.log",logging.INFO)
+        logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
+        row = use_mysql_cursors.get_row_count(table="hosts", db_name=self.__class__.db_name)
+
+        list_rules = import_hosts.main(self.__class__.network_path, self.__class__.standard_path)
+        import_hosts.dict_to_sql(list_unpacked_ips=list_rules, db_name=self.__class__.db_name)
+        
+        row2 = use_mysql_cursors.get_row_count(table="hosts", db_name=self.__class__.db_name)
+        self.assertTrue(row2 != row)
+
 
     def test_hits(self):
         # delete hits
         file_operations.delete_hits(dir=Path("hits"))
         self.assertTrue([x for x in Path("hits").iterdir()].__len__() == 1)
-
-        standard_path = "temporary/Standard_objects.json"
         # gets the systems ip ranges from darwin_json
-        sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
+        sag_systems = systems_group.get_systems_ip_list(darwin_json=self.__class__.standard_path)
         # download hits to hits/...json
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         hits.main(path=path, sag_systems=sag_systems)
         # creating 'ip_%Y%m%d' table from 'ip'
-        create_table_old_ip.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
+        use_mysql_cursors.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 
     # .json to mysql table 'ip'
     def test_bulk_json_to(self):
-        row = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
+        row = use_mysql_cursors.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
         regex = "^hit_darwin.*\.json$"
-        bulk_json_to_df.main(path, regex, self.__class__.db_name)
-        row2 = create_table_old_ip.get_row_count(table="ip", db_name=self.__class__.db_name)
+        csv_path_string = "/mnt/c/ProgramData/MySQL/MySQL Server 8.0/Data/Uploads/ip_dump.csv"
+        bulk_json_to_df.main(path, regex, self.__class__.db_name, csv_path_string)
+        #ToDo: go to MysqlWorkbench and do LOAD DATA LOCAL INFILE 'ip_dump.csv' INTO TABLE ip FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES;
+        row2 = use_mysql_cursors.get_row_count(table="ip", db_name=self.__class__.db_name)
         self.assertTrue(row2 != row)
