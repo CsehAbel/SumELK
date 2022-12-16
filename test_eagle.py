@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from unittest import TestCase
 import file_operations
+import ssh_download
 import import_rules
 import systems_group
 import generate_queries
@@ -32,36 +33,33 @@ class TestRegexpMatchRuleName(TestCase):
     db_name = "DARWIN_DB"
 
     def test_file_operations(self):
-        network = "Network-CST-P-SAG-Darwin.json"
-        standard = "Standard_objects.json"
-        pttrn = re.compile("^DARWIN_policy.*\.tar\.gz")
+        n = "Network-CST-P-SAG-Darwin.json"
+        st = "Standard_objects.json"
+        pt = re.compile("^DARWIN_policy.*\.tar\.gz")
+        temporary="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary/"
         file_operations.remove_files_in_dir(
-            pttrn=pttrn, dir=Path(file_operations.project_dir) / "policy")
-        policies = '/D:/projects/darwin/darwin_cofw_policies'
-        localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/policy/"
-        file_operations.extract_policy_to_project_dir(pttrn=pttrn,network_file=network,standard_file=standard,fromHere=policies,toHere=localdir)
+            pttrn=re.compile("^((?!gitkeep).)*$"), dir=Path(temporary))
+        fh = '/D:/projects/darwin/darwin_cofw_policies'
+        newest_tar_gz = ssh_download.download_file(pttrn=pt,fromHere=fh,toHere=temporary)
+        file_operations.extract_tarinfo(Path(newest_tar_gz),n,st,temporary)
+    
         #remove snic.csv
         pttrn_snic = re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments\.csv$")
-        file_operations.remove_files_in_project_dir(pttrn_ruleset=pttrn_snic)
+        file_operations.remove_files_in_dir(pttrn=pttrn_snic,dir=Path(temporary))
 
-        # copy new snic.csv
-        localdir = "/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/"
-        newest_snic = file_operations.ssh_download.download_file(pttrn=pttrn_snic, fromHere="/D:/snic/", toHere=localdir)
+        newest_snic = file_operations.ssh_download.download_file(pttrn=pttrn_snic, fromHere="/D:/snic/", toHere=temporary)
 
         snics_found = []
         file_operations.one_file_found_in_folder(filepath_list=snics_found,
-                                                 project_dir=Path("./"),
+                                                 dir=Path(temporary),
                                                  pttrn_snic=re.compile(
                                                      "\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
         self.assertTrue(snics_found.__len__() == 1)
-        # delete hits
-        file_operations.delete_hits(dir="hits")
-        self.assertTrue([x for x in Path("hits").iterdir()].__len__() == 1)
         # renames new_transform.json
         file_operations.rename_darwin_transform_json()
 
     def test_systems_to_sql(self):
-        standard_path = "Standard_objects.json"
+        standard_path = "temporary/Standard_objects.json"
         # fills systems table with sag_systems exploded into single ips,
         # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
@@ -74,10 +72,10 @@ class TestRegexpMatchRuleName(TestCase):
         logger_insert_fw_policy= self.setup_logger("insert_fw_policy", "logs/insert_fw_policy.log",logging.INFO)
         logger_ip_utils = self.setup_logger("ip_utils", "logs/ip_utils.log",logging.INFO)
         row = create_table_old_ip.get_row_count(table="fwpolicy", db_name=self.__class__.db_name)
-        standard_path = "Standard_objects.json"
 
-        path = "Network-CST-P-SAG-Darwin.json"
-        list_rules = import_rules.main(path, standard_path)
+        standard_path = "temporary/Standard_objects.json"
+        network_path = "temporary/Network-CST-P-SAG-Darwin.json"
+        list_rules = import_rules.main(network_path, standard_path)
         list_exploded, max_services_length = import_rules.proc_dest_port_tuples(list_rules)
 
         #write list of dictionaries to json
@@ -93,7 +91,11 @@ class TestRegexpMatchRuleName(TestCase):
         self.assertTrue(row2 != row)
 
     def test_hits(self):
-        standard_path = "Standard_objects.json"
+        # delete hits
+        file_operations.delete_hits(dir=Path("hits"))
+        self.assertTrue([x for x in Path("hits").iterdir()].__len__() == 1)
+
+        standard_path = "temporary/Standard_objects.json"
         # gets the systems ip ranges from darwin_json
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
         # download hits to hits/...json
