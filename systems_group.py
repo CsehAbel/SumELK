@@ -1,6 +1,7 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
 import pandas
 import json
+from sqlalchemy import create_engine
 from pathlib import Path
 
 def get_systems_ip_list(darwin_json):
@@ -16,10 +17,7 @@ def get_systems_ip_list(darwin_json):
     types = st_obj_df["type"].unique()
 
     of_type_group = st_obj_df[st_obj_df.type.isin(["group"])]
-
-    group_names = ['all_red_system_networks']
-    snx_systems = of_type_group[of_type_group.name.isin(group_names)]
-
+    snx_systems = of_type_group[of_type_group.name.isin(["EMEA_migrated_SNX_Systems", "NAM_migrated_SNX_Systems"])]
     list_source_ranges = []
     for index, obj in snx_systems.iterrows():
         rule_name = obj["name"]
@@ -41,16 +39,15 @@ def get_network_object_by_id(id,st_obj_df):
     df_obj=st_obj_df[matches]
     return df_obj
 
+#ld list of destination ips to complete with ips found inside group network objects
+#members list of members either Host_Network_Obj or Group_Network_Obj
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
         for id in ids:
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-
                     ld.append({"subnet":df_obj["ipv4-address"].values[0],"cidr":32})
-                    #ld.append(df_obj["ipv4-address"].values[0])
-
                 elif df_obj.type.values[0]=="network":
                     subnet=df_obj["subnet4"].values[0]
                     #netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
@@ -68,8 +65,7 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
                     raise ex
     except BaseException as err:
         print(f"Unexpected {err=}, {type(err)=}")
-        raise err
-
+        raise
 
 #from_rule: 1, port: 415-450/tcp, ip: 10.2.
 #from_rule: 1, port: 600/udp, ip: 10.2.
@@ -103,12 +99,3 @@ def df_from_line(line):
     dict_line = json.loads(line)
     df = pandas.DataFrame(dict_line)
     return df
-
-
-def main():
-    darwin_json = "Fokus_AC_Standard_objects.json"
-    get_systems_ip_list(darwin_json)
-
-if __name__=="__main__":
-    main()
-    print("systems_group.py done!")

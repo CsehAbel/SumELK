@@ -13,7 +13,7 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-hit_json='hit_fokus_00%d_%s_%d_%d.json'
+hit_json='hit_darwin_00%d_%s_%d_%d.json'
 
 def main(path,sag_systems):
     #print matched iterating: lista["i_f","vuser","wuser123","a_123","App_123"]
@@ -46,10 +46,9 @@ def main(path,sag_systems):
             query = json.load(json_file)
 
         for i in range(1):
-            download_index(es=es,query=query,index="fokus_business_partner",nth=(i+1),sort="_doc",gte_date=gte_date,asd=asd,path=path)
-        asd=asd+1
+            download_index(es=es,query=query,index="darwin_business_partner",nth=(i + 1),sort="_doc",gte_date=gte_date,asd=asd,path=path)
+        asd = asd + 1
     print("Done!")
-
 
 def to_slices(divisor, systems_ips):
     length = len(systems_ips)
@@ -64,7 +63,6 @@ def to_slices(divisor, systems_ips):
             slices.append(systems_ips[slice(lower_bound, length, 1)])
         lower_bound = upper_bound
     return slices
-
 
 def download_index(es,query, index, nth, sort, gte_date,asd,path):
     resp = es.search(query=query,index=index,sort=sort,size=10000)
@@ -104,7 +102,4 @@ def flattenhit(h):
     s=h['_source']['source']['ip']
     d=h['_source']['destination']['ip']
     return {"source_ip":s,"dest_ip":d}
-
-if __name__ == '__main__':
-    main(Path("hits/"))
 

@@ -10,6 +10,17 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 
 import secrets
 
+def get_network_object_by_id(id,st_obj_df):
+    #DataFrame->Series contaning index, and a field True or False
+    matches=st_obj_df["uid"].isin([id])
+    if 1!=matches.value_counts().loc[True]:
+        error="uid not found" if matches.value_counts().loc[True]==0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" %(error,id))
+    #DataFrame containing single row
+    #df_obj=df_ngh.loc[matches]
+    df_obj=st_obj_df[matches]
+    return df_obj
+
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
         for id in ids:
@@ -147,6 +158,19 @@ def get_network_object_by_id(id,st_obj_df):
     df_obj=st_obj_df[matches]
     return df_obj
 
+def get_white_rules(df_rules):
+    #DataFrame->Series contaning index, and a field True or False
+    a = df_rules[df_rules["type"].isin(["access-section"])]
+    pat_white_rules="^white\s+rules((?!eagle).)*$"
+    b = a["name"].str.contains(pat_white_rules, case=False, regex=True)
+    #Anzahl der 'True' values
+    c = b.value_counts().loc[True]
+    if 1 != c:
+        error = "'white_rules' not found" if c == 0 else "more than one object found for uid"
+        raise ValueError("%s\n\r uid: %s" % (error, id))
+    white_rules = a[b].iloc[0]
+    return white_rules
+
 
 def main(path,standard_path):
     #list_files checks for regex ^hit.*
@@ -163,7 +187,13 @@ def main(path,standard_path):
     df_rules = pandas.DataFrame(rules)
     #access-section, access-rule
     types=df_rules.type.unique()
+
+    #section=get_white_rules(df_rules)
+    #_from=int(section["from"])
+    #_to=int(section["to"])
     df_rules = df_rules[df_rules["type"].isin(["access-rule"])]
+    #df_rules = df_rules[df_rules["rule-number"].isin(range(_from, _to+1))]
+
     #there is no row which doesnt have a type
     notype = df_rules.type.isna().value_counts()
     #7 doesn't have name
