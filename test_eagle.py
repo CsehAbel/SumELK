@@ -42,6 +42,10 @@ class TestRegexpMatchRuleName(TestCase):
         file_operations.remove_files_in_dir(
             pttrn=re.compile("^((?!gitkeep).)*$"), dir=Path(temporary))
         fh = '/D:/projects/fokus/fokus_cofw_policies/'
+        #check if temp folder is empty
+        #use the generator to get the number of files in the folder
+        sizeOfGenerator = sum(1 for _ in Path(temporary).iterdir())
+        self.assertTrue(sizeOfGenerator == 1)
         newest_tar_gz = ssh_download.download_file(pttrn=pt,fromHere=fh,toHere=temporary)
         file_operations.extract_tarinfo(Path(newest_tar_gz),n,st,temporary)
     
@@ -121,7 +125,7 @@ class TestRegexpMatchRuleName(TestCase):
     def test_bulk_json_to(self):
         row = use_mysql_cursors.get_row_count(table="ip", db_name=self.__class__.db_name)
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-        regex = "^hit_darwin.*\.json$"
+        regex = "^hit_fokus.*\.json$"
         csv_path_string = "/mnt/c/ProgramData/MySQL/MySQL Server 8.0/Data/Uploads/ip_dump.csv"
         bulk_json_to_df.main(path, regex, self.__class__.db_name, csv_path_string)
         #ToDo: go to MysqlWorkbench and do LOAD DATA LOCAL INFILE 'ip_dump.csv' INTO TABLE ip FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\r\n' IGNORE 1 LINES;
