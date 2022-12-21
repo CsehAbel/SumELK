@@ -7,10 +7,10 @@ import ssh_download
 
 import ssh_download
 
-project_dir=Path("/home/akecse/PycharmProjectsSumELK")
+
 
 def delete_hits(dir):
-    hits_folder=Path(project_dir/dir)
+    hits_folder=dir
     b_exists = hits_folder.exists()
     b_is_dir = hits_folder.is_dir()
     #keeping gitkeep in hits folder for git to be able to persist it across 'branch_switching'
@@ -20,19 +20,6 @@ def delete_hits(dir):
             if pttrn.match(child.name):
                 unlink_file(child)
                 print("%s unlinked" % child.resolve().__str__())
-
-def extract_policy_to_project_dir(pttrn,network_file,standard_file,fromHere,toHere):
-    network_file=(project_dir/network_file)
-    standard_file=(project_dir/standard_file)
-
-    unlink_file(network_file)
-    unlink_file(standard_file)
-
-    newest_tar_gz = ssh_download.download_file(pttrn,fromHere=fromHere,toHere=toHere)
-
-    extract_to = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/")
-    extract_tarinfo(Path(newest_tar_gz),network_file,standard_file,extract_to)
-    print("extraction done!")
 
 def search_newest_in_folder(dir, pttrn):
     b_exists = dir.exists()
@@ -47,12 +34,10 @@ def search_newest_in_folder(dir, pttrn):
     return newest_tar_gz
 
 def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
-    abs_network_string = network_file.resolve().__str__()
-    abs_standard_string = standard_file.resolve().__str__()
     tar_gz = TarFile.open(name=newest_tar_gz.resolve().__str__(), mode='r:gz')
     tar_members = tar_gz.getmembers()
 
-    network_tarinfo = list(filter(lambda x: (x.name in [network_file.name]), tar_members))
+    network_tarinfo = list(filter(lambda x: (x.name in [network_file]), tar_members))
     if network_tarinfo.__len__() != 1:
         raise ValueError("network_tarinfo file not found")
     network_tarinfo = network_tarinfo[0]
@@ -60,12 +45,13 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     # You can specify a different directory using path
     # member may be a filename or TarInfo object
     tar_gz.extract(member=network_tarinfo.name, path=extract_to, set_attrs=True, numeric_owner=False)
-    exists1 = network_file.exists()
+    e_network_file = Path(extract_to) / network_file
+    exists1 = e_network_file.exists()
     if not exists1:
-        raise RuntimeError("file %s wasnt extracted to %s" % (network_file.name, project_dir.name))
+        raise RuntimeError("file %s wasnt extracted" % (e_network_file.name))
     else:
-        print("%s extracted to %s" % (network_file.name, project_dir.name))
-    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file.name]), tar_members))
+        print("%s extracted" % (e_network_file.name))
+    standard_tarinfo = list(filter(lambda x: (x.name in [standard_file]), tar_members))
     if standard_tarinfo.__len__() != 1:
         raise ValueError("standard_tarinfo file not found")
     standard_tarinfo = standard_tarinfo[0]
@@ -73,11 +59,12 @@ def extract_tarinfo(newest_tar_gz,network_file,standard_file,extract_to):
     # You can specify a different directory using path
     # member may be a filename or TarInfo object
     tar_gz.extract(member=standard_tarinfo.name, path=extract_to, set_attrs=True, numeric_owner=False)
-    exists2 = standard_file.exists()
+    e_standard_file = Path(extract_to) / standard_file
+    exists2 = e_standard_file.exists()
     if not exists2:
-        raise RuntimeError("file %s wasnt extracted to %s" % (standard_file.name, project_dir.name))
+        raise RuntimeError("file %s wasnt extracted" % (e_standard_file.name))
     else:
-        print("%s extracted to %s" % (standard_file.name, project_dir.name))
+        print("%s extracted" % (e_standard_file.name))
 
 
 def unlink_file(to_be_unlinked_file):
@@ -104,19 +91,15 @@ def rename_darwin_transform_json(source,target_string):
             unlink_file(source)
             print(source.name+"\n renamed to \n"+target.name)
 
-def one_file_found_in_folder(filepath_list, project_dir, pttrn_snic):
-    for x in project_dir.iterdir():
+def one_file_found_in_folder(filepath_list, dir, pttrn_snic):
+    for x in dir.iterdir():
         if pttrn_snic.match(x.name):
             filepath_list.append(x.resolve().__str__())
     if filepath_list.__len__() != 1:
-        raise ValueError(project_dir.name+": more than one file matching "+pttrn_snic.pattern)
-
-def remove_files_in_project_dir(pttrn_ruleset):
-    remove_files_in_dir(pttrn_ruleset,project_dir)
+        raise ValueError(dir.name+": more than one file matching "+pttrn_snic.pattern)
 
 def remove_files_in_dir(pttrn,dir):
     for x in dir.iterdir():
         if pttrn.match(x.name):
             unlink_file(x)
             print("%s unlinked" %x.resolve().__str__())
-

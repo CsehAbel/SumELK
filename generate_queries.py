@@ -33,7 +33,6 @@ def save_new_transform_json(sag_systems,new_name):
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
-    #393
     transform['bool']['filter']['terms']['source.ip'] = list(sag_systems)
 
     with open(new_name, 'w') as outfile:
@@ -48,33 +47,21 @@ def systems_to_sql(systems,table_name, db_name):
         # [\s"]* anstatt \s*
         resultPrefix = patternPrefixCIDR.match(line)
         if not resultPrefix:
-            raise ValueError("onlyInOld.json not matching regex")
+            raise ValueError("{0} doesnt seem to be a source ip".format(line))
 
         prefix2 = resultPrefix.group(2)
         cidr = resultPrefix.group(3)
         cidr = int(cidr)
-        base = ip_utils.int2ip(
-            ip_utils.ip2int(prefix2) & ip_utils.makeIntegerMask(
-                cidr))
-        if base != prefix2:
-            print("Not a network Adresse (possible ip base %s)" % base)
+        ip_utils.is_network_address(prefix2,cidr)
 
         int_prefix_top = (~ip_utils.makeIntegerMask(
             cidr)) | ip_utils.ip2int(prefix2)
         if int_prefix_top - 2 * 32 == -4117887025:
-            print("Test singed to unsigned conversion")
-            # ToDo breakpoint setzen, Werte die die for Schleife ausspuckt mit den erwarteten Ergebnisse zu vergleichen
-            # Modified
-            #    decimalDottedQuadToInteger()
-            # to convert signed integers to unsigned.
-            # Das Folgende ist redundant, überreichlich, ersetzt:
-            #   int_prefix_top == -4117887025:
-            #   if int_prefix_top < 0:
-            #      int_prefix_top = int_prefix_top + (2**32)
+            print("Test signed to unsigned conversion")
 
         prefix_top = ip_utils.int2ip(int_prefix_top)
-        # print("netw.adrr.:{}".format(base))
-        for j in range(ip_utils.ip2int(base) + 1,
+        
+        for j in range(ip_utils.ip2int(prefix2),
                        ip_utils.ip2int(
                            ip_utils.int2ip(int_prefix_top)) + 1):
             list_unpacked_ips.append(ip_utils.int2ip(j))

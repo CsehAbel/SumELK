@@ -102,11 +102,3 @@ def df_from_line(line):
     dict_line = json.loads(line)
     df = pandas.DataFrame(dict_line)
     return df
-
-def main():
-    darwin_json = "Standard_objects.json"
-    get_systems_ip_list(darwin_json)
-
-if __name__=="__main__":
-    main()
-    print("systems_group.py done!")

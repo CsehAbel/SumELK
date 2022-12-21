@@ -156,7 +156,8 @@ def main(path,standard_path):
     with file.open() as f:
         rules=json.load(f)
 
-    patternApp=re.compile("^a.*",re.IGNORECASE)
+    patternApp=re.compile("^a_.*",re.IGNORECASE)
+    patternApp2=re.compile("^app_.*",re.IGNORECASE)
     patternWuser=re.compile("^wuser.*",re.IGNORECASE)
     df_rules = pandas.DataFrame(rules)
     #access-section, access-rule
@@ -186,11 +187,10 @@ def main(path,standard_path):
         rule_name = rule["name"]
         if rule_name.find('atos_vuln_scans')!=-1:  # ,'ai_ngfs','a_whitelist_bulk_https','a_whitelist':
             continue
-        if rule_name == "a_17042_CDC":
-            print("129.73.226.0/24 should be added to return value list_rules")
         resultApp=patternApp.match(rule_name)
+        resultApp2=patternApp2.match(rule_name)
         resultWuser = patternWuser.match(rule_name)
-        if resultWuser or resultApp:
+        if resultWuser or resultApp or resultApp2:
             #fills ld with a list of dictionaries, each dictionary containnig start,end,cidr,type,start_int,end_int
             ld = []
             get_dest_ports_ips(ld,rule["destination"],st_obj_df)

@@ -223,8 +223,3 @@ def to_slices(divisor, systems_ips):
             slices.append(systems_ips[slice(lower_bound, length, 1)])
         lower_bound = upper_bound
     return slices
-    
-if __name__=="__main__":
-    standard_path = "Standard_objects.json"
-    path = "./Network-CST-P-SAG-Energy.json"
-    list_rules = main(path, standard_path)
