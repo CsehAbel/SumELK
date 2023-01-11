@@ -70,13 +70,19 @@ class TestRegexpMatchRuleName(TestCase):
 
     # test_eagle_filter
     def test_eagle_filter(self):
-        service_points_path = "service_points.csv"
-        lines = eagle_filter.read_sp_list(service_points_path)
+        temporary="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary/"
+        temporary_eagle="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary_eagle/"
+
+        lines_found = []
+        file_operations.one_file_found_in_folder(lines_found,
+                                                Path(temporary_eagle),
+                                                re.compile("service_points.csv"))
+        lines = eagle_filter.read_sp_list(lines_found[0])
         #create subset of to be unpacked ips
         snics_found = []
-        file_operations.one_file_found_in_folder(filepath_list=snics_found,
-                                                project_dir=Path("./"),
-                                                pttrn_snic=re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
+        file_operations.one_file_found_in_folder(snics_found,
+                                                Path(temporary),
+                                                re.compile("\d{4}\d{2}\d{2}-snic_ip_network_assignments.csv"))
         print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
         attachment_snic = pandas.read_csv(snics_found[0], index_col=None, dtype=str, sep=";")
         pre_list_unpacked_ips1 = eagle_filter.to_unpack_ips_1(attachment_snic, lines)
@@ -84,17 +90,20 @@ class TestRegexpMatchRuleName(TestCase):
 
         # create subset of to be unpacked ips
         network_cont = []
-        file_operations.one_file_found_in_folder(filepath_list=network_cont,
-                                                project_dir=Path("./"),
-                                                pttrn_snic=re.compile("\d{4}\d{2}\d{2}-network_container.csv"))
-        print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
+        file_operations.one_file_found_in_folder(network_cont,
+                                                Path(temporary_eagle),
+                                                re.compile("\d{4}\d{2}\d{2}-network_container.csv"))
+        print("%s used to fill mysql tables eagle, snic_export" % network_cont[0])
         attachment_network_container = pandas.read_csv(network_cont[0], index_col=None, dtype=str, sep=";")
         pre_list_unpacked_ips2 = eagle_filter.to_unpack_ips_2(attachment_network_container)
         list_unpacked_ips2 = eagle_filter.unpack_ips(pre_list_unpacked_ips2)
 
         #merge the two list of dictionaries
         list_unpacked_ips = list_unpacked_ips1 + list_unpacked_ips2
+        row1 = use_mysql_cursors.get_row_count(table="eagle", db_name=self.__class__.db_name)
         eagle_filter.dict_to_sql(list_unpacked_ips,self.db_name)
+        row2 = use_mysql_cursors.get_row_count(table="eagle", db_name=self.__class__.db_name)
+        self.assertTrue(row2 != row1)
         eagle_filter.snic_to_sql(snics_found[0])
 
     def test_systems_to_sql(self):

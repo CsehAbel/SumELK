@@ -76,27 +76,27 @@ def unpack_ips(pre_list_unpacked_ips):
     for d in pre_list_unpacked_ips:
         prefix2 = d["ip"]
         cidr2 = d["cidr"]
-        base = integer_to_ipaddress(
-            ipaddress_to_integer(prefix2) & cidr_to_integer(cidr2)
+        base = ip_utils.int2ip(
+            ip_utils.ip2int(prefix2) & ip_utils.makeIntegerMask(cidr2)
         )
         if base != prefix2:
             print("Not a network Adresse (possible ip base %s)" % base)
 
-        int_prefix_top = (~cidr_to_integer(
-            cidr2)) | ipaddress_to_integer(prefix2)
+        int_prefix_top = (~ip_utils.makeIntegerMask(
+            cidr2)) | ip_utils.ip2int(prefix2)
         if int_prefix_top - 2 * 32 == -4117887025:
             print("Test singed to unsigned conversion")
 
-        prefix_top = integer_to_ipaddress(int_prefix_top)
+        prefix_top = ip_utils.int2ip(int_prefix_top)
         # print("netw.adrr.:{}".format(base))
-        for j in range(ipaddress_to_integer(base),
-                       ipaddress_to_integer(
-                           integer_to_ipaddress(int_prefix_top)) + 1):
-            list_unpacked_ips.append({"ip": integer_to_ipaddress(j), "base": base, "cidr": cidr2})
+        for j in range(ip_utils.ip2int(base),
+                       ip_utils.ip2int(
+                           ip_utils.int2ip(int_prefix_top)) + 1):
+            list_unpacked_ips.append({"ip": ip_utils.int2ip(j), "base": base, "cidr": cidr2})
     return list_unpacked_ips
 
 def read_sp_list(service_points_path):
-    path = Path(service_points_path);
+    path = Path(service_points_path)
     # trim the the beginning and end of each line
     # create a list from the lines in the file
     with path.open() as f:

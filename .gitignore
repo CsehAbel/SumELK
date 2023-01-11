@@ -11,4 +11,6 @@ policy_dump/**
 !policy_dump/gitkeep
 temporary/**
 !temporary/gitkeep
+temporary_eagle/**
+!temporary_eagle/gitkeep
 
