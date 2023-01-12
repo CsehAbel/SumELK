@@ -1,14 +1,10 @@
-import math
+import logging
 import re
-import socket
-import struct
 from pathlib import Path
 import ip_utils
-
 import pandas
-import sqlalchemy
+from sqlalchemy.dialects.mysql import INTEGER
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
-
 import secrets
 
 def snic_to_sql(filepath_qc):
@@ -35,8 +31,14 @@ def to_unpack_ips_1(attachment_qc, lines):
             sp = sp.strip()
         if sp in lines:
             b = row["IP-net-base"]
+            t = row["IP-net-top"]
             cidr = row["CIDR"]
-            pre_list_unpacked_ips.append({"ip":b,"cidr":int(cidr)})
+            pre_list_unpacked_ips.append({"ip_start": b,
+                                          "ip_end": t,
+                                            "cidr": cidr,
+                                            "ip_start_int": ip_utils.ip2int(b),
+                                            "ip_end_int": ip_utils.ip2int(t)})
+
     return pre_list_unpacked_ips
 
 #filepath_qc is downloaded from snic, contains fields inet-start, inet-stop, supported_by, comment
@@ -66,7 +68,11 @@ def to_unpack_ips_2(attachment_qc):
         cidr = ip_utils.iprange_to_cidr(inet_start, inet_stop)
         sp = row["supported_by"]
         sp = row["comment"]
-        pre_list_unpacked_ips.append({"ip":inet_start,"cidr":cidr})
+        pre_list_unpacked_ips.append({"ip_start": inet_start,
+                                      "ip_end": inet_stop,
+                                      "cidr": cidr,
+                                      "ip_start_int": ip_utils.ip2int(inet_start),
+                                      "ip_end_int": ip_utils.ip2int(inet_stop)})
     return pre_list_unpacked_ips
 
 #ToDo propagate the sp from the snic report to the eagle mysql table
@@ -80,7 +86,7 @@ def unpack_ips(pre_list_unpacked_ips):
             ip_utils.ip2int(prefix2) & ip_utils.makeIntegerMask(cidr2)
         )
         if base != prefix2:
-            print("Not a network Adresse (possible ip base %s)" % base)
+            print("Not a network address (possible ip base %s)" % base)
 
         int_prefix_top = (~ip_utils.makeIntegerMask(
             cidr2)) | ip_utils.ip2int(prefix2)
@@ -124,7 +130,8 @@ def insert_to_eagle_table(conn, table, list_unpacked_ips):
             conn.execute(table.insert().values(s))
         #if the insert fails print the error
         except Exception as e:
-            print(e)
+            #insert_eagle logger set to level=ERROR in test_eagle.py test_import_rules() so this will not print
+            logging.getLogger("insert_eagle").log(level=logging.WARNING,msg=e)
 
 def to_slices(divisor, systems_ips):
     length = len(systems_ips)
@@ -142,10 +149,13 @@ def to_slices(divisor, systems_ips):
 
 def drop_and_create_eagle_table(metadata_obj, sqlEngine):
         eagle_table = Table('eagle', metadata_obj,
-                         Column('id', Integer, primary_key=True),
-                         Column('ip', String(15), nullable=False),
-                         Column('base', String(15), nullable=False),
-                         Column('cidr', Integer, nullable=False)
+                        Column('id', Integer, primary_key=True),
+                        Column('ip_start', String(15), nullable=False),
+                        Column('ip_end', String(15), nullable=False),
+                        # use unsigned int for ip_start_int and ip_end_int
+                        Column('cidr', Integer, nullable=False),
+                        Column('ip_start_int', INTEGER(unsigned=True), nullable=False),
+                        Column('ip_end_int', INTEGER(unsigned=True), nullable=False)
                          )
         # check first for table existing
         eagle_table.drop(sqlEngine, checkfirst=False)

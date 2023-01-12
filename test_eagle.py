@@ -70,6 +70,9 @@ class TestRegexpMatchRuleName(TestCase):
 
     # test_eagle_filter
     def test_eagle_filter(self):
+        pttrn_logs = re.compile("^.*\.log$")
+        file_operations.remove_files_in_dir(pttrn_logs,Path("./logs"))
+        logger_insert_fw_policy= self.setup_logger("insert_eagle", "logs/insert_eagle.log",logging.INFO)
         temporary="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary/"
         temporary_eagle="/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary_eagle/"
 
@@ -86,7 +89,6 @@ class TestRegexpMatchRuleName(TestCase):
         print("%s used to fill mysql tables eagle, snic_export" % snics_found[0])
         attachment_snic = pandas.read_csv(snics_found[0], index_col=None, dtype=str, sep=";")
         pre_list_unpacked_ips1 = eagle_filter.to_unpack_ips_1(attachment_snic, lines)
-        list_unpacked_ips1 = eagle_filter.unpack_ips(pre_list_unpacked_ips1)
 
         # create subset of to be unpacked ips
         network_cont = []
@@ -96,14 +98,14 @@ class TestRegexpMatchRuleName(TestCase):
         print("%s used to fill mysql tables eagle, snic_export" % network_cont[0])
         attachment_network_container = pandas.read_csv(network_cont[0], index_col=None, dtype=str, sep=";")
         pre_list_unpacked_ips2 = eagle_filter.to_unpack_ips_2(attachment_network_container)
-        list_unpacked_ips2 = eagle_filter.unpack_ips(pre_list_unpacked_ips2)
 
         #merge the two list of dictionaries
-        list_unpacked_ips = list_unpacked_ips1 + list_unpacked_ips2
+        pre_list_unpacked_ips = pre_list_unpacked_ips1 + pre_list_unpacked_ips2
         row1 = use_mysql_cursors.get_row_count(table="eagle", db_name=self.__class__.db_name)
-        eagle_filter.dict_to_sql(list_unpacked_ips,self.db_name)
+        eagle_filter.dict_to_sql(pre_list_unpacked_ips,self.db_name)
         row2 = use_mysql_cursors.get_row_count(table="eagle", db_name=self.__class__.db_name)
-        self.assertTrue(row2 != row1)
+        print("row1 %s row2 %s pre_list_unpacked_ips %s" % (row1,row2,pre_list_unpacked_ips.__len__()))
+        self.assertTrue(row2 == pre_list_unpacked_ips.__len__())
         eagle_filter.snic_to_sql(snics_found[0])
 
     def test_systems_to_sql(self):
