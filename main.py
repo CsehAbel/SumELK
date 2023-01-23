@@ -42,12 +42,8 @@ def main(path,sag_systems):
         query['bool']['filter'][0]['terms']['source.ip'] = s
         with open('query%d.json' % (asd + 1), 'w') as outfile:
             json.dump(query, outfile)
-
-        with open('query%d.json' % (asd + 1)) as json_file:
-            query = json.load(json_file)
-
-        for i in range(4):
-            download_index(es=es,query=query,index="business_partner_00%d" % (i+1),nth=(i+1),sort="_doc",gte_date=gte_date,asd=asd,path=path)
+        
+        download_index(es=es,query=query,index="energy-checkpoint",nth=1,sort="_doc",gte_date=gte_date,asd=asd,path=path)
         asd=asd+1
     print("Done!")
 
@@ -97,14 +93,19 @@ def download_index(es,query, index, nth, sort, gte_date,asd,path):
             with filepath.open('w') as outfile:
                 # json.dump(buckets)
                 for b in hits:
-                    json.dump(flattenhit(b), outfile)
-                    outfile.write("\n")
+                    if flattenhit(b) is not None:
+                        json.dump(flattenhit(b), outfile)
+                        outfile.write("\n")
         seq = seq + 1
 
 def flattenhit(h):
-    s=h['_source']['source']['ip']
-    d=h['_source']['destination']['ip']
-    return {"source_ip":s,"dest_ip":d}
+    try:
+        s=h['_source']['source']['ip']
+        d=h['_source']['destination']['ip']
+        return {"source_ip":s,"dest_ip":d}
+    except Exception as e:
+        print("Error in flattenhit: %s\t%s" % (h["_index"],h["_id"]))
+        return None
 
 if __name__ == '__main__':
     main(Path("hits/"))
