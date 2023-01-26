@@ -14,9 +14,7 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-hit_json='hit_energy_00%d_%s_%d_%d.json'
-
-def main(path,sag_systems):
+def main(path,sag_systems,hit_json):
     #print matched iterating: lista["i_f","vuser","wuser123","a_123","App_123"]
     es = Elasticsearch([host], port=port, connection_class=RequestsHttpConnection,
                        http_auth=(user, pw), use_ssl=True, verify_certs=False, timeout=120, retry_on_timeout=True, max_retries=3)
@@ -46,8 +44,7 @@ def main(path,sag_systems):
         with open('query%d.json' % (slices_index + 1), 'w') as outfile:
             json.dump(query, outfile)
         
-        #download_index(es=es,query=query,index="energy-checkpoint",nth=1,sort="_doc",gte_date=gte_date,asd=asd,path=path)
-        download_buckets(es=es,query=query,aggs=aggs,gte_date=gte_date,slices_index=slices_index)
+        download_buckets(es=es,query=query,index="energy-checkpoint",aggs=aggs,hit_json=hit_json,gte_date=gte_date,slices_index=slices_index,path=path)
         slices_index=slices_index+1
     print("Done!")
 
@@ -66,57 +63,26 @@ def to_slices(divisor, systems_ips):
         lower_bound = upper_bound
     return slices
 
-
-def download_index(es,query, index, nth, sort, gte_date,asd,path):
-    resp = es.search(query=query,index=index,sort=sort,size=10000)
-    #hits_len = resp['hits']['total']['value']
-    hits_len = len(resp['hits']['hits'])
-    print("Got %d Hits:" % hits_len)
+def download_buckets(es,query, index, hit_json, aggs,gte_date,slices_index,path):
+    
     seq = 0
-    hits = resp['hits']['hits']
+    buckets_len = 10000
+    while buckets_len >= 10000:
+        resp = es.search(index=index, size=0, query=query, aggs=aggs)
+        #size=0 means no hits are returned, only aggregations
+        
+        buckets = resp['aggregations']['my-buckets']['buckets']
+        buckets_len = buckets.__len__()
+        print("Got %d buckets:" % buckets_len)
 
-    filepath = path / (hit_json % (asd, gte_date, nth, seq))
-    with filepath.open('w') as outfile:
-        for b in hits:
-            json.dump(flattenhit(b), outfile)
-            outfile.write("\n")
-    seq = seq + 1
-
-    while hits_len >= 10000:
-        search_after=resp['hits']['hits'][-1]['sort']
-        resp = es.search(index=index,sort=sort,search_after=search_after,size=10000)
-        # hits_len = resp['hits']['total']['value']
-        hits_len = len(resp['hits']['hits'])
-        print("Got %d Hits:" % hits_len)
-        hits = resp['hits']['hits']
-
-        filepath = path / (hit_json % (asd, gte_date, nth, seq))
-        if hits_len==0:
+        filepath = path / (hit_json % (slices_index, gte_date, seq))
+        if buckets_len == 0:
             print("Not creating "+filepath.name)
         else:
             with filepath.open('w') as outfile:
-                # json.dump(buckets)
-                for b in hits:
-                    if flattenhit(b) is not None:
-                        json.dump(flattenhit(b), outfile)
-                        outfile.write("\n")
-        seq = seq + 1
-
-def download_buckets(es,query,aggs,gte_date,slices_index):
-    buckets_len = 10000
-    seq = 0
-    while buckets_len >= 10000:
-        resp = es.search(query=query, index="energy-checkpoint", size=0, aggs=aggs)
-        hits_len = resp['hits']['total']['value']
-        print("Got %d Hits:" % hits_len)
-        buckets = resp['aggregations']['my-buckets']['buckets']
-        buckets_len = buckets.__len__()
-
-        with open('hits/hit%s_%d_%d.json' % (gte_date,slices_index,seq), 'w') as outfile:
-            # json.dump(buckets)
-            for b in buckets:
-                json.dump(flattenbucket(b), outfile)
-                outfile.write("\n")
+                for b in buckets:
+                    json.dump(flattenbucket(b), outfile)
+                    outfile.write("\n")
         seq = seq + 1
 
         if (10000<=buckets_len):
@@ -131,17 +97,12 @@ def download_buckets(es,query,aggs,gte_date,slices_index):
             aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
 
 def flattenbucket(b):
-    s=b['key']['source_ip']
-    d=b['key']['dest_ip']
-    return {"source_ip":s,"dest_ip":d}
-
-def flattenhit(h):
     try:
-        s=h['_source']['source']['ip']
-        d=h['_source']['destination']['ip']
+        s=b['key']['source_ip']
+        d=b['key']['dest_ip']
         return {"source_ip":s,"dest_ip":d}
     except Exception as e:
-        print("Error in flattenhit: %s\t%s" % (h["_index"],h["_id"]))
+        print("Error in flattenhit: %s\t%s" % (b["_index"],b["_id"]))
         return None
 
 if __name__ == '__main__':

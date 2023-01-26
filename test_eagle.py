@@ -159,7 +159,9 @@ class TestRegexpMatchRuleName(TestCase):
         sag_systems = systems_group.get_systems_ip_list(darwin_json=self.__class__.standard_path)
         # download hits to hits/...json
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-        hits.main(path=path, sag_systems=sag_systems)
+        # move hit_json to an instance variable inside a subclass
+        hit_json='hit_energy_00%d_%s_%d.json'
+        hits.main(path=path, sag_systems=sag_systems,hit_json=hit_json)
         # creating 'ip_%Y%m%d' table from 'ip'
         use_mysql_cursors.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 
