@@ -37,14 +37,18 @@ def main(path,sag_systems):
     with open('query.json') as json_file:
         query = json.load(json_file)
 
-    asd = 0
+    with open('aggs.json') as json_file:
+        aggs = json.load(json_file)
+
+    slices_index = 0
     for s in slices:
         query['bool']['filter'][0]['terms']['source.ip'] = s
-        with open('query%d.json' % (asd + 1), 'w') as outfile:
+        with open('query%d.json' % (slices_index + 1), 'w') as outfile:
             json.dump(query, outfile)
         
-        download_index(es=es,query=query,index="energy-checkpoint",nth=1,sort="_doc",gte_date=gte_date,asd=asd,path=path)
-        asd=asd+1
+        #download_index(es=es,query=query,index="energy-checkpoint",nth=1,sort="_doc",gte_date=gte_date,asd=asd,path=path)
+        download_buckets(es=es,query=query,aggs=aggs,gte_date=gte_date,slices_index=slices_index)
+        slices_index=slices_index+1
     print("Done!")
 
 
@@ -97,6 +101,39 @@ def download_index(es,query, index, nth, sort, gte_date,asd,path):
                         json.dump(flattenhit(b), outfile)
                         outfile.write("\n")
         seq = seq + 1
+
+def download_buckets(es,query,aggs,gte_date,slices_index):
+    buckets_len = 10000
+    seq = 0
+    while buckets_len >= 10000:
+        resp = es.search(query=query, index="energy-checkpoint", size=0, aggs=aggs)
+        hits_len = resp['hits']['total']['value']
+        print("Got %d Hits:" % hits_len)
+        buckets = resp['aggregations']['my-buckets']['buckets']
+        buckets_len = buckets.__len__()
+
+        with open('hits/hit%s_%d_%d.json' % (gte_date,slices_index,seq), 'w') as outfile:
+            # json.dump(buckets)
+            for b in buckets:
+                json.dump(flattenbucket(b), outfile)
+                outfile.write("\n")
+        seq = seq + 1
+
+        if (10000<=buckets_len):
+            with open('hits/after_key.json', 'a') as outfile:
+                #check if after_key.json gets overwritten instead of appended to
+                json.dump(resp['aggregations']['my-buckets']['after_key'], outfile)
+                outfile.write("\n")
+
+            aggs['my-buckets']['composite']['after'] = {}
+            aggs['my-buckets']['composite']['after']['source_ip'] = resp['aggregations']['my-buckets']['after_key'][
+                'source_ip']
+            aggs['my-buckets']['composite']['after']['dest_ip'] = resp['aggregations']['my-buckets']['after_key']['dest_ip']
+
+def flattenbucket(b):
+    s=b['key']['source_ip']
+    d=b['key']['dest_ip']
+    return {"source_ip":s,"dest_ip":d}
 
 def flattenhit(h):
     try:

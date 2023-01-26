@@ -1,6 +1,35 @@
 {
     "bool":{
-      "filter": [
+      "should" : [
+        {"regexp": {
+          "rule.name": {
+            "value": "a_.*",
+            "flags": "ALL",
+            "case_insensitive": true,
+            "max_determinized_states": 10000
+          }
+        }},
+        {"regexp": {
+          "rule.name": {
+            "value": "app_.*",
+            "flags": "ALL",
+            "case_insensitive": true,
+            "max_determinized_states": 10000
+          }
+        }},
+        {
+          "regexp": {
+            "rule.name": {
+              "value": "wuser.*",
+              "flags": "ALL",
+              "case_insensitive": true,
+              "max_determinized_states": 10000
+            }
+          }
+        }
+        ],
+      "minimum_should_match" : 1,
+      "filter": [ 
        {
         "terms" :
         {
