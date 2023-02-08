@@ -156,9 +156,3 @@ def drop_and_create_ip_table(metadata_obj, sqlEngine):
     ip_table.drop(sqlEngine, checkfirst=True)
     ip_table.create(sqlEngine)
     return ip_table
-
-if __name__ == '__main__':
-    path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-    regex = "^hit_energy.*\.json$"
-    csv_path_string = "/mnt/c/ProgramData/MySQL/MySQL Server 8.0/Data/Uploads/ip_dump.csv"
-    main(path, regex, "CSV_DB",csv_path_string)

@@ -121,13 +121,17 @@ def proc_dest_port_tuples(list_rules):
                     tcp_udp=tcp_udp()
                 complete_port = "%s/%s" % (port, tcp_udp)
                 list_services.append(complete_port)
-            max_services_length = len("%s" %list_services) if len("%s" %list_services) > max_services_length else max_services_length
+            # issue with having services left as is, json.dumps() didnt work for list_exploded_with_concatenated_services,
+            # only worked when services was concatenated into a string
+            json_services = json.dumps(list_services)
+            #set max_services_length to the length json_services if it is greater than max_services_length
+            max_services_length = len(json_services) if len(json_services) > max_services_length else max_services_length
 
             list_exploded.append(
                 {"dest_ip_start": ip["start"], "dest_ip_end": ip["end"], "dest_ip_cidr": ip["cidr"],
                  "dest_ip_type": ip["type"],
                  "dest_ip_start_int": ip["start_int"], "dest_ip_end_int": ip["end_int"],
-                 "json_services": "%s" %list_services,  # concat_services,
+                 "json_services": json_services,  # concat_services,
                  "rule_name": list_rules[i]["name"],
                  "rule_number": "%d" % list_rules[i]["number"]})
     return list_exploded, max_services_length

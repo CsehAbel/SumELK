@@ -164,6 +164,41 @@ class TestRegexpMatchRuleName(TestCase):
         # creating 'ip_%Y%m%d' table from 'ip'
         use_mysql_cursors.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 
+    def test_compare_transform_sources(self):
+        # gets the systems ip ranges from darwin_json
+        sag_systems = systems_group.get_systems_ip_list(darwin_json=self.__class__.standard_path)
+        # read /mnt/c/Users/z004a6nh/PycharmProjects/SumELK/temporary/query_on_elastic_without_5th.txt
+        # into a list of strings
+        # from each line strip the whitespaces from the beginning and cut the commas at the end
+        path_string = "temporary/query_on_elastic_without_5th.txt"
+        transform_sources = [x.strip().lstrip('"').rstrip(",").rstrip('"') for x in open(path_string, "r").readlines()] 
+        #assert that the length of the list is not 0
+        self.assertTrue(transform_sources.__len__() != 0)
+        # convert sag_systems to a set, convert trasnform_sources to a set and get A-B and B-A
+        # A-B is the list of systems that are not in the transform_sources
+        # B-A is the list of systems that are not in the sag_systems
+        # create the set for sag_systems
+        sag_systems_set = set()
+        for x in sag_systems:
+            sag_systems_set.add(x)
+        # create the set for transform_sources
+        transform_sources_set = set()
+        for x in transform_sources:
+            transform_sources_set.add(x)
+        # get the difference between the two sets
+        diff = sag_systems_set.difference(transform_sources_set)
+        diff2 = transform_sources_set.difference(sag_systems_set)
+        # write diff to temporary/transform_sources_missing.txt
+        with open("temporary/transform_1to4_sources_missing.txt", "w") as f:
+            for x in diff:
+                f.write('"'+x+'"' + ",\n")
+        # assert that the difference is empty
+        self.assertTrue(diff.__len__() == 0)
+
+
+
+        
+
     # .json to mysql table 'ip'
     def test_bulk_json_to(self):
         row = use_mysql_cursors.get_row_count(table="ip", db_name=self.__class__.db_name)

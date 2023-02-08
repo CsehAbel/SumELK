@@ -3,10 +3,14 @@
       "composite": {
         "size": 10000,
         "sources":
-          { "source_ip": {
+          [{ "source_ip": {
             "terms": { "field": "source.ip" }
           }
-          }
+          },{
+            "dest_ip": {
+              "terms": { "field": "destination.ip" }
+            }
+          }]
       }
     }
 }

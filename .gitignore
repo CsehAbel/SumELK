@@ -12,4 +12,8 @@ temporary/**
 !temporary/gitkeep
 temporary_eagle/**
 !temporary_eagle/gitkeep
+query1.json
+query2.json
+query3.json
+query4.json
 
