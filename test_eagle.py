@@ -71,8 +71,8 @@ class TestRegexpMatchRuleName(TestCase):
         # fills systems table with sag_systems exploded into single ips,
         # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=standard_path)
-        generate_queries.save_new_transform_json(sag_systems,new_name="fokus_transform.json")
-        generate_queries.systems_to_sql(sag_systems,table_name="systems",db_name=self.__class__.db_name)
+        generate_queries.save_new_transform_json(sag_systems=sag_systems,new_name="fokus_transform.json")
+        generate_queries.systems_to_sql(systems=sag_systems,table_name="systems",db_name=self.__class__.db_name)
 
     def test_import_rules(self):
         pttrn_logs = re.compile("^.*\.log$")
@@ -117,7 +117,8 @@ class TestRegexpMatchRuleName(TestCase):
         sag_systems = systems_group.get_systems_ip_list(darwin_json=self.__class__.standard_path)
         # download hits to hits/...json
         path = Path("/mnt/c/Users/z004a6nh/PycharmProjects/SumELK/hits/")
-        hits.main(path=path, sag_systems=sag_systems)
+        hit_json='hit_fokus_00%d_%s_%d_%d.json'
+        hits.main(path=path, sag_systems=sag_systems,hit_json=hit_json)
         # creating 'ip_%Y%m%d' table from 'ip'
         use_mysql_cursors.main(history_table="ip_" + datetime.datetime.now().strftime("%Y%m%d"),db_name=self.__class__.db_name)
 

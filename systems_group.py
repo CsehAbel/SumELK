@@ -1,8 +1,8 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
+from pathlib import Path
+
 import pandas
 import json
-from sqlalchemy import create_engine
-from pathlib import Path
 
 def get_systems_ip_list(darwin_json):
     st_obj_dir_path = "./"
