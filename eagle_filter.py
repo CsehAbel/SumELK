@@ -158,6 +158,6 @@ def drop_and_create_eagle_table(metadata_obj, sqlEngine):
                         Column('ip_end_int', INTEGER(unsigned=True), nullable=False)
                          )
         # check first for table existing
-        eagle_table.drop(sqlEngine, checkfirst=False)
+        eagle_table.drop(sqlEngine, checkfirst=True)
         eagle_table.create(sqlEngine)
         return eagle_table

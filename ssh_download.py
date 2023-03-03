@@ -18,7 +18,8 @@ def get_newest(pttrn, policies,sftp):
         res = pttrn.match(filename)
         if res:
             stats.append(filename)
-    newest_tar_gz = max(stats, key=lambda x: sftp.stat(x).st_mtime)
+    stats = sorted(stats, key=lambda x: sftp.stat(x).st_mtime)
+    newest_tar_gz = stats[-1]
     return newest_tar_gz
 
 
