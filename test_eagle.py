@@ -113,7 +113,7 @@ class TestRegexpMatchRuleName(TestCase):
         # fills systems table with sag_systems exploded into single ips,
         # which is later used for filtering hits on source ips
         sag_systems = systems_group.get_systems_ip_list(darwin_json=self.__class__.standard_path)
-        generate_queries.save_new_transform_json(sag_systems=sag_systems,new_name="new_transform.json")
+        #generate_queries.save_new_transform_json(sag_systems=sag_systems,new_name="new_transform.json")
         generate_queries.systems_to_sql(systems=sag_systems,table_name="systems",db_name=self.__class__.db_name)
 
     def test_import_rules(self):

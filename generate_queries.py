@@ -25,11 +25,7 @@ pw=secrets.sc_pw
 host='sn1hot03.ad001.siemens.net'
 port='9200'
 
-#moved from systems_group.py
-#onlyinold_to_sql() not needed anymore, table should be deleted
-#onlyInNew needs to be exploded to use as left join filter for the table hits
 def save_new_transform_json(sag_systems,new_name):
-
     with open('transform.json') as json_file:
         transform = json.load(json_file)
     print("Done reading transform.json!")
@@ -41,32 +37,7 @@ def save_new_transform_json(sag_systems,new_name):
     print("Done writing %s!" % new_name)
 
 def systems_to_sql(systems,table_name, db_name):
-    list_unpacked_ips = []
-    for line in systems:
-        patternPrefixCIDR = re.compile('^(([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/(\d+))$')
-        # [\s"]* anstatt \s*
-        resultPrefix = patternPrefixCIDR.match(line)
-        if not resultPrefix:
-            raise ValueError("{0} doesnt seem to be a source ip".format(line))
-
-        prefix2 = resultPrefix.group(2)
-        cidr = resultPrefix.group(3)
-        cidr = int(cidr)
-        ip_utils.is_network_address(prefix2,cidr)
-
-        int_prefix_top = (~ip_utils.makeIntegerMask(
-            cidr)) | ip_utils.ip2int(prefix2)
-        if int_prefix_top - 2 * 32 == -4117887025:
-            print("Test signed to unsigned conversion")
-
-        prefix_top = ip_utils.int2ip(int_prefix_top)
-        
-        for j in range(ip_utils.ip2int(prefix2),
-                       ip_utils.ip2int(
-                           ip_utils.int2ip(int_prefix_top)) + 1):
-            list_unpacked_ips.append(ip_utils.int2ip(j))
-
-    df = pandas.DataFrame(list_unpacked_ips)
+    df = pandas.DataFrame(systems)
     sqlEngine = create_engine(
         'mysql+pymysql://%s:%s@%s/%s' % (secrets.mysql_u, secrets.mysql_pw, "127.0.0.1", db_name), pool_recycle=3600)
     dbConnection = sqlEngine.connect()

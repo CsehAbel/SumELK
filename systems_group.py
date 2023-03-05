@@ -1,6 +1,7 @@
 #!/home/scripts/ticket_automatisierung/bin/python3
 import re
 from pathlib import Path
+import ip_utils
 
 import pandas
 import json
@@ -26,10 +27,9 @@ def get_systems_ip_list(darwin_json):
         rule_name = obj["name"]
         ld = []
         get_dest_ports_ips(ld, [x["uid"] for x in obj["members"]], st_obj_df)
-        [list_source_ranges.append(y) for y in ld]
-    #{"subnet":,"cidr":}
-    lsr=[("%s/%s" %(x["subnet"],x["cidr"])) for x in list_source_ranges]
-    return lsr
+        #[list_source_ranges.append(y) for y in ld]
+        list_source_ranges.extend(ld)
+    return list_source_ranges
 
 def get_network_object_by_id(id,st_obj_df):
     #DataFrame->Series contaning index, and a field True or False
@@ -42,7 +42,7 @@ def get_network_object_by_id(id,st_obj_df):
     df_obj=st_obj_df[matches]
     return df_obj
 
-#ld list of destination ips to complete with ips found inside group network objects
+#ld is for accumulating the results
 #members list of members either Host_Network_Obj or Group_Network_Obj
 def get_dest_ports_ips(ld,ids,st_obj_df):
     try:
@@ -50,15 +50,22 @@ def get_dest_ports_ips(ld,ids,st_obj_df):
             try:
                 df_obj = get_network_object_by_id(id,st_obj_df)
                 if df_obj.type.values[0]=="host":
-                    ld.append({"subnet":df_obj["ipv4-address"].values[0],"cidr":32})
+                    ipv4adrr = df_obj["ipv4-address"].values[0]
+                    name = df_obj["name"].values[0]
+                    #create a dictionary with start,end,cidr,type,start_int,end_int
+                    ld.append({"name":name,"start":ipv4adrr,"end":ipv4adrr,"cidr":32,"type":"host","start_int":ip_utils.ip2int(ipv4adrr),"end_int":ip_utils.ip2int(ipv4adrr)})
                 elif df_obj.type.values[0]=="network":
+                    name = df_obj["name"].values[0]
                     subnet=df_obj["subnet4"].values[0]
-                    #netmask=ip_utils.cidr_to_netmask(df_obj["mask-length4"].values[0])
-                    ld.append({"subnet":subnet,"cidr":df_obj["mask-length4"].values[0].__int__()})
+                    netmask=df_obj["mask-length4"].values[0]
+                    netmask=int(netmask)
+                    base,prefix_top=ip_utils.base_cidr_to_range(subnet,netmask)
+                    #create a dictionary with start,end,cidr,type,start_int,end_int
+                    ld.append({"name":name,"start":base,"end":prefix_top,"cidr":netmask,"type":"network","start_int":ip_utils.ip2int(base),"end_int":ip_utils.ip2int(prefix_top)})
                 elif df_obj.type.values[0]=="group":
                     get_dest_ports_ips(ld,[x["uid"] for x in df_obj["members"].values[0]],st_obj_df)
                 elif df_obj.type.values[0] == "address-range":
-                    # for ra in range(ip_utils.ip2int(df_obj["ipv4-address-first"].values[0]), ip_utils.ip2int(df_obj["ipv4-address-last"].values[0]) + 1):
+                    # for ra in range(ip_utils.ip2int(df_obj["ipv4adrr-first"].values[0]), ip_utils.ip2int(df_obj["ipv4adrr-last"].values[0]) + 1):
                     #     r_ip = ip_utils.int2ip(ra)
                     #     ld.append(r_ip)
                     raise ValueError("type is not netw,range")
